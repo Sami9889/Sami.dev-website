@@ -1,29 +1,31 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-   <script src="https://cdn.jsdelivr.net/npm/eruda"></script>
+<script src="https://cdn.jsdelivr.net/npm/eruda"></script>
 <script>
-    // Initialize Eruda first
-    eruda.init();
+    eruda.init(); // Initialize Eruda first
 
-    // Fireall boot
+    // Fireall bootstrap
     document.addEventListener('DOMContentLoaded', () => {
+
         if (!window.fireall) {
             window.fireall = new window.Fireall();
 
-            // Wait until Eruda is ready
-            function startFireall() {
-                if (window.eruda && eruda.isInit) {
+            // Strictly wait for eruda.init() before doing any console logging
+            function waitForErudaReady() {
+                if (window.eruda && typeof eruda.init === 'function' && eruda.isInit) {
+                    // Now safe to init Fireall completely
                     window.fireall.init();
                     console.log('%cFireall fully initialized!', 'color:#00ff00;font-weight:bold;');
                 } else {
-                    console.log('Waiting for Eruda to initialize...');
-                    setTimeout(startFireall, 500);
+                    // Retry after 500ms
+                    setTimeout(waitForErudaReady, 500);
                 }
             }
 
-            startFireall();
+            waitForErudaReady();
         }
+
     });
 </script>
     <!-- Favicon setup -->
