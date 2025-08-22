@@ -1,6 +1,125 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
+<meta charset="UTF-8">
+<title>Fireall Protected Page</title>
+<style>
+  body.fireall-error {
+    font-family: Arial, sans-serif;
+    text-align: center;
+    margin-top: 100px;
+    background: #111;
+    color: #f33;
+  }
+  body.fireall-error h1 {
+    font-size: 3em;
+    margin-bottom: 20px;
+  }
+  body.fireall-error p {
+    font-size: 1.2em;
+  }
+</style>
+</head>
+<body>
+
+<h1>Welcome to my site</h1>
+<p>All content is protected by Fireall.</p>
+
+<script>
+// Fireall invisible client-side firewall with custom error pages
+(function() {
+    function logEvent(message) {
+        const time = new Date().toISOString();
+        const entry = `${time}: ${message}`;
+        console.log(entry);
+        let logs = JSON.parse(localStorage.getItem('fireallLogs') || "[]");
+        logs.push(entry);
+        localStorage.setItem('fireallLogs', JSON.stringify(logs));
+    }
+
+    function breachCode() {
+        const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789';
+        let code = '';
+        for(let i=0;i<12;i++) code += chars[Math.floor(Math.random()*chars.length)];
+        return code;
+    }
+
+    function showErrorPage(reason) {
+        const code = breachCode();
+        logEvent(reason + '. Breach code: ' + code);
+        document.body.innerHTML = `
+            <div class="fireall-error">
+                <h1>Security Breach Detected</h1>
+                <p>${reason}</p>
+                <p>Breach code: <strong>${code}</strong></p>
+            </div>
+        `;
+        document.body.classList.add('fireall-error');
+        throw new Error('Fireall terminated the page: ' + reason);
+    }
+
+    // DevTools detection
+    let devtoolsOpen = false;
+    const threshold = 160;
+    setInterval(() => {
+        if(window.outerWidth - window.innerWidth > threshold || window.outerHeight - window.innerHeight > threshold){
+            if(!devtoolsOpen) {
+                devtoolsOpen = true;
+                showErrorPage('DevTools detected');
+            }
+        } else devtoolsOpen = false;
+    }, 500);
+
+    // Right-click / context menu
+    document.addEventListener('contextmenu', e=>{
+        e.preventDefault();
+        showErrorPage('Right-click blocked');
+    });
+
+    // Copy / cut / paste
+    ['copy', 'cut', 'paste'].forEach(ev=>{
+        document.addEventListener(ev, e=>{
+            e.preventDefault();
+            showErrorPage(ev.charAt(0).toUpperCase() + ev.slice(1) + ' blocked');
+        });
+    });
+
+    // Key combinations
+    document.addEventListener('keydown', e=>{
+        const forbidden = (e.ctrlKey && e.shiftKey && e.key.toLowerCase() === 'i') ||
+                          (e.ctrlKey && e.key.toLowerCase() === 'u') ||
+                          (e.ctrlKey && e.shiftKey && e.key.toLowerCase() === 'j') ||
+                          (e.ctrlKey && e.shiftKey && e.key.toLowerCase() === 'c');
+        if(forbidden){
+            e.preventDefault();
+            showErrorPage('Blocked key combination: ' + e.key);
+        }
+    });
+
+    // DOM mutation detection
+    const observer = new MutationObserver(mutations => {
+        for(let mutation of mutations){
+            if(mutation.type === 'childList' || mutation.type === 'attributes'){
+                showErrorPage('DOM modification detected');
+            }
+        }
+    });
+    observer.observe(document, { childList: true, subtree: true, attributes: true, attributeOldValue: true });
+
+    // Script / iframe / object / embed detection
+    setInterval(() => {
+        document.querySelectorAll('script, iframe, object, embed').forEach(el=>{
+            if(!el.hasAttribute('data-safe')) {
+                showErrorPage('Suspicious element detected: ' + el.tagName);
+            }
+        });
+    }, 2000);
+
+    logEvent('Fireall initialized invisibly with custom error pages');
+})();
+</script>
+
+</body>
     <!-- Favicon setup -->
 <link rel="icon" href="favicon.ico" type="image/x-icon">
 <link rel="shortcut icon" href="favicon.ico" type="image/x-icon">
