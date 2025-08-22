@@ -280,3 +280,58 @@ window.fireall = window.fireall || (function(){
     return window.fireall;
 
 })();
+
+// ---- Inside Fireall class ----
+
+// Add these properties to constructor
+this.logQueue = [];      // Stores logs until Eruda ready
+this.consoleReady = false;
+
+// Replace logEvent function with this:
+logEvent(msg) {
+    const timestamp = new Date().toISOString();
+    const formatted = `[Fireall][${timestamp}] ${msg}`;
+
+    if (this.consoleReady) {
+        console.log(`%c${formatted}`, 'color:#ff0000;font-weight:bold;background:#f0f0f0;padding:2px;');
+    } else {
+        // Queue logs if console not ready
+        this.logQueue.push(formatted);
+    }
+
+    this.log.push(formatted);
+}
+
+// Add this function to flush queued logs when Eruda is ready
+flushLogQueue() {
+    if (this.logQueue.length > 0) {
+        this.logQueue.forEach(msg => console.log(`%c${msg}`, 'color:#ff0000;font-weight:bold;background:#f0f0f0;padding:2px;'));
+        this.logQueue = [];
+    }
+}
+
+// Replace or modify startConsoleMonitor / console override function
+startConsoleMonitor() {
+    const self = this;
+
+    function enableConsole() {
+        if (window.eruda && typeof eruda.init === 'function' && eruda.isInit) {
+            self.consoleReady = true;
+            self.flushLogQueue();
+            console.log('%cFireall console logging enabled!', 'color:#00ff00;font-weight:bold;');
+        } else {
+            setTimeout(enableConsole, 500);
+        }
+    }
+
+    enableConsole();
+
+    // Keep the live console monitor running
+    setInterval(() => {
+        if (self.isCompromised || !self.consoleReady) return;
+        if (self.log.length) {
+            const last = self.log[self.log.length - 1];
+            console.log(`%c[Fireall][LIVE] ${last}`, 'color:#ff6600;font-weight:bold;');
+        }
+    }, 1000);
+}
