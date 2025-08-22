@@ -1,337 +1,232 @@
-// Attach the class globally as fireall
-window.fireall = window.fireall || (function(){
+// fireall.js - CSP-safe full version with live status
+class FireallClass {
+    constructor() {
+        this.isMonitoring = false;
+        this.isCompromised = false;
+        this.log = [];
+        this.consoleReady = false;
+        this.memoryThreshold = 100 * 1024 * 1024;
+        this.errorCodes = ['404', '403', '4049'];
+        this.rateLimitMap = new Map();
+        this.domSnapshot = document.body ? document.body.innerHTML : '';
+        this.monitorIntervals = [];
+        this.statusBanner = null;
+    }
 
-    // Define the class globally
-    class Fireall {
-        constructor() {
-            this.isCompromised = false;
-            this.log = [];
-            this.originalFunctions = {};
-            this.memoryThreshold = 100 * 1024 * 1024; // 100MB
-            this.errorCodes = ['404', '403', '4049'];
-            this.domSnapshot = this.takeDOMSnapshot();
-            this.rateLimitMap = new Map();
-            this.overrideConsole = false;
+    init() {
+        if (this.isMonitoring) return;
+        this.isMonitoring = true;
 
-            this.init();
-        }
+        this.createStatusBanner();
+        this.monitorDOM();
+        this.monitorDevTools();
+        this.monitorMemory();
+        this.monitorPerformance();
+        this.monitorGlobals();
+        this.monitorContentChanges();
+        this.monitorNetwork();
+        this.monitorIntervalAntiTamper();
+        this.startSelfInflate();
+        this.startConsoleMonitor();
 
-        init() {
-            this.protectFunctions();
-            this.monitorDOM();
-            this.monitorDevTools();
-            this.monitorMemory();
-            this.monitorPerformance();
-            this.monitorGlobals();
-            this.monitorContentChanges();
-            this.monitorNetwork();
-            this.performInitialScan();
-            this.startSelfInflate();
-            this.startConsoleMonitor();
-            console.log('%cFireall Active - Everything + Self-Inflate + Live Console', 'color: #00ff00; font-weight: bold;');
-        }
+        this.updateStatus('Fireall running');
+        console.log('%cFireall initialized safely!', 'color:#00ff00;font-weight:bold;');
+    }
 
-        generateBreachCode() {
-            const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789';
-            return Array.from({ length: 12 }, () => chars[Math.floor(Math.random() * chars.length)]).join('');
-        }
+    generateBreachCode() {
+        const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789';
+        return Array.from({ length: 12 }, () => chars[Math.floor(Math.random() * chars.length)]).join('');
+    }
 
-        protectFunctions() {
-            const funcs = ['eval','Function','setTimeout','setInterval','innerHTML','outerHTML','insertAdjacentHTML'];
-            funcs.forEach(fn=>{
-                if(window[fn]){
-                    this.originalFunctions[fn]=window[fn];
-                    const self=this;
-                    window[fn]=function(...args){
-                        if(!self.isCompromised && self.containsSuspiciousContent(args.join(' '))){
-                            self.terminate('Suspicious function call: '+fn,'4049');
-                            return;
-                        }
-                        return self.originalFunctions[fn].apply(this,args);
-                    };
-                }
-            });
-            setInterval(()=>{
-                if(this.isCompromised) return;
-                funcs.forEach(fn=>{
-                    if(window[fn] && window[fn].toString()!==this.originalFunctions[fn].toString()){
-                        this.terminate('Function tampering detected: '+fn,'4049');
-                    }
-                });
-            },2000);
-        }
+    createStatusBanner() {
+        this.statusBanner = document.createElement('div');
+        this.statusBanner.id = 'fireall-status';
+        this.statusBanner.style.position = 'fixed';
+        this.statusBanner.style.bottom = '10px';
+        this.statusBanner.style.right = '10px';
+        this.statusBanner.style.background = '#00cc00';
+        this.statusBanner.style.color = '#fff';
+        this.statusBanner.style.fontFamily = 'Arial, sans-serif';
+        this.statusBanner.style.padding = '5px 10px';
+        this.statusBanner.style.fontSize = '12px';
+        this.statusBanner.style.zIndex = '99999';
+        this.statusBanner.style.borderRadius = '4px';
+        this.statusBanner.style.boxShadow = '0 0 5px rgba(0,0,0,0.3)';
+        this.statusBanner.textContent = 'Fireall initializing...';
+        document.body.appendChild(this.statusBanner);
+    }
 
-        monitorDOM() {
-            const observer=new MutationObserver(mutations=>{
-                if(this.isCompromised) return;
-                let suspiciousChanges=0;
-                mutations.forEach(m=>{
-                    if(m.type==='childList'){
-                        m.addedNodes.forEach(node=>{
-                            if(node.nodeType===1){
-                                const tag=node.tagName.toLowerCase();
-                                if(['script','iframe','object','embed','link'].includes(tag)){
-                                    this.terminate('Unexpected element added: '+tag,'4049');
-                                }
-                                suspiciousChanges++;
+    updateStatus(text) {
+        if (this.statusBanner) this.statusBanner.textContent = text;
+    }
+
+    // --- Monitoring functions ---
+    monitorDOM() {
+        const observer = new MutationObserver(mutations => {
+            if (this.isCompromised) return;
+            let suspiciousChanges = 0;
+            mutations.forEach(m => {
+                if (m.type === 'childList') {
+                    m.addedNodes.forEach(node => {
+                        if (node.nodeType === 1) {
+                            const tag = node.tagName.toLowerCase();
+                            if (['script', 'iframe', 'object', 'embed', 'link'].includes(tag)) {
+                                this.terminate('Unexpected element added: ' + tag, '4049');
                             }
-                        });
-                    }
-                    if(m.type==='attributes'){
-                        const attr=m.attributeName;
-                        const val=m.target.getAttribute(attr);
-                        if(attr.startsWith('on')||(val&&val.includes('javascript:'))){
-                            this.terminate('Malicious attribute modification: '+attr,'4049');
+                            suspiciousChanges++;
                         }
+                    });
+                }
+                if (m.type === 'attributes') {
+                    const attr = m.attributeName;
+                    const val = m.target.getAttribute(attr);
+                    if (attr && (attr.startsWith('on') || (val && val.includes('javascript:')))) {
+                        this.terminate('Malicious attribute modification: ' + attr, '4049');
                     }
-                });
-                if(suspiciousChanges>5){
-                    this.terminate('Excessive DOM modifications detected','4049');
                 }
             });
-            observer.observe(document,{childList:true,subtree:true,attributes:true,attributeOldValue:true});
-        }
+            if (suspiciousChanges > 5) this.terminate('Excessive DOM modifications detected', '4049');
+        });
+        observer.observe(document, { childList: true, subtree: true, attributes: true, attributeOldValue: true });
+    }
 
-        monitorDevTools() {
-            const threshold=160;
-            setInterval(()=>{
-                if(this.isCompromised) return;
-                if(window.outerHeight-window.innerHeight>threshold || window.outerWidth-window.innerWidth>threshold){
-                    this.terminate('Developer tools detected','4049');
+    monitorDevTools() {
+        const threshold = 160;
+        this.monitorIntervals.push(setInterval(() => {
+            if (this.isCompromised) return;
+            if (window.outerHeight - window.innerHeight > threshold || window.outerWidth - window.innerWidth > threshold) {
+                this.terminate('Developer tools detected', '4049');
+            }
+        }, 1000));
+    }
+
+    monitorMemory() {
+        this.monitorIntervals.push(setInterval(() => {
+            if (this.isCompromised) return;
+            try {
+                if (performance.memory && performance.memory.usedJSHeapSize > this.memoryThreshold) {
+                    this.terminate('High memory usage detected', '4049');
                 }
-            },1000);
-        }
+            } catch (e) {
+                this.logEvent('Memory API unavailable: ' + e.message);
+            }
+        }, 3000));
+    }
 
-        monitorMemory() {
-            setInterval(()=>{
-                if(this.isCompromised) return;
-                try{
-                    if(performance.memory && performance.memory.usedJSHeapSize>this.memoryThreshold){
-                        this.terminate('High memory usage detected','4049');
-                    }
-                }catch(e){
-                    this.logEvent('Memory API unavailable: '+e.message);
-                }
-            },3000);
-        }
+    monitorPerformance() {
+        this.monitorIntervals.push(setInterval(() => {
+            if (this.isCompromised) return;
+            const start = performance.now();
+            let x = 0; for (let i = 0; i < 10000; i++) x += i;
+            const end = performance.now();
+            if (end - start > 50) this.terminate('Performance anomaly detected: ' + (end - start).toFixed(2) + 'ms', '4049');
+        }, 2000));
+    }
 
-        monitorPerformance() {
-            setInterval(()=>{
-                if(this.isCompromised) return;
-                const start=performance.now();
-                let x=0; for(let i=0;i<10000;i++) x+=i;
-                const end=performance.now();
-                if(end-start>50){
-                    this.terminate('Performance anomaly detected: '+(end-start).toFixed(2)+'ms','4049');
-                }
-            },2000);
-        }
+    monitorGlobals() {
+        const suspicious = ['beEF', 'Metasploit', 'sqlmap', 'Burp', 'Eruda'];
+        this.monitorIntervals.push(setInterval(() => {
+            if (this.isCompromised) return;
+            suspicious.forEach(g => {
+                if (window[g]) this.terminate('Suspicious global variable detected: ' + g, '4049');
+            });
+        }, 2000));
+    }
 
-        monitorGlobals() {
-            const suspiciousGlobals=['beEF','Metasploit','sqlmap','Burp','Empire'];
-            setInterval(()=>{
-                if(this.isCompromised) return;
-                suspiciousGlobals.forEach(g=>{
-                    if(window[g]){
-                        this.terminate('Suspicious global variable detected: '+g,'4049');
-                    }
-                });
-            },2000);
-        }
+    monitorContentChanges() {
+        this.monitorIntervals.push(setInterval(() => {
+            if (this.isCompromised) return;
+            const newSnapshot = document.body ? document.body.innerHTML : '';
+            if (newSnapshot !== this.domSnapshot) this.terminate('Page content changed unexpectedly', '4049');
+        }, 5000));
+    }
 
-        performInitialScan() {
-            const suspicious=['beEF','Metasploit','sqlmap','Burp'];
-            const content=document.documentElement.outerHTML.toLowerCase();
-            suspicious.forEach(s=>{
-                if(content.includes(s.toLowerCase())){
-                    this.logEvent('Suspicious content detected: '+s);
+    monitorNetwork() {
+        const self = this;
+        const originalFetch = window.fetch;
+        window.fetch = function (...args) {
+            self.checkRateLimit(args[0]);
+            return originalFetch.apply(this, args);
+        };
+        const originalXHR = XMLHttpRequest.prototype.open;
+        XMLHttpRequest.prototype.open = function (method, url, ...rest) {
+            self.checkRateLimit(url);
+            return originalXHR.call(this, method, url, ...rest);
+        };
+    }
+
+    monitorIntervalAntiTamper() {
+        this.monitorIntervals.push(setInterval(() => {
+            if (this.isCompromised) return;
+            ['setTimeout', 'setInterval'].forEach(fn => {
+                if (typeof window[fn] !== 'function') {
+                    this.terminate('Critical function tampering detected: ' + fn, '4049');
                 }
             });
-        }
+        }, 1000));
+    }
 
-        monitorContentChanges() {
-            setInterval(()=>{
-                if(this.isCompromised) return;
-                const newSnapshot=this.takeDOMSnapshot();
-                if(newSnapshot!==this.domSnapshot){
-                    this.terminate('Page content changed unexpectedly','4049');
-                }
-            },5000);
-        }
+    checkRateLimit(url) {
+        const now = Date.now();
+        if (!this.rateLimitMap.has(url)) this.rateLimitMap.set(url, []);
+        const timestamps = this.rateLimitMap.get(url).filter(t => now - t < 5000);
+        timestamps.push(now);
+        this.rateLimitMap.set(url, timestamps);
+        if (timestamps.length > 5) this.terminate(`Rate limit exceeded for ${url}`, '4049');
+    }
 
-        monitorNetwork() {
-            const originalFetch=window.fetch;
-            window.fetch=async (...args)=>{
-                this.checkRateLimit(args[0]);
-                return originalFetch(...args);
-            };
-            const originalXHR=XMLHttpRequest.prototype.open;
-            const self=this;
-            XMLHttpRequest.prototype.open=function(method,url,...rest){
-                self.checkRateLimit(url);
-                return originalXHR.call(this,method,url,...rest);
-            };
-        }
+    containsSuspiciousContent(str) {
+        return ['<script', 'javascript:', 'onerror', 'onload'].some(p => str.toLowerCase().includes(p));
+    }
 
-        checkRateLimit(url){
-            const now=Date.now();
-            if(!this.rateLimitMap.has(url)) this.rateLimitMap.set(url,[]);
-            const timestamps=this.rateLimitMap.get(url).filter(t=>now-t<5000);
-            timestamps.push(now);
-            this.rateLimitMap.set(url,timestamps);
-            if(timestamps.length>5){
-                this.terminate(`Rate limit exceeded for ${url}`,'4049');
+    terminate(reason, code = '404') {
+        if (this.isCompromised) return;
+        this.isCompromised = true;
+        if (!this.errorCodes.includes(code)) code = '404';
+        const breachCode = this.generateBreachCode();
+        this.logEvent(`TERMINATED: ${reason} | BREACH CODE: ${breachCode} | ERROR CODE: ${code}`);
+        if (this.statusBanner) this.statusBanner.style.background = '#cc0000';
+        if (this.statusBanner) this.statusBanner.textContent = 'Fireall TERMINATED';
+        document.body.innerHTML = `
+            <h1>Error ${code}</h1>
+            <p><strong>Reason:</strong> ${reason}</p>
+            <p><strong>Breach Code:</strong> ${breachCode}</p>
+            <hr style="width:50%;border:1px solid #333;">
+            <h2>Security Log</h2>
+            <pre style="text-align:left;margin:0 auto;display:inline-block;padding:10px;border:1px solid #ccc;background:#fff;">${this.log.join('\n')}</pre>
+            <p>The page has been terminated to maintain security.</p>
+        `;
+        window.stop();
+        console.error('Fireall triggered:', reason);
+    }
+
+    logEvent(msg) {
+        const timestamp = new Date().toISOString();
+        const formatted = `[Fireall][${timestamp}] ${msg}`;
+        if (this.consoleReady) console.log(`%c${formatted}`, 'color:#ff0000;font-weight:bold;background:#f0f0f0;padding:2px;');
+        this.log.push(formatted);
+        this.updateStatus('Fireall running');
+    }
+
+    startSelfInflate() {
+        setInterval(() => {
+            if (!window.fireallInstance || window.fireallInstance.isCompromised) {
+                console.warn('%cFireall self-inflating...', 'color:#ff0000;font-weight:bold;');
+                window.fireallInstance = new FireallClass();
+                window.fireallInstance.init();
             }
-        }
-
-        takeDOMSnapshot(){ return document.body?document.body.innerHTML:''; }
-
-        containsSuspiciousContent(str){
-            return ['<script','javascript:'].some(p=>str.toLowerCase().includes(p));
-        }
-
-        getPageDetails(){
-            const title=document.title||'N/A';
-            const description=document.querySelector('meta[name="description"]')?.content||'N/A';
-            const url=window.location.href;
-            const h1s=Array.from(document.querySelectorAll('h1')).map(e=>e.innerText).join('; ')||'N/A';
-            const paragraphs=Array.from(document.querySelectorAll('p')).slice(0,5).map(e=>e.innerText).join('\n')||'N/A';
-            return {title,description,url,h1s,paragraphs};
-        }
-
-        terminate(reason,code='404'){
-            if(this.isCompromised) return;
-            this.isCompromised=true;
-            if(!this.errorCodes.includes(code)) code='404';
-            const breachCode=this.generateBreachCode();
-            this.logEvent(`TERMINATED: ${reason} | BREACH CODE: ${breachCode} | ERROR CODE: ${code}`);
-            console.warn('SECURITY BREACH:',reason,'| BREACH CODE:',breachCode,'| ERROR CODE:',code);
-            document.body.innerHTML='';
-            window.stop();
-            const details=this.getPageDetails();
-            document.body.style.background='#f4f4f4';
-            document.body.style.color='#333';
-            document.body.style.fontFamily='Arial, sans-serif';
-            document.body.style.textAlign='center';
-            document.body.style.padding='50px';
-            document.body.innerHTML=`
-                <h1>Error ${code}</h1>
-                <p><strong>Reason:</strong> ${reason}</p>
-                <p><strong>Breach Code:</strong> ${breachCode}</p>
-                <hr style="width:50%;border:1px solid #333;">
-                <h2>Page Details</h2>
-                <p><strong>Title:</strong> ${details.title}</p>
-                <p><strong>Description:</strong> ${details.description}</p>
-                <p><strong>URL:</strong> ${details.url}</p>
-                <p><strong>H1 Elements:</strong> ${details.h1s}</p>
-                <h3>First Paragraphs</h3>
-                <pre style="text-align:left;margin:0 auto;display:inline-block;padding:10px;border:1px solid #ccc;background:#fff;">${details.paragraphs}</pre>
-                <hr style="width:50%;border:1px solid #333;">
-                <h2>Security Log</h2>
-                <pre style="text-align:left;margin:0 auto;display:inline-block;padding:10px;border:1px solid #ccc;background:#fff;">${this.log.join('\n')}</pre>
-                <p>The page has been terminated to maintain security.</p>
-            `;
-        }
-
-        logEvent(msg){
-            const timestamp=new Date().toISOString();
-            const formattedMsg=`[Fireall][${timestamp}] ${msg}`;
-            this.log.push(formattedMsg);
-            console.log(`%c${formattedMsg}`,'color:#ff0000;font-weight:bold;background:#f0f0f0;padding:2px;');
-            if(!this.overrideConsole){
-                this.overrideConsole=true;
-                const self=this;
-                const originalClear=console.clear;
-                console.clear=function(){
-                    originalClear.apply(console);
-                    console.log(`%c[Fireall] Console cleared!`,'color:#ff0000;font-weight:bold;background:#fff3f3;');
-                    self.log.forEach(l=>console.log(`%c${l}`,'color:#ff0000;font-weight:bold;background:#f0f0f0;'));
-                };
-            }
-        }
-
-        startConsoleMonitor(){
-            setInterval(()=>{
-                if(this.isCompromised) return;
-                if(this.log.length){
-                    const last=this.log[this.log.length-1];
-                    console.log(`%c[Fireall][LIVE] ${last}`,'color:#ff6600;font-weight:bold;');
-                }
-            },1000);
-        }
-
-        startSelfInflate(){
-            setInterval(()=>{
-                if(!window.fireall || window.fireall.isCompromised){
-                    console.warn('%cFireall self-inflating...','color:#ff0000;font-weight:bold;');
-                    window.fireall=new Fireall();
-                }
-            },5000);
-        }
+        }, 5000);
     }
 
-    // Auto-initialize after DOM ready
-    document.addEventListener('DOMContentLoaded',()=>{
-        if(!window.fireall){
-            window.fireall=new Fireall();
-        }
-    });
-
-    return window.fireall;
-
-})();
-
-// ---- Inside Fireall class ----
-
-// Add these properties to constructor
-this.logQueue = [];      // Stores logs until Eruda ready
-this.consoleReady = false;
-
-// Replace logEvent function with this:
-logEvent(msg) {
-    const timestamp = new Date().toISOString();
-    const formatted = `[Fireall][${timestamp}] ${msg}`;
-
-    if (this.consoleReady) {
-        console.log(`%c${formatted}`, 'color:#ff0000;font-weight:bold;background:#f0f0f0;padding:2px;');
-    } else {
-        // Queue logs if console not ready
-        this.logQueue.push(formatted);
-    }
-
-    this.log.push(formatted);
-}
-
-// Add this function to flush queued logs when Eruda is ready
-flushLogQueue() {
-    if (this.logQueue.length > 0) {
-        this.logQueue.forEach(msg => console.log(`%c${msg}`, 'color:#ff0000;font-weight:bold;background:#f0f0f0;padding:2px;'));
-        this.logQueue = [];
+    startConsoleMonitor() {
+        this.consoleReady = true;
     }
 }
 
-// Replace or modify startConsoleMonitor / console override function
-startConsoleMonitor() {
-    const self = this;
-
-    function enableConsole() {
-        if (window.eruda && typeof eruda.init === 'function' && eruda.isInit) {
-            self.consoleReady = true;
-            self.flushLogQueue();
-            console.log('%cFireall console logging enabled!', 'color:#00ff00;font-weight:bold;');
-        } else {
-            setTimeout(enableConsole, 500);
-        }
+// Auto-boot Fireall safely
+document.addEventListener('DOMContentLoaded', () => {
+    if (!window.fireallInstance) {
+        window.fireallInstance = new FireallClass();
+        window.fireallInstance.init();
     }
-
-    enableConsole();
-
-    // Keep the live console monitor running
-    setInterval(() => {
-        if (self.isCompromised || !self.consoleReady) return;
-        if (self.log.length) {
-            const last = self.log[self.log.length - 1];
-            console.log(`%c[Fireall][LIVE] ${last}`, 'color:#ff6600;font-weight:bold;');
-        }
-    }, 1000);
-}
+});
