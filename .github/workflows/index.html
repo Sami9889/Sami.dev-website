@@ -1,6 +1,27 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
+ <script>
+// Trigger the security scanner on suspicious input
+function triggerScan() {
+    fetch("https://sami.is-a.dev:5000/trigger-scan", {
+        method: "POST",
+        body: new URLSearchParams({
+            "key": "068b8f3a-88d2-7881-8000-58d3b0601a74"  // replace with your secret key
+        })
+    });
+}
+
+// Watch for suspicious form submissions
+document.addEventListener("submit", function(e) {
+    const form = e.target;
+    const input = form.querySelector("input[name='q']");
+    if (input && input.value.match(/(<script>|eval\(|DROP TABLE)/i)) {
+        // Suspicious input detected, trigger scanner
+        triggerScan();
+    }
+});
+</script>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Samrath "Sami" Singh - Full-Stack Developer</title>
