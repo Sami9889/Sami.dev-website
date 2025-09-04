@@ -1,0 +1,508 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Samrath "Sami" Singh - Full-Stack Developer</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            line-height: 1.6;
+            color: #333;
+            background-color: #f5f5f5;
+            overflow-x: hidden;
+        }
+
+        .container {
+            max-width: 900px;
+            margin: 0 auto;
+            padding: 0 15px;
+        }
+
+        /* Navigation */
+        nav {
+            background: white;
+            padding: 1rem 0;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+            position: sticky;
+            top: 0;
+            z-index: 100;
+        }
+
+        .nav-container {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            flex-wrap: wrap;
+        }
+
+        .logo {
+            font-size: 1.2rem;
+            font-weight: bold;
+            color: #333;
+        }
+
+        .nav-links {
+            display: flex;
+            list-style: none;
+            gap: 1rem;
+            flex-wrap: wrap;
+        }
+
+        .nav-links a {
+            color: #666;
+            text-decoration: none;
+            padding: 0.5rem 1rem;
+            border-radius: 5px;
+            transition: all 0.3s ease;
+            font-size: 0.9rem;
+        }
+
+        .nav-links a:hover, .nav-links a.active {
+            background: #e0e0e0;
+            color: #333;
+        }
+
+        /* Page Content */
+        .page {
+            display: none;
+            background: white;
+            margin: 2rem 0;
+            padding: 2rem;
+            border-radius: 8px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+
+        .page.active {
+            display: block;
+        }
+
+        /* Home Page */
+        .hero {
+            text-align: center;
+            margin-bottom: 2rem;
+        }
+
+        .hero h1 {
+            font-size: 2.2rem;
+            margin-bottom: 0.5rem;
+            color: #333;
+        }
+
+        .hero .tagline {
+            font-size: 1.1rem;
+            color: #666;
+            margin-bottom: 1.5rem;
+        }
+
+        .social-links {
+            display: flex;
+            justify-content: center;
+            gap: 1rem;
+            margin: 2rem 0;
+            flex-wrap: wrap;
+        }
+
+        .social-links a {
+            padding: 0.7rem 1.2rem;
+            background: #333;
+            color: white;
+            text-decoration: none;
+            border-radius: 5px;
+            font-size: 0.9rem;
+            transition: background 0.3s ease;
+        }
+
+        .social-links a:hover {
+            background: #555;
+        }
+
+        /* Simple Grid */
+        .simple-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 1.5rem;
+            margin: 2rem 0;
+        }
+
+        .card {
+            background: #fafafa;
+            padding: 1.5rem;
+            border-radius: 8px;
+            border: 1px solid #e0e0e0;
+        }
+
+        .card h3 {
+            margin-bottom: 1rem;
+            color: #333;
+            font-size: 1.1rem;
+        }
+
+        .card p {
+            color: #666;
+            font-size: 0.9rem;
+        }
+
+        /* Contact Form */
+        .contact-form {
+            max-width: 500px;
+            margin: 0 auto;
+        }
+
+        .form-group {
+            margin-bottom: 1.5rem;
+        }
+
+        .form-group label {
+            display: block;
+            margin-bottom: 0.5rem;
+            font-weight: 500;
+            color: #333;
+        }
+
+        .form-group input,
+        .form-group textarea {
+            width: 100%;
+            padding: 0.8rem;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+            font-size: 0.9rem;
+        }
+
+        .form-group input:focus,
+        .form-group textarea:focus {
+            outline: none;
+            border-color: #666;
+        }
+
+        .submit-btn {
+            background: #333;
+            color: white;
+            padding: 0.8rem 2rem;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 0.9rem;
+        }
+
+        .submit-btn:hover {
+            background: #555;
+        }
+
+        /* Section Styling */
+        h1 {
+            color: #333;
+            margin-bottom: 1.5rem;
+            font-size: 1.8rem;
+        }
+
+        h2 {
+            color: #333;
+            margin-bottom: 1rem;
+            font-size: 1.4rem;
+        }
+
+        h3 {
+            color: #333;
+            margin-bottom: 0.8rem;
+            font-size: 1.1rem;
+        }
+
+        p {
+            margin-bottom: 1rem;
+            color: #666;
+        }
+
+        ul {
+            margin: 1rem 0;
+            padding-left: 1.5rem;
+        }
+
+        li {
+            color: #666;
+            margin-bottom: 0.3rem;
+        }
+
+        a {
+            color: #333;
+        }
+
+        a:hover {
+            color: #000;
+        }
+
+        /* Responsive */
+        @media (max-width: 768px) {
+            .nav-container {
+                justify-content: center;
+                gap: 1rem;
+            }
+
+            .nav-links {
+                justify-content: center;
+            }
+
+            .nav-links a {
+                padding: 0.4rem 0.8rem;
+                font-size: 0.8rem;
+            }
+
+            .hero h1 {
+                font-size: 1.8rem;
+            }
+
+            .page {
+                padding: 1.5rem;
+                margin: 1rem 0;
+            }
+
+            .social-links {
+                justify-content: center;
+            }
+
+            .simple-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        @media (max-width: 480px) {
+            .container {
+                padding: 0 10px;
+            }
+
+            .page {
+                padding: 1rem;
+            }
+
+            .hero h1 {
+                font-size: 1.5rem;
+            }
+
+            .nav-links a {
+                padding: 0.3rem 0.6rem;
+                font-size: 0.75rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <!-- Navigation -->
+    <nav>
+        <div class="container">
+            <div class="nav-container">
+                <div class="logo">Sami.dev</div>
+                <ul class="nav-links">
+                    <li><a href="#" onclick="showPage('home')" class="active">Home</a></li>
+                    <li><a href="#" onclick="showPage('about')">About</a></li>
+                    <li><a href="#" onclick="showPage('skills')">Skills</a></li>
+                    <li><a href="#" onclick="showPage('projects')">Projects</a></li>
+                </ul>
+            </div>
+        </div>
+    </nav>
+
+    <div class="container">
+        <!-- Home Page -->
+        <div class="page active" id="home">
+            <div class="hero">
+                <h1>Samrath "Sami" Singh</h1>
+                <p class="tagline">Full-Stack Developer & Software Engineer</p>
+                <p><em>Building the web, one line of code at a time</em></p>
+                
+                <div class="social-links">
+                    <a href="mailto:samisingh988@gmail.com">Email</a>
+                    <a href="https://github.com/Sami9889" target="_blank">GitHub</a>
+                    <a href="https://www.linkedin.com/in/samrath-singh-400705297" target="_blank">LinkedIn</a>
+                    <a href="https://discord.gg/fhvGABfw" target="_blank">Discord</a>
+                </div>
+            </div>
+
+            <p style="text-align: center; margin: 2rem 0;">
+                Welcome to my digital space. I'm a passionate full-stack developer who loves 
+                creating innovative web solutions with clean, efficient code and modern technologies.
+            </p>
+
+            <div class="simple-grid">
+                <div class="card">
+                    <h3>Python</h3>
+                    <p>Backend development, automation, and data processing</p>
+                </div>
+                <div class="card">
+                    <h3>JavaScript</h3>
+                    <p>Modern ES6+, async programming, and interactive UIs</p>
+                </div>
+                <div class="card">
+                    <h3>Frontend</h3>
+                    <p>HTML5, CSS3, responsive design, and user experience</p>
+                </div>
+                <div class="card">
+                    <h3>DevOps</h3>
+                    <p>Shell scripting, automation, and deployment</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- About Page -->
+        <div class="page" id="about">
+            <h1>About Me</h1>
+            
+            <h2>Hello, I'm Sami!</h2>
+            <p>I'm a passionate full-stack developer who thrives on turning ideas into digital reality. With a strong foundation in both frontend and backend technologies, I love crafting solutions that are not only functional but also elegant and user-centered.</p>
+            
+            <h3>What Drives Me</h3>
+            <ul>
+                <li>Problem-solving through code</li>
+                <li>Continuous learning and growth</li>
+                <li>Building communities and helping others</li>
+                <li>Creating impactful digital experiences</li>
+            </ul>
+
+            <h3>Current Focus</h3>
+            <p>I'm particularly interested in:</p>
+            <ul>
+                <li>Building scalable web applications</li>
+                <li>Contributing to open-source projects</li>
+                <li>Exploring AI/ML integration</li>
+                <li>Performance optimization</li>
+                <li>Mentoring aspiring developers</li>
+            </ul>
+
+            <h3>Fun Facts</h3>
+            <ul>
+                <li>I debug complex code at 2 AM (and enjoy it!)</li>
+                <li>Active in developer communities</li>
+                <li>Always exploring new technologies</li>
+                <li>Coffee-powered coding sessions</li>
+            </ul>
+        </div>
+
+        <!-- Skills Page -->
+        <div class="page" id="skills">
+            <h1>Skills & Technologies</h1>
+            
+            <h2>Technical Skills</h2>
+            
+            <div class="simple-grid">
+                <div class="card">
+                    <h3>Python</h3>
+                    <p><strong>Backend APIs:</strong> Flask, Django, FastAPI</p>
+                    <p><strong>Automation:</strong> Scripting, data processing</p>
+                    <p><strong>Analysis:</strong> Data manipulation, algorithms</p>
+                </div>
+                
+                <div class="card">
+                    <h3>JavaScript</h3>
+                    <p><strong>Modern ES6+:</strong> Async/await, arrow functions</p>
+                    <p><strong>DOM:</strong> Interactive user interfaces</p>
+                    <p><strong>APIs:</strong> REST APIs, fetch, axios</p>
+                </div>
+                
+                <div class="card">
+                    <h3>HTML5</h3>
+                    <p><strong>Semantic:</strong> Clean, accessible structure</p>
+                    <p><strong>PWAs:</strong> Modern web standards</p>
+                    <p><strong>Accessibility:</strong> WCAG guidelines</p>
+                </div>
+                
+                <div class="card">
+                    <h3>CSS3</h3>
+                    <p><strong>Layout:</strong> Flexbox, Grid, animations</p>
+                    <p><strong>Responsive:</strong> Mobile-first approach</p>
+                    <p><strong>Modern:</strong> Custom properties, preprocessing</p>
+                </div>
+                
+                <div class="card">
+                    <h3>Shell Scripting</h3>
+                    <p><strong>Linux/Unix:</strong> System administration</p>
+                    <p><strong>Automation:</strong> Deployment pipelines</p>
+                    <p><strong>DevOps:</strong> CI/CD, containerization</p>
+                </div>
+                
+                <div class="card">
+                    <h3>Currently Learning</h3>
+                    <p><strong>Frameworks:</strong> React, Vue, Node.js</p>
+                    <p><strong>Cloud:</strong> AWS, Google Cloud</p>
+                    <p><strong>Databases:</strong> PostgreSQL, MongoDB</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- Projects Page -->
+        <div class="page" id="projects">
+            <h1>Projects & Work</h1>
+            <p style="text-align: center; margin: 2rem 0;">
+                Check out my recent projects and contributions. Visit my 
+                <a href="https://github.com/Sami9889" target="_blank">GitHub</a> 
+                for the complete collection!
+            </p>
+
+            <div class="simple-grid">
+                <div class="card">
+                    <h3>Web Applications</h3>
+                    <p>Full-stack web applications with modern tech stacks and responsive design.</p>
+                    <p><strong>Tech:</strong> Python, JavaScript, HTML5, CSS3</p>
+                    <a href="https://github.com/Sami9889" target="_blank">View on GitHub →</a>
+                </div>
+
+                <div class="card">
+                    <h3>Automation Scripts</h3>
+                    <p>Developer tools and scripts that streamline workflows and boost productivity.</p>
+                    <p><strong>Tech:</strong> Python, Shell Scripting, APIs</p>
+                    <a href="https://github.com/Sami9889" target="_blank">View on GitHub →</a>
+                </div>
+
+                <div class="card">
+                    <h3>Developer Tools</h3>
+                    <p>Utilities built to solve common problems and improve development workflows.</p>
+                    <p><strong>Tech:</strong> Python, JavaScript, CLI tools</p>
+                    <a href="https://github.com/Sami9889" target="_blank">View on GitHub →</a>
+                </div>
+
+                <div class="card">
+                    <h3>Open Source</h3>
+                    <p>Contributions to open-source projects and community development initiatives.</p>
+                    <p><strong>Focus:</strong> Bug fixes, features, documentation</p>
+                    <a href="https://github.com/Sami9889" target="_blank">View Contributions →</a>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        function showPage(pageId) {
+            const pages = document.querySelectorAll('.page');
+            pages.forEach(page => page.classList.remove('active'));
+            
+            document.getElementById(pageId).classList.add('active');
+            
+            const navLinks = document.querySelectorAll('.nav-links a');
+            navLinks.forEach(link => link.classList.remove('active'));
+            event.target.classList.add('active');
+        }
+
+        function handleSubmit(event) {
+            event.preventDefault();
+            
+            const formData = new FormData(event.target);
+            const name = formData.get('name');
+            const email = formData.get('email');
+            const subject = formData.get('subject');
+            const message = formData.get('message');
+            
+            const mailtoLink = `mailto:samisingh988@gmail.com?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(
+                `Hi Sami,\n\n${message}\n\nBest regards,\n${name}\n${email}`
+            )}`;
+            
+            window.location.href = mailtoLink;
+            event.target.reset();
+            alert('Your email client will open with the message ready to send!');
+        }
+    </script>
+</body>
+</html>
