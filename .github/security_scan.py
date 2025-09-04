@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-import requests, re, time, datetime, os, ssl, socket
+import requests, re, time, datetime, os, ssl, socket, subprocess, logging
 
 # ================= CONFIG =================
 URL = "https://sami.is-a.dev/"
@@ -7,6 +7,7 @@ TIMEOUT = 8
 DELAY = 1  # seconds between requests
 LOG_FILE = "security_scan.log"
 HTML_REPORT = "security_scan_report.html"
+WATCH_LOG = "/var/log/myserver/access.log"  # replace with your server log path
 
 SECURITY_HEADERS = [
     "Strict-Transport-Security",
@@ -22,35 +23,32 @@ MALWARE_PATTERNS = [
 ]
 
 SENSITIVE_PATHS = [
-    "/admin", "/.env", "/phpmyadmin", "/config.php", "/backup.zip", "/wp-config.php", "/test.php"
+    "/admin", "/.env", "/phpmyadmin", "/config.php", "/backup.zip",
+    "/wp-config.php", "/test.php"
 ]
 
 PAYLOADS = [
-    "' OR '1'='1", "<script>alert(1)</script>", "../../etc/passwd", "' OR 1=1 --", "'; DROP TABLE users; --"
+    "' OR '1'='1", "<script>alert(1)</script>", "../../etc/passwd",
+    "' OR 1=1 --", "'; DROP TABLE users; --"
 ]
 
-# ================= LOGGING =================
-def log(msg):
-    print(msg)
-    with open(LOG_FILE, "a") as f:
-        f.write(f"{datetime.datetime.utcnow()} | {msg}\n")
+SUSPICIOUS_PATTERNS = [
+    r"(<script>|eval\(|base64_decode|system\(|shell_exec|DROP TABLE)"
+]
 
-def write_html_report(results):
-    with open(HTML_REPORT, "w") as f:
-        f.write("<html><head><title>Security Scan Report</title></head><body>")
-        f.write("<h1>Security Scan Report</h1>")
-        f.write(f"<p>Scanned: {datetime.datetime.utcnow()} UTC</p>")
-        for section, content in results.items():
-            color = "red" if "WARNING" in content or "Suspicious" in content else "black"
-            f.write(f"<h2>{section}</h2><pre style='color:{color}'>{content}</pre>")
-        f.write("</body></html>")
+# ================= LOGGING SETUP =================
+logging.basicConfig(
+    level=logging.INFO,
+    format="%(asctime)s | %(message)s",
+    handlers=[logging.FileHandler(LOG_FILE), logging.StreamHandler()]
+)
 
-# ================= CHECK FUNCTIONS =================
+# ================= SCANNER FUNCTIONS =================
 def fetch(url):
     try:
         return requests.get(url, timeout=TIMEOUT, allow_redirects=True)
     except Exception as e:
-        log(f"ERROR: {url} -> {e}")
+        logging.error(f"{url} -> {e}")
         return None
 
 def check_status():
@@ -118,41 +116,63 @@ def check_ssl_tls():
         out.append(f"SSL/TLS check failed: {e}")
     return "\n".join(out)
 
-# ================= MAIN =================
-def main():
-    # Prevent random runs by requiring manual start
-    input("Press Enter to start the security scan...")
+def write_html_report(results):
+    with open(HTML_REPORT, "w") as f:
+        f.write("<html><head><title>Security Scan Report</title></head><body>")
+        f.write("<h1>Security Scan Report</h1>")
+        f.write(f"<p>Scanned: {datetime.datetime.utcnow()} UTC</p>")
+        for section, content in results.items():
+            color = "red" if "WARNING" in content or "Suspicious" in content else "black"
+            f.write(f"<h2>{section}</h2><pre style='color:{color}'>{content}</pre>")
+        f.write("</body></html>")
 
+def run_scanner():
+    logging.info("=== Security Scan Started ===")
     if os.path.exists(LOG_FILE):
         os.remove(LOG_FILE)
-
     results = {}
-    log("=== Security Scan Started ===")
 
-    # Status
     resp, status = check_status()
     results["Status"] = status
-    log(status)
+    logging.info(status)
 
     if resp:
         results["Headers"] = check_headers(resp)
-        log(results["Headers"])
-
+        logging.info(results["Headers"])
         results["Malware Scan"] = check_malware(resp)
-        log(results["Malware Scan"])
-
+        logging.info(results["Malware Scan"])
         results["Sensitive Paths"] = check_sensitive_paths()
-        log(results["Sensitive Paths"])
-
+        logging.info(results["Sensitive Paths"])
         results["Injection Tests"] = check_injection()
-        log(results["Injection Tests"])
-
+        logging.info(results["Injection Tests"])
         results["SSL/TLS"] = check_ssl_tls()
-        log(results["SSL/TLS"])
+        logging.info(results["SSL/TLS"])
 
-    log("=== Security Scan Complete ===")
     write_html_report(results)
-    log(f"HTML report saved to {HTML_REPORT}")
+    logging.info(f"HTML report saved to {HTML_REPORT}")
+    logging.info("=== Security Scan Complete ===")
 
+# ================= WATCHER =================
+def monitor_logs():
+    logging.info("Watcher started, monitoring server logs for suspicious activity...")
+    seen_lines = set()
+    while True:
+        if not os.path.exists(WATCH_LOG):
+            time.sleep(5)
+            continue
+        with open(WATCH_LOG, "r") as f:
+            for line in f.readlines():
+                if line in seen_lines:
+                    continue
+                seen_lines.add(line)
+                for pattern in SUSPICIOUS_PATTERNS:
+                    if re.search(pattern, line, re.I):
+                        logging.warning(f"Suspicious activity detected: {line.strip()}")
+                        run_scanner()
+                        break
+        time.sleep(2)  # check every 2 seconds
+
+# ================= MAIN =================
 if __name__ == "__main__":
-    main()
+    # Prevent random runs; watcher triggers scanner
+    monitor_logs()
