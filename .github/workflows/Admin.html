@@ -1,0 +1,137 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>Admin Panel - Sami.is-a.dev</title>
+<style>
+body { font-family: Arial; background:#111; color:#fff; padding:20px; text-align:center; }
+h1,h2,h3 { color:#f90; }
+input, button { padding:8px; margin:5px; border-radius:5px; border:none; }
+button { background:#f90; color:#111; cursor:pointer; font-weight:bold; }
+table { width:100%; margin-top:20px; border-collapse:collapse; }
+th, td { border:1px solid #555; padding:5px; }
+th { background:#333; }
+tr:nth-child(even){background:#222;}
+</style>
+</head>
+<body>
+
+<h1>Admin Panel – Sami.is-a.dev</h1>
+
+<h2>Visitor Info</h2>
+<table id="visitsTable">
+<tr><th>IP</th><th>Location</th><th>User Agent</th><th>Time</th></tr>
+</table>
+
+<h2>Banned Users</h2>
+<input type="text" id="banIP" placeholder="IP Address">
+<input type="text" id="banReason" placeholder="Reason">
+<button onclick="banUser()">Ban</button>
+<table id="bannedTable">
+<tr><th>IP</th><th>Reason</th><th>Action</th></tr>
+</table>
+
+<h2>Test Your IP</h2>
+<p id="visitorInfo">Checking if you are banned...</p>
+
+<script>
+// ---------------- Storage helpers ----------------
+const getVisits = () => JSON.parse(localStorage.getItem('visits') || '[]');
+const getBanned = () => JSON.parse(localStorage.getItem('banned') || '[]');
+const saveVisits = v => localStorage.setItem('visits', JSON.stringify(v));
+const saveBanned = b => localStorage.setItem('banned', JSON.stringify(b));
+
+// ---------------- Update Tables ----------------
+function updateVisitsTable(){
+    const table = document.getElementById('visitsTable');
+    table.innerHTML = "<tr><th>IP</th><th>Location</th><th>User Agent</th><th>Time</th></tr>";
+    getVisits().slice(-50).reverse().forEach(v => {
+        const row = table.insertRow();
+        row.insertCell(0).innerText = v.ip;
+        row.insertCell(1).innerText = `${v.city}, ${v.region}, ${v.country}`;
+        row.insertCell(2).innerText = v.ua;
+        row.insertCell(3).innerText = v.time;
+    });
+}
+
+function updateBannedTable(){
+    const table = document.getElementById('bannedTable');
+    table.innerHTML = "<tr><th>IP</th><th>Reason</th><th>Action</th></tr>";
+    getBanned().forEach(u => {
+        const row = table.insertRow();
+        row.insertCell(0).innerText = u.ip;
+        row.insertCell(1).innerText = u.reason;
+        const btn = document.createElement('button');
+        btn.innerText = "Unban";
+        btn.onclick = () => unbanUser(u.ip);
+        row.insertCell(2).appendChild(btn);
+    });
+}
+
+// ---------------- Ban / Unban ----------------
+function banUser(){
+    const ip = document.getElementById('banIP').value;
+    const reason = document.getElementById('banReason').value;
+    if(!ip || !reason){alert('Enter IP and reason'); return;}
+    const banned = getBanned();
+    banned.push({ip, reason});
+    saveBanned(banned);
+    updateBannedTable();
+    alert(`IP ${ip} has been banned.`);
+}
+
+function unbanUser(ip){
+    let banned = getBanned();
+    banned = banned.filter(u => u.ip !== ip);
+    saveBanned(banned);
+    updateBannedTable();
+}
+
+// ---------------- Visitor logging + banned check ----------------
+async function logVisitor(){
+    try {
+        const res = await fetch('https://ipapi.co/json/');
+        const data = await res.json();
+        const visitor = {
+            ip: data.ip,
+            city: data.city,
+            region: data.region,
+            country: data.country_name,
+            ua: navigator.userAgent,
+            time: new Date().toLocaleString()
+        };
+
+        // Check banned
+        const banned = getBanned();
+        const banInfo = banned.find(u => u.ip === visitor.ip);
+        const infoEl = document.getElementById('visitorInfo');
+        if(banInfo){
+            infoEl.innerHTML = `<b>🚫 You are banned!</b><br>Reason: ${banInfo.reason}`;
+        } else {
+            infoEl.innerText = `Your IP: ${visitor.ip}, Location: ${visitor.city}, ${visitor.region}, ${visitor.country}`;
+        }
+
+        // Log visit
+        const visits = getVisits();
+        visits.push(visitor);
+        saveVisits(visits);
+
+        updateVisitsTable();
+    } catch(err) {
+        console.error(err);
+    }
+}
+
+// ---------------- Optional JS password ----------------
+const password = "admin123"; // simple JS password
+if(!prompt("Enter admin password:").includes(password)){
+    alert("Wrong password! Access denied.");
+    document.body.innerHTML = "<h1>Access Denied</h1>";
+} else {
+    logVisitor();
+    updateBannedTable();
+}
+</script>
+
+</body>
+</html>
