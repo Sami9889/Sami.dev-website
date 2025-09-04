@@ -7,7 +7,7 @@ from threading import Thread
 # ================= CONFIG =================
 APP_HOST = "db.fr-pari1.bengt.wasmernet.com"  # listen on all interfaces
 APP_PORT = 10272       # endpoint port
-SECRET_KEY = "YOUR_SECRET_KEY_HERE"  # strong key to prevent unauthorized triggers
+SECRET_KEY = "068b8f3a-88d2-7881-8000-58d3b0601a74"  # strong key to prevent unauthorized triggers
 SCANNER_SCRIPT = "security_scan.py"  # path to your scanner script
 
 # ================= LOGGING =================
