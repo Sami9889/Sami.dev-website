@@ -1,6 +1,6 @@
 // ======= CONFIG =======
 const maintenance = {
-  active: false,             // true = maintenance on, false = off
+  active: true,             // true = maintenance on, false = off
   endTime: "2025-09-06T12:00:00", // maintenance end time
   page: "maintenance.html"  // page to show
 };
