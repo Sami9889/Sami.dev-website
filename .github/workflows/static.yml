@@ -1,4 +1,4 @@
-name: Deploy static content to Pages
+name: Deploy Maintenance Page
 
 on:
   push:
@@ -10,53 +10,43 @@ permissions:
   pages: write
   id-token: write
 
-concurrency:
-  group: "pages"
-  cancel-in-progress: false
-
 jobs:
-  deploy:
-    environment:
-      name: github-pages
-      url: ${{ steps.deployment.outputs.page_url }}
+  deploy-maintenance:
     runs-on: ubuntu-latest
     steps:
       # 1. Checkout repo
       - name: Checkout
         uses: actions/checkout@v4
 
-      # 2. Add meta tags and maintenance script to index.html
-      - name: Prepare index.html
+      # 2. Check if maintenance.js is set to true
+      - name: Check maintenance mode
+        id: maintenance
         run: |
-          INDEX="index.html"
-          # Inject SEO and charset meta tags if missing
-          if ! grep -q '<meta charset="UTF-8">' "$INDEX"; then
-            sed -i '1i\<meta charset="UTF-8">\n<meta name="viewport" content="width=device-width, initial-scale=1.0">\n<meta name="description" content="My static website">' "$INDEX"
-          fi
-          # Inject maintenance.js loader if maintenanceMode is true
-          if grep -q 'window.maintenanceMode = true' "js/maintenance.js"; then
-            if ! grep -q '<script src="js/maintenance.js">' "$INDEX"; then
-              sed -i '/<\/body>/i <script src="js/maintenance.js"></script>' "$INDEX"
-            fi
+          if grep -q 'window.maintenanceMode = true' js/maintenance.js; then
+            echo "MAINTENANCE=true" >> $GITHUB_ENV
+          else
+            echo "MAINTENANCE=false" >> $GITHUB_ENV
           fi
 
-      # 3. Setup GitHub Pages
-      - name: Setup Pages
-        uses: actions/configure-pages@v5
+      # 3. Stop if maintenance mode is false
+      - name: Skip if maintenance is false
+        if: env.MAINTENANCE == 'false'
+        run: |
+          echo "Maintenance mode not enabled, stopping workflow."
+          exit 0
 
-      # 4. Upload only site files (exclude unnecessary folders)
-      - name: Upload artifact
+      # 4. Upload only the maintenance page
+      - name: Upload maintenance artifact
         uses: actions/upload-pages-artifact@v3
+        if: env.MAINTENANCE == 'true'
         with:
           path: |
-            index.html
-            favicon.ico
             maintenance.html
-            js/
-            LICENSE.md
-            static.yml
+            js/maintenance.js
+            favicon.ico
 
-      # 5. Deploy to GitHub Pages
-      - name: Deploy to GitHub Pages
+      # 5. Deploy maintenance page
+      - name: Deploy maintenance page
         id: deployment
         uses: actions/deploy-pages@v4
+        if: env.MAINTENANCE == 'true'
