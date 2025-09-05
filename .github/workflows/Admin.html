@@ -12,11 +12,13 @@ table { width:100%; margin-top:20px; border-collapse:collapse; }
 th, td { border:1px solid #555; padding:5px; }
 th { background:#333; }
 tr:nth-child(even){background:#222;}
+.warning { color: #f00; font-weight: bold; margin: 10px 0; }
 </style>
 </head>
 <body>
 
 <h1>Admin Panel – Sami.is-a.dev</h1>
+<p id="hostMessage"></p>
 
 <h2>Visitor Info</h2>
 <table id="visitsTable">
@@ -35,6 +37,17 @@ tr:nth-child(even){background:#222;}
 <p id="visitorInfo">Checking if you are banned...</p>
 
 <script>
+// ---------------- Check host ----------------
+const allowedHost = "Sami.is-a.dev";
+const currentHost = window.location.hostname;
+const hostMessage = document.getElementById('hostMessage');
+
+if(currentHost === allowedHost){
+    hostMessage.innerText = "✅ This admin panel is correctly hosted at " + allowedHost;
+} else {
+    hostMessage.innerHTML = "⚠️ Warning: This page is not hosted at " + allowedHost + ". You are on: " + currentHost;
+}
+
 // ---------------- Storage helpers ----------------
 const getVisits = () => JSON.parse(localStorage.getItem('visits') || '[]');
 const getBanned = () => JSON.parse(localStorage.getItem('banned') || '[]');
@@ -101,7 +114,6 @@ async function logVisitor(){
             time: new Date().toLocaleString()
         };
 
-        // Check banned
         const banned = getBanned();
         const banInfo = banned.find(u => u.ip === visitor.ip);
         const infoEl = document.getElementById('visitorInfo');
@@ -111,7 +123,6 @@ async function logVisitor(){
             infoEl.innerText = `Your IP: ${visitor.ip}, Location: ${visitor.city}, ${visitor.region}, ${visitor.country}`;
         }
 
-        // Log visit
         const visits = getVisits();
         visits.push(visitor);
         saveVisits(visits);
@@ -123,7 +134,7 @@ async function logVisitor(){
 }
 
 // ---------------- Optional JS password ----------------
-const password = "admin123"; // simple JS password
+const password = "admin123"; 
 if(!prompt("Enter admin password:").includes(password)){
     alert("Wrong password! Access denied.");
     document.body.innerHTML = "<h1>Access Denied</h1>";
@@ -132,6 +143,5 @@ if(!prompt("Enter admin password:").includes(password)){
     updateBannedTable();
 }
 </script>
-
 </body>
 </html>
