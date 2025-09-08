@@ -27,22 +27,45 @@
 <div id="timer">loading...</div>
 
 <script>
-const endTime = new Date("2025-09-06T12:00:00"); // match your JS file
+(function(){
+  const timerEl = document.getElementById("timer");
+  const redirectUrl = "/"; // Change to your main site path if needed
 
-function countdown() {
+  // Function to safely get the maintenance end time
+  function getEndTime() {
+    try {
+      // If maintenance.js sets a global, use it
+      if(window.MAINTENANCE_END){
+        return new Date(window.MAINTENANCE_END);
+      }
+    } catch(e){}
+    // fallback default end time
+    return new Date("2025-09-06T12:00:00");
+  }
+
+  let endTime = getEndTime();
+
+  function updateCountdown(){
     const now = new Date();
     const diff = endTime - now;
-    if (diff <= 0) {
-        location.href = "/"; // back to main site
-    } else {
-        const h = Math.floor(diff / 1000 / 60 / 60);
-        const m = Math.floor((diff / 1000 / 60) % 60);
-        const s = Math.floor((diff / 1000) % 60);
-        document.getElementById("timer").textContent = `${h}h ${m}m ${s}s`;
+
+    if(diff <= 0){
+      window.location.href = redirectUrl;
+      return;
     }
-}
-setInterval(countdown, 1000);
-countdown();
+
+    const h = Math.floor(diff / 1000 / 60 / 60);
+    const m = Math.floor((diff / 1000 / 60) % 60);
+    const s = Math.floor((diff / 1000) % 60);
+
+    timerEl.textContent = `${h}h ${m}m ${s}s`;
+  }
+
+  // start interval
+  updateCountdown();
+  setInterval(updateCountdown, 1000);
+
+})();
 </script>
 </body>
 </html>
