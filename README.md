@@ -4,65 +4,68 @@ This repository hosts the source code and assets for the _Sami.dev_ site—a per
 
 ---
 
-## Reporting & Redaction Guidelines
+## 🔐 Issue & Redaction Rules
 
-When creating **issues** in this repository, please adhere to the following guidelines:
+When you open an issue, follow these steps:
 
-- **Sensitive or special content must be tagged appropriately in the issue title.**  
-  Currently supported tags:
+1. **Every issue must reference a related number or identifier.**  
+   Examples:  
+   - Commit hash (`abc1234`)  
+   - Pull request number (`#42`)  
+   - Line number (`line 120 in index.js`)  
+   - Feature ID (`F-07`)  
 
-  | Tag | Meaning |
-  |-----|---------|
-  | `ISL` | The issue contains content that must be redacted or kept confidential. Example: `Fix layout bug on header (ISL)` |
-  | `IRE` | The issue requires immediate review or special attention from maintainers. Example: `Update security script (IRE)` |
+   > ❗ Issues without a clear reference will be closed.
 
-- In the issue description, briefly note:
-  - Why the content needs redaction (`ISL`) or why it requires immediate review (`IRE`).
-  - Any specific information that should be redacted or addressed urgently.
-- After the issue is addressed:
-  - Remove or update the `ISL`/`IRE` tag.
-  - Comment “Redacted / resolved” and close the issue.
+2. **Add the correct tag(s) to your issue title.**  
+   Available tags (you can add more if needed):  
+   - `ISL` → Contains sensitive info that may need redaction.  
+   - `IRE` → Requires immediate review or urgent attention.  
+   - `DOC` → Documentation-related.  
+   - `BUG` → Code bug.  
+   - `UIX` → UI/UX improvement.  
+   - `PERF` → Performance issue.  
 
-### Why this matters
+   *Example*: `Navbar not loading (BUG, IRE)`
 
-Using `ISL` and `IRE` in your issue titles:
-- Helps maintainers quickly identify issues requiring privacy-sensitive handling or urgent review.
-- Keeps the repository organized and prevents accidental exposure of sensitive or critical content.
-- Documents that redaction or urgent handling has been intentionally noted and processed.
+3. **Explain the issue clearly in the description.**  
+   - Why it exists.  
+   - What needs fixing/redaction/urgent review.  
+   - Which reference number it relates to.  
+
+4. **After the issue is resolved:**  
+   - Remove or update the tag(s).  
+   - Leave a closing comment such as:  
+     - “Redacted / closed” (for ISL)  
+     - “Resolved / closed” (for others)  
+   - Close the issue.
 
 ---
 
-## Contributing
+## 📋 Why this matters
 
-1. Fork this repository.
-2. Create a branch for your changes.
-3. Open a pull request with a clear description.
-4. If your issue or changes involve content that should be redacted or require urgent attention, tag the issue with `ISL` or `IRE` as described above.
+- Keeps all issues **traceable**.  
+- Helps maintainers prioritize (`IRE` urgent, `ISL` sensitive, etc.).  
+- Keeps the repository **clean, professional, and secure**.  
+
+---
+
+## ✅ Quick Checklist (before submitting an issue)
+
+- [ ] I added a **reference number** (commit, PR, line, or feature ID).  
+- [ ] I used the correct **tag(s)** in the issue title.  
+- [ ] I explained **what, why, and where** in the description.  
+- [ ] I understand maintainers may redact or close my issue if rules aren’t followed.  
 
 ---
 
 ## License
 
-This project is under a **Strict No-Modification License (SNML)**:
-- You may **view** and **download** for non-commercial, educational purposes only.
-- **No modifications, redistributions, or derivative works are allowed** without explicit permission.  
-- For license details, see the [License file](LICENSE.md).
+This project is under a **Strict No-Modification License (SNML)**.  
+See the [License file](LICENSE.md) for full details.  
 
 ---
 
 ## Contact
 
-For any questions or special requests, please reach out at **samisingh988@gmail.com**.
-
----
-
-### Summary of Issue Tags
-
-| Tag | Purpose | Action After Resolution |
-|-----|---------|------------------------|
-| `ISL` | Sensitive content that must be redacted | Remove tag, comment “Redacted / closed” |
-| `IRE` | Requires immediate review or attention | Remove tag, comment “Resolved / closed” |
-
-Thanks for helping keep this project secure, organized, and well-maintained!  
-—
-_Sami Singh_
+For questions, reach out: **samisingh988@gmail.com**  
