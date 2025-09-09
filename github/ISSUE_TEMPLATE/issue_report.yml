@@ -1,0 +1,50 @@
+name: Issue Report
+description: Report a bug, doc issue, redaction need, or improvement
+title: "[TAG] Brief title"
+labels: []
+body:
+  - type: input
+    id: reference
+    attributes:
+      label: Reference
+      description: Commit hash, PR number, line number, or feature ID
+      placeholder: "e.g. abc1234 or #42 or line 120 in index.js"
+    validations:
+      required: true
+
+  - type: dropdown
+    id: tags
+    attributes:
+      label: Tags
+      description: Select one or more tags
+      multiple: true
+      options:
+        - BUG
+        - DOC
+        - UIX
+        - PERF
+        - ISL
+        - IRE
+    validations:
+      required: true
+
+  - type: textarea
+    id: description
+    attributes:
+      label: Description
+      description: Explain clearly what the issue is, why it exists, and what needs fixing
+      placeholder: "What, why, and where"
+    validations:
+      required: true
+
+  - type: checkboxes
+    id: checklist
+    attributes:
+      label: Checklist
+      options:
+        - label: "Added a valid reference number (commit, PR, line, or feature ID)"
+          required: true
+        - label: "Used the correct tag(s)"
+          required: true
+        - label: "Explained what, why, and where"
+          required: true
