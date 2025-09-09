@@ -15,12 +15,11 @@ jobs:
   handle-issue-pr:
     runs-on: ubuntu-latest
     steps:
-      # Checkout default branch (needed for branch creation)
-      - name: Checkout default branch
+      # Checkout repository
+      - name: Checkout repo
         if: github.event_name == 'issues'
         uses: actions/checkout@v4
         with:
-          ref: ${{ github.event.repository.default_branch }}
           fetch-depth: 0
 
       # Configure git
@@ -30,37 +29,8 @@ jobs:
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
 
-      # Automatically add 'create-branch' label for collaborators
-      - name: Add create-branch label for collaborators
-        if: github.event_name == 'issues'
-        uses: actions/github-script@v7
-        with:
-          github-token: ${{ secrets.GITHUB_TOKEN }}
-          script: |
-            const issue = context.payload.issue;
-            const owner = context.repo.owner;
-            const repo = context.repo.repo;
-            const username = issue.user.login.toLowerCase();
-
-            let permission = 'none';
-            try {
-              const perm = await github.rest.repos.getCollaboratorPermissionLevel({ owner, repo, username });
-              permission = perm.data.permission || 'none';
-            } catch(e) { permission = 'none'; }
-
-            const allowed = ['admin','maintain','write'];
-
-            if (allowed.includes(permission)) {
-              await github.rest.issues.addLabels({
-                owner, repo,
-                issue_number: issue.number,
-                labels: ['create-branch']
-              });
-              console.log(`Added 'create-branch' label to issue #${issue.number}`);
-            }
-
-      # Create branch, initial commit & PR for collaborators / instructions for others
-      - name: Handle issue
+      # Handle new issues
+      - name: Handle new issue
         if: github.event_name == 'issues'
         uses: actions/github-script@v7
         with:
@@ -81,7 +51,7 @@ jobs:
             const slug = slugify(issueTitle);
             const branchName = `issue-${issueNumber}/${username}/${slug}`;
 
-            // Check collaborator permission
+            // Check if user is a collaborator
             let permission = 'none';
             try {
               const perm = await github.rest.repos.getCollaboratorPermissionLevel({ owner, repo, username });
@@ -91,30 +61,30 @@ jobs:
             const allowed = ['admin','maintain','write'];
 
             if (allowed.includes(permission)) {
-              // Collaborator → create branch & initial commit & draft PR
-              const ref = await github.rest.git.getRef({ owner, repo, ref: `heads/${defaultBranch}` });
-              const sha = ref.data.object.sha;
+              // Add label
+              await github.rest.issues.addLabels({
+                owner, repo,
+                issue_number: issueNumber,
+                labels: ['create-branch']
+              });
 
+              // Create branch from default branch if it doesn't exist
               try {
-                await github.rest.git.createRef({ owner, repo, ref: `refs/heads/${branchName}`, sha });
-                console.log(`Created branch: ${branchName}`);
+                const ref = await github.rest.git.getRef({ owner, repo, ref: `heads/${branchName}` });
               } catch(err) {
-                if (err.status === 422) console.log(`Branch ${branchName} already exists`);
-                else throw err;
+                if (err.status === 404) {
+                  const defaultRef = await github.rest.git.getRef({ owner, repo, ref: `heads/${defaultBranch}` });
+                  await github.rest.git.createRef({ owner, repo, ref: `refs/heads/${branchName}`, sha: defaultRef.data.object.sha });
+                }
               }
 
-              // Make initial commit
-              const fs = require('fs');
-              const tmp = require('tmp');
-              const tmpDir = tmp.dirSync({ unsafeCleanup: true }).name;
-
+              // Initial commit
               const { execSync } = require('child_process');
-              execSync(`git clone https://x-access-token:${process.env.GITHUB_TOKEN}@github.com/${owner}/${repo}.git ${tmpDir}`);
-              execSync(`git checkout -b ${branchName}`, { cwd: tmpDir });
-              fs.writeFileSync(`${tmpDir}/README-ISSUE.md`, `# Work in progress for issue #${issueNumber}\n`);
-              execSync(`git add README-ISSUE.md`, { cwd: tmpDir });
-              execSync(`git commit -m "Initial commit for issue #${issueNumber}"`, { cwd: tmpDir });
-              execSync(`git push origin ${branchName}`, { cwd: tmpDir });
+              execSync(`git checkout ${branchName}`);
+              execSync(`echo "# Work in progress for issue #${issueNumber}" > README-ISSUE.md`);
+              execSync(`git add README-ISSUE.md`);
+              execSync(`git commit -m "Initial commit for issue #${issueNumber}"`);
+              execSync(`git push origin ${branchName}`);
 
               // Create draft PR
               const pr = await github.rest.pulls.create({
@@ -126,34 +96,32 @@ jobs:
                 draft: true
               });
 
-              const comment = [
-                `✅ Branch created: \`${branchName}\``,
-                `Draft Pull Request: ${pr.data.html_url}`,
-                '',
-                `Checkout locally:`,
-                `\`\`\`bash`,
-                `git fetch origin && git checkout ${branchName}`,
-                `\`\`\``,
-                `Make changes, commit, push, and continue working on the PR.`
-              ].join('\n');
+              // Comment with checkout instructions
+              const comment = `
+✅ Branch created: \`${branchName}\`
+Draft Pull Request: ${pr.data.html_url}
 
+Checkout locally:
+git fetch origin && git checkout ${branchName}
+
+Make changes, commit, push, and continue working on the PR.
+`;
               await github.rest.issues.createComment({ owner, repo, issue_number: issueNumber, body: comment });
 
             } else {
-              // External contributor → fork instructions
-              const comment = [
-                `Hi @${username}, thanks for opening this issue!`,
-                '',
-                `You don't have permission to create a branch in this repository.`,
-                `You can still contribute by following these steps:`,
-                `1. Fork the repository to your account.`,
-                `2. Create a branch in your fork using the suggested name: \`git checkout -b ${branchName}\``,
-                `3. Make your changes and push to your fork: \`git push origin ${branchName}\``,
-                `4. Open a Pull Request in the main repository referencing this issue (e.g. \`Fixes #${issueNumber}\`)`,
-                '',
-                `Using the suggested branch name ensures consistency with our workflow.`
-              ].join('\n');
+              // External contributor instructions
+              const comment = `
+Hi @${username}, thanks for opening this issue!
 
+You don't have permission to create a branch in this repository.
+You can still contribute by following these steps:
+1. Fork the repository to your account.
+2. Create a branch in your fork using the suggested name: \`git checkout -b ${branchName}\`
+3. Make your changes and push to your fork: \`git push origin ${branchName}\`
+4. Open a Pull Request in the main repository referencing this issue (e.g. \`Fixes #${issueNumber}\`)
+
+Using the suggested branch name ensures consistency with our workflow.
+`;
               await github.rest.issues.createComment({ owner, repo, issue_number: issueNumber, body: comment });
             }
 
@@ -170,21 +138,14 @@ jobs:
             const repo = context.repo.repo;
 
             const match = branchName.match(/^issue-(\d+)\/.+$/);
-            if (!match) {
-              console.log(`Branch ${branchName} does not match issue branch pattern. Skipping deletion.`);
-              return;
-            }
+            if (!match) return;
 
             const issueNumber = parseInt(match[1]);
-
             try {
               await github.rest.git.deleteRef({ owner, repo, ref: `heads/${branchName}` });
-              console.log(`Deleted branch ${branchName}`);
-
               const body = `The branch \`${branchName}\` has been deleted because PR #${pr.number} was ${pr.merged ? 'merged' : 'closed'}.`;
               await github.rest.issues.createComment({ owner, repo, issue_number: issueNumber, body });
-
               await github.rest.issues.addLabels({ owner, repo, issue_number: issueNumber, labels: ['branch-deleted'] });
-            } catch (err) {
+            } catch(err) {
               console.error(`Failed to delete branch: ${err.message}`);
             }
