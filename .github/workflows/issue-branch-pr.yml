@@ -17,28 +17,24 @@ jobs:
     steps:
       # Checkout repository
       - name: Checkout repo
-        if: github.event_name == 'issues'
         uses: actions/checkout@v4
         with:
           fetch-depth: 0
 
       # Configure git
       - name: Configure git
-        if: github.event_name == 'issues'
         run: |
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
 
-      # Handle new issues
-      - name: Handle new issue
-        if: github.event_name == 'issues'
+      # Prepare branch name and check permissions
+      - name: Set variables
+        id: vars
         uses: actions/github-script@v7
         with:
           github-token: ${{ secrets.GITHUB_TOKEN }}
           script: |
             const issue = context.payload.issue;
-            const owner = context.repo.owner;
-            const repo = context.repo.repo;
             const username = issue.user.login.toLowerCase();
             const issueNumber = issue.number;
             const issueTitle = issue.title || 'issue';
@@ -51,53 +47,58 @@ jobs:
             const slug = slugify(issueTitle);
             const branchName = `issue-${issueNumber}/${username}/${slug}`;
 
-            // Check if user is a collaborator
+            // Check collaborator permission
             let permission = 'none';
             try {
-              const perm = await github.rest.repos.getCollaboratorPermissionLevel({ owner, repo, username });
+              const perm = await github.rest.repos.getCollaboratorPermissionLevel({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                username
+              });
               permission = perm.data.permission || 'none';
-            } catch(e) { permission = 'none'; }
+            } catch(e) {}
 
-            const allowed = ['admin','maintain','write'];
+            return {
+              branchName,
+              issueNumber,
+              issueTitle,
+              username,
+              defaultBranch,
+              permission
+            };
 
-            if (allowed.includes(permission)) {
-              // Add label
-              await github.rest.issues.addLabels({
-                owner, repo,
-                issue_number: issueNumber,
-                labels: ['create-branch']
-              });
+      # Create branch & initial commit if collaborator
+      - name: Create branch and commit
+        if: ${{ contains(fromJSON(steps.vars.outputs.permission), 'write') || contains(fromJSON(steps.vars.outputs.permission), 'admin') || contains(fromJSON(steps.vars.outputs.permission), 'maintain') }}
+        run: |
+          BRANCH="${{ fromJSON(steps.vars.outputs.branchName) }}"
+          DEFAULT="${{ fromJSON(steps.vars.outputs.defaultBranch) }}"
+          ISSUE="${{ fromJSON(steps.vars.outputs.issueNumber) }}"
 
-              // Create branch from default branch if it doesn't exist
-              try {
-                const ref = await github.rest.git.getRef({ owner, repo, ref: `heads/${branchName}` });
-              } catch(err) {
-                if (err.status === 404) {
-                  const defaultRef = await github.rest.git.getRef({ owner, repo, ref: `heads/${defaultBranch}` });
-                  await github.rest.git.createRef({ owner, repo, ref: `refs/heads/${branchName}`, sha: defaultRef.data.object.sha });
-                }
-              }
+          git checkout -b $BRANCH origin/$DEFAULT
+          echo "# Work in progress for issue #$ISSUE" > README-ISSUE.md
+          git add README-ISSUE.md
+          git commit -m "Initial commit for issue #$ISSUE"
+          git push origin $BRANCH
 
-              // Initial commit
-              const { execSync } = require('child_process');
-              execSync(`git checkout ${branchName}`);
-              execSync(`echo "# Work in progress for issue #${issueNumber}" > README-ISSUE.md`);
-              execSync(`git add README-ISSUE.md`);
-              execSync(`git commit -m "Initial commit for issue #${issueNumber}"`);
-              execSync(`git push origin ${branchName}`);
-
-              // Create draft PR
-              const pr = await github.rest.pulls.create({
-                owner, repo,
-                title: `[${issueNumber}] ${issueTitle}`,
-                head: branchName,
-                base: defaultBranch,
-                body: `This PR addresses issue #${issueNumber}`,
-                draft: true
-              });
-
-              // Comment with checkout instructions
-              const comment = `
+      # Create draft PR and comment for collaborator
+      - name: Create PR and comment
+        if: ${{ contains(fromJSON(steps.vars.outputs.permission), 'write') || contains(fromJSON(steps.vars.outputs.permission), 'admin') || contains(fromJSON(steps.vars.outputs.permission), 'maintain') }}
+        uses: actions/github-script@v7
+        with:
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          script: |
+            const { branchName, issueNumber, issueTitle, defaultBranch } = fromJSON(process.env.STEP_VARS || '{}');
+            const pr = await github.rest.pulls.create({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              title: `[${issueNumber}] ${issueTitle}`,
+              head: branchName,
+              base: defaultBranch,
+              body: `This PR addresses issue #${issueNumber}`,
+              draft: true
+            });
+            const comment = `
 ✅ Branch created: \`${branchName}\`
 Draft Pull Request: ${pr.data.html_url}
 
@@ -106,11 +107,22 @@ git fetch origin && git checkout ${branchName}
 
 Make changes, commit, push, and continue working on the PR.
 `;
-              await github.rest.issues.createComment({ owner, repo, issue_number: issueNumber, body: comment });
+            await github.rest.issues.createComment({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              issue_number: issueNumber,
+              body: comment
+            });
 
-            } else {
-              // External contributor instructions
-              const comment = `
+      # Comment instructions for external contributors
+      - name: External contributor instructions
+        if: ${{ !contains(fromJSON(steps.vars.outputs.permission), 'write') && !contains(fromJSON(steps.vars.outputs.permission), 'admin') && !contains(fromJSON(steps.vars.outputs.permission), 'maintain') }}
+        uses: actions/github-script@v7
+        with:
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          script: |
+            const { branchName, issueNumber, username } = fromJSON(process.env.STEP_VARS || '{}');
+            const comment = `
 Hi @${username}, thanks for opening this issue!
 
 You don't have permission to create a branch in this repository.
@@ -122,8 +134,12 @@ You can still contribute by following these steps:
 
 Using the suggested branch name ensures consistency with our workflow.
 `;
-              await github.rest.issues.createComment({ owner, repo, issue_number: issueNumber, body: comment });
-            }
+            await github.rest.issues.createComment({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              issue_number: issueNumber,
+              body: comment
+            });
 
       # Cleanup branch on PR close/merge
       - name: PR closed - cleanup branch
