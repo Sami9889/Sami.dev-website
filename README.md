@@ -55,7 +55,10 @@ When you open an issue, follow these steps:
 - [ ] I added a **reference number** (commit, PR, line, or feature ID).  
 - [ ] I used the correct **tag(s)** in the issue title.  
 - [ ] I explained **what, why, and where** in the description.  
-- [ ] I understand maintainers may redact or close my issue if rules aren’t followed.  
+- [ ] I understand maintainers may redact or close my issue if rules aren’t followed.
+
+      
+📌 Note: After creating an issue, please also create a Pull Request using the PR template to propose changes or fixes.
 
 ---
 
