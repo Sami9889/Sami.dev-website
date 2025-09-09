@@ -1,10 +1,11 @@
-name: Issue Branch & PR Workflow
+name: Issue Branch PR Workflow
 
 on:
   issues:
-    types: [opened]
+    types: [opened, assigned, labeled]
   pull_request:
-    types: [closed]
+    types: [opened, closed, merged, synchronize]
+  workflow_dispatch:
 
 permissions:
   contents: write
@@ -12,224 +13,418 @@ permissions:
   pull-requests: write
 
 jobs:
-  handle-issue-pr:
+  create-branch:
+    name: Create Branch from Issue
+    if: github.event_name == 'issues' && (github.event.action == 'opened' || github.event.action == 'assigned')
     runs-on: ubuntu-latest
+    
     steps:
-      # Checkout repository with full history
-      - name: Checkout repo
+      - name: Checkout repository
         uses: actions/checkout@v4
         with:
+          token: ${{ secrets.GITHUB_TOKEN }}
           fetch-depth: 0
-
-      # Configure git
-      - name: Configure git
+          
+      - name: Setup Git
         run: |
-          git config user.name "github-actions[bot]"
-          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git config --global user.name "github-actions[bot]"
+          git config --global user.email "github-actions[bot]@users.noreply.github.com"
+          
+      - name: Create issue branch
+        id: create_branch
+        run: |
+          ISSUE_NUMBER="${{ github.event.issue.number }}"
+          ISSUE_TITLE="${{ github.event.issue.title }}"
+          
+          # Clean the issue title for branch name
+          CLEAN_TITLE=$(echo "$ISSUE_TITLE" | \
+            sed 's/[^a-zA-Z0-9 ]//g' | \
+            tr '[:upper:]' '[:lower:]' | \
+            sed 's/ /-/g' | \
+            sed 's/--*/-/g' | \
+            sed 's/^-\|-$//g' | \
+            cut -c1-50)
+          
+          BRANCH_NAME="issue-${ISSUE_NUMBER}-${CLEAN_TITLE}"
+          
+          echo "Creating branch: $BRANCH_NAME"
+          
+          # Check if branch already exists
+          if git ls-remote --heads origin "$BRANCH_NAME" | grep -q "$BRANCH_NAME"; then
+            echo "Branch $BRANCH_NAME already exists"
+            echo "branch_exists=true" >> $GITHUB_OUTPUT
+          else
+            # Create and push new branch
+            git checkout -b "$BRANCH_NAME"
+            git push origin "$BRANCH_NAME"
+            echo "branch_exists=false" >> $GITHUB_OUTPUT
+            echo "Branch $BRANCH_NAME created successfully"
+          fi
+          
+          echo "branch_name=$BRANCH_NAME" >> $GITHUB_OUTPUT
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          
+      - name: Comment on issue
+        if: steps.create_branch.outputs.branch_exists == 'false'
+        uses: actions/github-script@v7
+        with:
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          script: |
+            const branchName = '${{ steps.create_branch.outputs.branch_name }}';
+            const issueNumber = context.issue.number;
+            
+            const comment = `🔀 **Branch Created**
+            
+            A new branch has been created for this issue:
+            - Branch: \`${branchName}\`
+            - You can start working on this issue by checking out the branch
+            
+            \`\`\`bash
+            git fetch origin
+            git checkout ${branchName}
+            \`\`\`
+            
+            When ready, create a pull request to merge your changes!`;
+            
+            await github.rest.issues.createComment({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              issue_number: issueNumber,
+              body: comment
+            });
 
-      # Set branch info and check collaborator permission
-      - name: Set variables
-        id: vars
+  auto-create-pr:
+    name: Auto Create Pull Request
+    if: github.event_name == 'issues' && github.event.action == 'labeled' && contains(github.event.label.name, 'ready-for-pr')
+    runs-on: ubuntu-latest
+    
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
+          fetch-depth: 0
+          
+      - name: Find and create PR for issue branch
         uses: actions/github-script@v7
         with:
           github-token: ${{ secrets.GITHUB_TOKEN }}
           script: |
             const issue = context.payload.issue;
-            const username = issue.user.login.toLowerCase();
             const issueNumber = issue.number;
-            const issueTitle = issue.title || 'issue';
-            const defaultBranch = context.payload.repository.default_branch;
-
-            const slugify = s => s.toLowerCase()
-                                   .replace(/[^a-z0-9]+/g,'-')
-                                   .replace(/(^-|-$)/g,'')
-                                   .slice(0,50) || 'issue';
-            const slug = slugify(issueTitle);
-            const branchName = `issue-${issueNumber}/${username}/${slug}`;
-
-            // Check collaborator permission
-            let permission = 'none';
+            
+            // Clean the issue title for branch name (same logic as create-branch job)
+            const cleanTitle = issue.title
+              .replace(/[^a-zA-Z0-9 ]/g, '')
+              .toLowerCase()
+              .replace(/\s+/g, '-')
+              .replace(/-+/g, '-')
+              .replace(/^-|-$/g, '')
+              .substring(0, 50);
+            
+            const branchName = `issue-${issueNumber}-${cleanTitle}`;
+            
             try {
-              const perm = await github.rest.repos.getCollaboratorPermissionLevel({
+              // Check if branch exists
+              const { data: branch } = await github.rest.repos.getBranch({
                 owner: context.repo.owner,
                 repo: context.repo.repo,
-                username
+                branch: branchName
               });
-              permission = perm.data.permission || 'none';
-            } catch(e) {
-              console.log('Permission check failed:', e.message);
+              
+              // Check if PR already exists
+              const { data: existingPRs } = await github.rest.pulls.list({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                head: `${context.repo.owner}:${branchName}`,
+                state: 'open'
+              });
+              
+              if (existingPRs.length > 0) {
+                console.log(`PR already exists for branch ${branchName}`);
+                
+                // Comment on issue
+                await github.rest.issues.createComment({
+                  owner: context.repo.owner,
+                  repo: context.repo.repo,
+                  issue_number: issueNumber,
+                  body: `🔄 **Pull Request Already Exists**
+                  
+                  A pull request already exists for this issue:
+                  - PR: #${existingPRs[0].number}
+                  - Branch: \`${branchName}\`
+                  
+                  [View Pull Request](${existingPRs[0].html_url})`
+                });
+                return;
+              }
+              
+              // Create new PR
+              const { data: newPR } = await github.rest.pulls.create({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                title: `Fix #${issueNumber}: ${issue.title}`,
+                head: branchName,
+                base: 'main',
+                body: `## Description
+                
+                Fixes #${issueNumber}
+                
+                ## Issue Details
+                ${issue.body || 'No description provided.'}
+                
+                ## Changes Made
+                - [ ] List your changes here
+                
+                ## Testing
+                - [ ] Add testing details here
+                
+                ## Checklist
+                - [ ] Code follows project style guidelines
+                - [ ] Self-review completed
+                - [ ] Tests added/updated as needed
+                - [ ] Documentation updated as needed`,
+                draft: false
+              });
+              
+              console.log(`Created PR #${newPR.number} for issue #${issueNumber}`);
+              
+              // Comment on issue
+              await github.rest.issues.createComment({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                issue_number: issueNumber,
+                body: `🚀 **Pull Request Created**
+                
+                A pull request has been automatically created for this issue:
+                - PR: #${newPR.number}
+                - Branch: \`${branchName}\`
+                
+                [View Pull Request](${newPR.html_url})
+                
+                Please review and update the PR description with your implementation details.`
+              });
+              
+              // Add labels to PR
+              if (issue.labels && issue.labels.length > 0) {
+                const labelNames = issue.labels.map(label => label.name);
+                await github.rest.issues.addLabels({
+                  owner: context.repo.owner,
+                  repo: context.repo.repo,
+                  issue_number: newPR.number,
+                  labels: labelNames
+                });
+              }
+              
+            } catch (error) {
+              console.log(`Error processing branch ${branchName}:`, error.message);
+              
+              if (error.status === 404) {
+                // Branch doesn't exist
+                await github.rest.issues.createComment({
+                  owner: context.repo.owner,
+                  repo: context.repo.repo,
+                  issue_number: issueNumber,
+                  body: `❌ **Branch Not Found**
+                  
+                  Could not find branch \`${branchName}\` for this issue.
+                  
+                  Please ensure the branch exists before creating a pull request, or remove the 'ready-for-pr' label and re-assign the issue to create a new branch.`
+                });
+              } else {
+                // Other error
+                await github.rest.issues.createComment({
+                  owner: context.repo.owner,
+                  repo: context.repo.repo,
+                  issue_number: issueNumber,
+                  body: `❌ **Error Creating Pull Request**
+                  
+                  An error occurred while creating the pull request: ${error.message}
+                  
+                  Please create the pull request manually or contact a maintainer.`
+                });
+              }
             }
 
-            console.log(`User: ${username}, Permission: ${permission}`);
-            console.log(`Branch name: ${branchName}`);
-
-            // Set outputs properly
-            core.setOutput('branchName', branchName);
-            core.setOutput('issueNumber', issueNumber);
-            core.setOutput('issueTitle', issueTitle);
-            core.setOutput('username', username);
-            core.setOutput('defaultBranch', defaultBranch);
-            core.setOutput('permission', permission);
-
-      # Create branch and initial commit (collaborators)
-      - name: Create branch and initial commit
-        if: ${{ steps.vars.outputs.permission == 'write' || steps.vars.outputs.permission == 'admin' || steps.vars.outputs.permission == 'maintain' }}
-        run: |
-          BRANCH="${{ steps.vars.outputs.branchName }}"
-          DEFAULT="${{ steps.vars.outputs.defaultBranch }}"
-          ISSUE="${{ steps.vars.outputs.issueNumber }}"
-
-          echo "Creating branch: $BRANCH"
-          echo "Default branch: $DEFAULT"
-          echo "Issue number: $ISSUE"
-
-          # Authenticate git for pushing
-          git remote set-url origin https://x-access-token:${{ secrets.GITHUB_TOKEN }}@github.com/${{ github.repository }}.git
-          git fetch origin
-          git checkout -b "$BRANCH" "origin/$DEFAULT"
-          echo "# Work in progress for issue #$ISSUE" > README-ISSUE.md
-          git add README-ISSUE.md
-          git commit -m "Initial commit for issue #$ISSUE"
-          git push origin "$BRANCH"
-
-      # Create draft PR and comment (collaborators)
-      - name: Create draft PR and comment
-        if: ${{ steps.vars.outputs.permission == 'write' || steps.vars.outputs.permission == 'admin' || steps.vars.outputs.permission == 'maintain' }}
+  link-pr-to-issue:
+    name: Link PR to Issue
+    if: github.event_name == 'pull_request' && (github.event.action == 'opened' || github.event.action == 'synchronize')
+    runs-on: ubuntu-latest
+    
+    steps:
+      - name: Extract and link issue
         uses: actions/github-script@v7
         with:
           github-token: ${{ secrets.GITHUB_TOKEN }}
           script: |
-            const branchName = '${{ steps.vars.outputs.branchName }}';
-            const issueNumber = '${{ steps.vars.outputs.issueNumber }}';
-            const issueTitle = '${{ steps.vars.outputs.issueTitle }}';
-            const defaultBranch = '${{ steps.vars.outputs.defaultBranch }}';
+            const pr = context.payload.pull_request;
+            const prTitle = pr.title;
+            const prBody = pr.body || '';
+            const branchName = pr.head.ref;
+            
+            // Extract issue number from branch name (issue-123-title format)
+            const branchMatch = branchName.match(/^issue-(\d+)-/);
+            
+            // Extract issue number from PR title (Fix #123: or Fixes #123 format)
+            const titleMatch = prTitle.match(/(?:Fix|Fixes|Close|Closes|Resolve|Resolves)\s+#(\d+)/i);
+            
+            // Extract issue number from PR body
+            const bodyMatch = prBody.match(/(?:Fix|Fixes|Close|Closes|Resolve|Resolves)\s+#(\d+)/i);
+            
+            const issueNumber = branchMatch?.[1] || titleMatch?.[1] || bodyMatch?.[1];
+            
+            if (issueNumber) {
+              console.log(`Found linked issue #${issueNumber} for PR #${pr.number}`);
+              
+              // Comment on the linked issue
+              try {
+                await github.rest.issues.createComment({
+                  owner: context.repo.owner,
+                  repo: context.repo.repo,
+                  issue_number: parseInt(issueNumber),
+                  body: `🔗 **Pull Request Linked**
+                  
+                  Pull request #${pr.number} has been ${github.event.action === 'opened' ? 'opened' : 'updated'} for this issue.
+                  
+                  - PR: [${pr.title}](${pr.html_url})
+                  - Branch: \`${branchName}\`
+                  - Author: @${pr.user.login}
+                  
+                  ${github.event.action === 'opened' ? 'Review the changes and provide feedback!' : 'Changes have been updated in the PR.'}`
+                });
+                
+                // Add "in-progress" label to issue if PR is opened
+                if (github.event.action === 'opened') {
+                  await github.rest.issues.addLabels({
+                    owner: context.repo.owner,
+                    repo: context.repo.repo,
+                    issue_number: parseInt(issueNumber),
+                    labels: ['in-progress']
+                  });
+                }
+                
+              } catch (error) {
+                console.log(`Could not comment on issue #${issueNumber}:`, error.message);
+              }
+            } else {
+              console.log(`No linked issue found for PR #${pr.number}`);
+            }
 
-            console.log(`Creating PR for branch: ${branchName}`);
-
-            const pr = await github.rest.pulls.create({
-              owner: context.repo.owner,
-              repo: context.repo.repo,
-              title: `[#${issueNumber}] ${issueTitle}`,
-              head: branchName,
-              base: defaultBranch,
-              body: `This PR addresses issue #${issueNumber}\n\nCloses #${issueNumber}`,
-              draft: true
-            });
-
-            const comment = `✅ **Branch created successfully!**
-
-**Branch:** \`${branchName}\`
-**Draft Pull Request:** ${pr.data.html_url}
-
-**To work on this issue:**
-\`\`\`bash
-git fetch origin
-git checkout ${branchName}
-\`\`\`
-
-Make your changes, commit them, and push to continue working on the PR. When ready, mark the PR as "Ready for review".`;
-
-            await github.rest.issues.createComment({
-              owner: context.repo.owner,
-              repo: context.repo.repo,
-              issue_number: parseInt(issueNumber),
-              body: comment
-            });
-
-      # Comment instructions for external contributors
-      - name: External contributor instructions
-        if: ${{ steps.vars.outputs.permission != 'write' && steps.vars.outputs.permission != 'admin' && steps.vars.outputs.permission != 'maintain' }}
-        uses: actions/github-script@v7
-        with:
-          github-token: ${{ secrets.GITHUB_TOKEN }}
-          script: |
-            const branchName = '${{ steps.vars.outputs.branchName }}';
-            const issueNumber = '${{ steps.vars.outputs.issueNumber }}';
-            const username = '${{ steps.vars.outputs.username }}';
-
-            const comment = `👋 Hi @${username}, thanks for opening this issue!
-
-Since you don't have write access to this repository, here's how you can contribute:
-
-**1. Fork this repository** (click the "Fork" button at the top)
-
-**2. Clone your fork and create a branch:**
-\`\`\`bash
-git clone https://github.com/${username}/${context.repo.repo}.git
-cd ${context.repo.repo}
-git checkout -b ${branchName}
-\`\`\`
-
-**3. Make your changes, commit and push:**
-\`\`\`bash
-git add .
-git commit -m "Fix issue #${issueNumber}"
-git push origin ${branchName}
-\`\`\`
-
-**4. Create a Pull Request** from your fork back to this repository
-
-Make sure to reference this issue in your PR description with "Closes #${issueNumber}"`;
-
-            await github.rest.issues.createComment({
-              owner: context.repo.owner,
-              repo: context.repo.repo,
-              issue_number: parseInt(issueNumber),
-              body: comment
-            });
-
-      # Cleanup branch on PR close/merge
-      - name: PR closed - cleanup branch
-        if: github.event_name == 'pull_request'
+  handle-pr-merge:
+    name: Handle PR Merge
+    if: github.event_name == 'pull_request' && github.event.action == 'closed' && github.event.pull_request.merged == true
+    runs-on: ubuntu-latest
+    
+    steps:
+      - name: Process merged PR
         uses: actions/github-script@v7
         with:
           github-token: ${{ secrets.GITHUB_TOKEN }}
           script: |
             const pr = context.payload.pull_request;
             const branchName = pr.head.ref;
-            const owner = context.repo.owner;
-            const repo = context.repo.repo;
-
-            console.log(`PR ${pr.number} was ${pr.merged ? 'merged' : 'closed'}`);
-            console.log(`Branch to cleanup: ${branchName}`);
-
-            const match = branchName.match(/^issue-(\d+)\/.+$/);
-            if (!match) {
-              console.log('Branch name does not match issue pattern, skipping cleanup');
-              return;
+            
+            // Extract issue number from branch name
+            const branchMatch = branchName.match(/^issue-(\d+)-/);
+            
+            if (branchMatch) {
+              const issueNumber = parseInt(branchMatch[1]);
+              
+              try {
+                // Get the issue
+                const { data: issue } = await github.rest.issues.get({
+                  owner: context.repo.owner,
+                  repo: context.repo.repo,
+                  issue_number: issueNumber
+                });
+                
+                // Close the issue if it's still open
+                if (issue.state === 'open') {
+                  await github.rest.issues.update({
+                    owner: context.repo.owner,
+                    repo: context.repo.repo,
+                    issue_number: issueNumber,
+                    state: 'closed'
+                  });
+                  
+                  // Add completion comment
+                  await github.rest.issues.createComment({
+                    owner: context.repo.owner,
+                    repo: context.repo.repo,
+                    issue_number: issueNumber,
+                    body: `✅ **Issue Completed**
+                    
+                    This issue has been resolved and closed automatically because PR #${pr.number} was merged.
+                    
+                    - Merged PR: [${pr.title}](${pr.html_url})
+                    - Merged by: @${pr.merged_by?.login || 'unknown'}
+                    - Merge commit: ${pr.merge_commit_sha?.substring(0, 7) || 'unknown'}
+                    
+                    Thank you for your contribution! 🎉`
+                  });
+                  
+                  // Remove "in-progress" label and add "completed" label
+                  try {
+                    await github.rest.issues.removeLabel({
+                      owner: context.repo.owner,
+                      repo: context.repo.repo,
+                      issue_number: issueNumber,
+                      name: 'in-progress'
+                    });
+                  } catch (e) {
+                    // Label might not exist, ignore
+                  }
+                  
+                  await github.rest.issues.addLabels({
+                    owner: context.repo.owner,
+                    repo: context.repo.repo,
+                    issue_number: issueNumber,
+                    labels: ['completed']
+                  });
+                }
+                
+              } catch (error) {
+                console.log(`Error processing issue #${issueNumber}:`, error.message);
+              }
             }
 
-            const issueNumber = parseInt(match[1]);
-            try {
-              await github.rest.git.deleteRef({ 
-                owner, 
-                repo, 
-                ref: `heads/${branchName}` 
-              });
-              
-              const body = `🧹 **Branch cleaned up**
-
-The branch \`${branchName}\` has been automatically deleted because PR #${pr.number} was ${pr.merged ? 'merged' : 'closed'}.`;
-              
-              await github.rest.issues.createComment({ 
-                owner, 
-                repo, 
-                issue_number: issueNumber, 
-                body 
-              });
-              
-              // Only add label if issue is still open
+  cleanup-branch:
+    name: Cleanup Branch
+    if: github.event_name == 'pull_request' && github.event.action == 'closed'
+    runs-on: ubuntu-latest
+    
+    steps:
+      - name: Delete merged branch
+        uses: actions/github-script@v7
+        with:
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          script: |
+            const pr = context.payload.pull_request;
+            const branchName = pr.head.ref;
+            
+            // Only delete issue branches that were merged
+            if (branchName.startsWith('issue-') && pr.merged) {
               try {
-                await github.rest.issues.addLabels({ 
-                  owner, 
-                  repo, 
-                  issue_number: issueNumber, 
-                  labels: ['branch-deleted'] 
+                await github.rest.git.deleteRef({
+                  owner: context.repo.owner,
+                  repo: context.repo.repo,
+                  ref: `heads/${branchName}`
                 });
-              } catch(labelErr) {
-                console.log('Could not add label (issue might be closed):', labelErr.message);
+                
+                console.log(`Deleted branch: ${branchName}`);
+                
+                // Comment on PR
+                await github.rest.issues.createComment({
+                  owner: context.repo.owner,
+                  repo: context.repo.repo,
+                  issue_number: pr.number,
+                  body: `🧹 **Branch Cleanup**
+                  
+                  Branch \`${branchName}\` has been automatically deleted after merge.`
+                });
+                
+              } catch (error) {
+                console.log(`Could not delete branch ${branchName}:`, error.message);
               }
-              
-            } catch(err) {
-              console.error(`Failed to delete branch: ${err.message}`);
             }
