@@ -1,4 +1,4 @@
-name: Repository Protection
+name: Enhanced Repository Protection
 
 on:
   workflow_dispatch:
@@ -24,19 +24,13 @@ on:
         default: 'false'
         type: choice
         options: ['true','false']
-      auto_relock_hours:
-        description: 'Auto re-lock after emergency unlock (hours, 0=manual)'
-        required: true
-        default: '24'
-        type: choice
-        options: ['0','1','4','8','24','72']
       maintainer_username:
         description: 'Additional maintainer GitHub username (optional)'
         required: false
         type: string
 
   schedule:
-    - cron: '0 2 * * *' # Nightly at 2am UTC
+    - cron: '0 2 * * *'  # Run at 2 AM UTC daily
 
 permissions:
   contents: write
@@ -47,17 +41,15 @@ permissions:
 env:
   PROTECTION_LABEL: 'repo-protection-status'
   EMERGENCY_LABEL: '🚨-emergency-unlock'
-  FORBIDDEN_REGEX: "(\\.pem$|\\.key$|\\.p12$|\\.env$|/secrets/)"
 
 jobs:
   validate-user:
     runs-on: ubuntu-latest
     outputs:
       authorized: ${{ steps.check.outputs.authorized }}
-      skip_confirmation: ${{ steps.check.outputs.skip_confirmation }}
       user_role: ${{ steps.check.outputs.user_role }}
     steps:
-      - name: Validate user and confirmation
+      - name: Validate user permissions
         id: check
         run: |
           maintainer="${{ github.event.inputs.maintainer_username }}"
@@ -71,142 +63,41 @@ jobs:
           else
             echo "user_role=maintainer" >> $GITHUB_OUTPUT
           fi
-          if [ "${{ github.event.inputs.action }}" = "status-check" ]; then
-            echo "skip_confirmation=true" >> $GITHUB_OUTPUT
-            echo "authorized=true" >> $GITHUB_OUTPUT
-            exit 0
-          fi
-          if [ "${{ github.event.inputs.confirmation }}" != "CONFIRM" ]; then
-            echo "authorized=false" >> $GITHUB_OUTPUT
-            exit 1
-          fi
-          echo "skip_confirmation=false" >> $GITHUB_OUTPUT
           echo "authorized=true" >> $GITHUB_OUTPUT
 
-  security-scan:
-    name: Security Scan
+  cleanup-old-branches:
+    needs: validate-user
+    if: needs.validate-user.outputs.authorized == 'true'
     runs-on: ubuntu-latest
-    if: github.event_name == 'pull_request'
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
-
-      - name: Run CodeQL Init
-        uses: github/codeql-action/init@v3
         with:
-          languages: javascript, typescript, python
-
-      - name: Analyze with CodeQL
-        uses: github/codeql-action/analyze@v3
-
-      - name: Secret & Forbidden File Scan
-        id: scan
+          fetch-depth: 0
+          
+      - name: Delete old branches
         run: |
-          echo "🔍 Scanning repository..."
-          issues=0
-          # Check for forbidden files
-          if git diff --name-only origin/main...HEAD | grep -E "${FORBIDDEN_REGEX}"; then
-            echo "❌ Forbidden file detected"
-            echo "found_forbidden=true" >> $GITHUB_OUTPUT
-            issues=1
-          fi
-          # Check for secrets
-          if grep -r --include="*.{js,ts,py,json,yml,yaml,env}" -E "(AKIA|SECRET|PASSWORD|TOKEN|PRIVATE_KEY)" .; then
-            echo "❌ Possible secret detected in code"
-            echo "found_secret=true" >> $GITHUB_OUTPUT
-            issues=1
-          fi
-          if [ $issues -eq 0 ]; then
-            echo "✅ No forbidden files or secrets found"
-            echo "safe=true" >> $GITHUB_OUTPUT
-          else
-            exit 1
-
-      - name: Auto-Close PR if Security Violations Found
-        if: failure()
-        uses: actions/github-script@v7
-        with:
-          github-token: ${{ secrets.GITHUB_TOKEN }}
-          script: |
-            const pr = context.payload.pull_request;
-            if (!pr) {
-              console.log("ℹ️ Not a PR context, skipping");
-              return;
-            }
-            await github.rest.issues.createComment({
-              owner: context.repo.owner,
-              repo: context.repo.repo,
-              issue_number: pr.number,
-              body: `🚨 **PR Closed Automatically**
-
-This pull request contained **forbidden files or secrets** and was automatically closed.
-
-❌ Forbidden files include: \`.pem\`, \`.key\`, \`.p12\`, \`.env\`, \`/secrets/\`  
-❌ Secrets detected include tokens, passwords, API keys, or private keys  
-
-Please remove these and open a new PR.`
-            });
-            await github.rest.pulls.update({
-              owner: context.repo.owner,
-              repo: context.repo.repo,
-              pull_number: pr.number,
-              state: "closed"
-            });
-            console.log(`🚨 Closed PR #${pr.number} due to security violations`);
-
-  apply-protection:
-    needs: validate-user
-    runs-on: ubuntu-latest
-    if: needs.validate-user.outputs.authorized == 'true' && github.event.inputs.action == 'lock-it-down'
-    steps:
-      - name: Update CODEOWNERS
-        run: |
-          mkdir -p .github
-          echo "# Repository Protection" > .github/CODEOWNERS
-          if [ -n "$MAINTAINER_USERNAME" ]; then
-            echo "* @$REPO_OWNER @$MAINTAINER_USERNAME" >> .github/CODEOWNERS
-          else
-            echo "* @$REPO_OWNER" >> .github/CODEOWNERS
-          fi
-          git add .github/CODEOWNERS
-          git commit -m "🔒 Update CODEOWNERS" || true
-          git push || true
+          git fetch --prune origin
+          
+          # Get list of branches excluding protected ones
+          branches=$(git branch -r | grep -v "HEAD\|main\|master" | sed 's/origin\///')
+          
+          for branch in $branches; do
+            # Check if branch has no open PRs and is older than 30 days
+            last_commit=$(git log -1 --since="30 days ago" -s origin/$branch)
+            if [ -z "$last_commit" ]; then
+              echo "Deleting stale branch: $branch"
+              git push origin --delete "$branch" || true
+            fi
+          done
         env:
-          REPO_OWNER: ${{ github.repository_owner }}
-          MAINTAINER_USERNAME: ${{ github.event.inputs.maintainer_username }}
-
-      - name: Update branch protection rules
-        uses: actions/github-script@v7
-        with:
-          github-token: ${{ secrets.GITHUB_TOKEN }}
-          script: |
-            const approvals = parseInt('${{ github.event.inputs.approval_count }}');
-            const bypassAdmin = '${{ github.event.inputs.bypass_admin }}' === 'true';
-            const branches = ['main','master'];
-            for (const branch of branches) {
-              try {
-                await github.rest.repos.updateBranchProtection({
-                  owner: context.repo.owner, repo: context.repo.repo, branch,
-                  required_status_checks: { strict: true, contexts: ["security-scan"] },
-                  enforce_admins: !bypassAdmin,
-                  required_pull_request_reviews: {
-                    required_approving_review_count: approvals,
-                    dismiss_stale_reviews: true,
-                    require_code_owner_reviews: true
-                  },
-                  allow_force_pushes: false,
-                  allow_deletions: false,
-                  required_conversation_resolution: true
-                });
-                console.log(`✅ ${branch} secured`);
-              } catch (e) { console.log(`⚠️ ${branch}: ${e.message}`); }
-            }
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
   create-security-guidelines:
     name: Post Security Guidelines
-    runs-on: ubuntu-latest
-    needs: [validate-user, apply-protection]
+    needs: [validate-user]
     if: needs.validate-user.outputs.authorized == 'true' && github.event.inputs.action == 'lock-it-down'
+    runs-on: ubuntu-latest
     steps:
       - name: Post security guideline issue
         uses: actions/github-script@v7
@@ -233,77 +124,74 @@ Please remove these and open a new PR.`
             await github.rest.issues.create({
               owner: context.repo.owner, repo: context.repo.repo,
               title: '🔒 Security Rules & Contribution Guidelines',
-              body: `# 🔒 Repository Security Rules
-
-This repository is under **strict security protection**.  
-
----
-
-## ✅ Allowed
-- Branch off \`main\` / \`master\`
-- Open PRs for changes
-- Pass **security-scan**
-- Get ${approvals} approvals + code owner review
-- Fix issues raised in reviews
-
-## ❌ Forbidden
-- Direct pushes to protected branches
-- Merging PRs without approvals
-- Merging with failing security-scan
-- Merging with unresolved conversations
-- Adding **forbidden files** (\`.pem\`, \`.key\`, \`.p12\`, \`.env\`, \`/secrets/\`)
-- Committing secrets (tokens, API keys, passwords, private keys)
-- Force pushing or deleting branches
-
----
-
-⚠️ **PRs with forbidden files or secrets will be automatically CLOSED by the bot.**
-
-Maintainers: ${reviewers}  
-Activated by: @${{ github.actor }}  
-📌 *This issue is pinned for contributor reference*`,
-              labels:
-                - security-guidelines
-                - documentation
-                - pinned
+              body: `# 🔒 Repository Security Rules\n\nThis repository is under **strict security protection**.  \n\n---\n\n## ✅ Allowed\n- Branch off \`main\` / \`master\`\n- Open PRs for changes\n- Pass **security-scan**\n- Get ${approvals} approvals + code owner review\n- Fix issues raised in reviews\n\n## ❌ Forbidden\n- Direct pushes to protected branches\n- Merging PRs without approvals\n- Merging with failing security-scan\n- Merging with unresolved conversations\n- Adding **forbidden files** (\`.pem\`, \`.key\`, \`.p12\`, \`.env\`, \`/secrets/\`)\n- Committing secrets (tokens, API keys, passwords, private keys)\n- Force pushing or deleting branches\n\n---\n\n⚠️ **PRs with forbidden files or secrets will be automatically CLOSED by the bot.**\n\nMaintainers: ${reviewers}  \nActivated by: @${{ github.actor }}  \n📌 *This issue is pinned for contributor reference*`,
+              labels: ['security-guidelines', 'documentation', 'pinned']
             });
 
-  delete-stale-branches:
-    name: Delete Stale Branches
+  security-scan:
     runs-on: ubuntu-latest
-    if: github.event_name == 'schedule' || github.event_name == 'workflow_dispatch'
     steps:
-      - name: Delete old, closed, or merged branches
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Scan for secrets and forbidden files
+        run: |
+          # Check for forbidden files
+          forbidden_files=$(find . -type f -regex ".*\.\(pem\|key\|p12\|env\)" -o -path "*/secrets/*")
+          if [ ! -z "$forbidden_files" ]; then
+            echo "::error::Found forbidden files:"
+            echo "$forbidden_files"
+            exit 1
+          fi
+          
+          # Check for potential secrets
+          if git diff --name-only ${{ github.event.before }} ${{ github.sha }} | 
+             xargs grep -l -E "(AKIA|SECRET|TOKEN|KEY|PASSWORD)" 2>/dev/null; then
+            echo "::error::Potential secrets found in changes"
+            exit 1
+          fi
+
+  protect-branches:
+    needs: [validate-user, security-scan]
+    if: needs.validate-user.outputs.authorized == 'true' && github.event.inputs.action == 'lock-it-down'
+    runs-on: ubuntu-latest
+    steps:
+      - name: Setup branch protection
         uses: actions/github-script@v7
         with:
           github-token: ${{ secrets.GITHUB_TOKEN }}
           script: |
-            const defaultBranches = ['main', 'master'];
-            const { data: branches } = await github.rest.repos.listBranches({
-              owner: context.repo.owner,
-              repo: context.repo.repo,
-              protected: false
-            });
-            for (const branch of branches) {
-              if (defaultBranches.includes(branch.name)) continue;
+            const approvals = parseInt('${{ github.event.inputs.approval_count }}');
+            const bypassAdmin = '${{ github.event.inputs.bypass_admin }}' === 'true';
+            
+            for (const branch of ['main', 'master']) {
               try {
-                // Check for open PRs on this branch
-                const prs = await github.rest.pulls.list({
+                await github.rest.repos.updateBranchProtection({
                   owner: context.repo.owner,
                   repo: context.repo.repo,
-                  head: `${context.repo.owner}:${branch.name}`,
-                  state: 'open'
+                  branch: branch,
+                  required_status_checks: {
+                    strict: true,
+                    contexts: ['security-scan']
+                  },
+                  enforce_admins: !bypassAdmin,
+                  required_pull_request_reviews: {
+                    required_approving_review_count: approvals,
+                    dismiss_stale_reviews: true,
+                    require_code_owner_reviews: true
+                  },
+                  restrictions: null,
+                  allow_force_pushes: false,
+                  allow_deletions: false,
+                  required_conversation_resolution: true
                 });
-                if (prs.data.length === 0) {
-                  // Try to delete the branch
-                  await github.rest.git.deleteRef({
-                    owner: context.repo.owner,
-                    repo: context.repo.repo,
-                    ref: `heads/${branch.name}`
-                  });
-                  console.log(`🗑️ Deleted stale branch: ${branch.name}`);
-                }
+                console.log(`✅ Protected ${branch} branch`);
               } catch (e) {
-                // Ignore errors (branch may already be deleted, protected, etc)
+                if (e.status !== 404) {
+                  throw e;
+                }
+                console.log(`Branch ${branch} not found, skipping`);
               }
             }
