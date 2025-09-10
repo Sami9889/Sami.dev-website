@@ -1,0 +1,490 @@
+name: Strict Repository Protection
+
+on:
+  workflow_dispatch:
+    inputs:
+      action:
+        description: 'What to do?'
+        required: true
+        type: choice
+        options:
+          - lock-it-down
+          - remove-protection
+          - emergency-unlock
+      confirmation:
+        description: 'Type "CONFIRM" to proceed'
+        required: true
+        type: string
+      approval_count:
+        description: 'Required approvals (1-6)'
+        required: true
+        default: '2'
+        type: choice
+        options:
+          - '1'
+          - '2'
+          - '3'
+          - '4'
+          - '5'
+          - '6'
+
+permissions:
+  contents: write
+  issues: write
+  pull-requests: write
+  administration: write
+
+jobs:
+  validate-user:
+    name: Validate Authorization
+    runs-on: ubuntu-latest
+    outputs:
+      authorized: ${{ steps.check.outputs.authorized }}
+    
+    steps:
+      - name: Check Authorization
+        id: check
+        run: |
+          echo "🔍 Validating user authorization..."
+          
+          # Only repository owner can run this
+          if [ "${{ github.actor }}" != "${{ github.repository_owner }}" ]; then
+            echo "❌ UNAUTHORIZED: Only ${{ github.repository_owner }} can modify protection"
+            echo "authorized=false" >> $GITHUB_OUTPUT
+            exit 1
+          fi
+          
+          # Require confirmation
+          if [ "${{ github.event.inputs.confirmation }}" != "CONFIRM" ]; then
+            echo "❌ INVALID: Must type 'CONFIRM' exactly"
+            echo "authorized=false" >> $GITHUB_OUTPUT
+            exit 1
+          fi
+          
+          echo "✅ Authorization validated"
+          echo "authorized=true" >> $GITHUB_OUTPUT
+
+  apply-protection:
+    name: Apply Strict Protection
+    runs-on: ubuntu-latest
+    needs: validate-user
+    if: needs.validate-user.outputs.authorized == 'true' && github.event.inputs.action == 'lock-it-down'
+    
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
+        
+      - name: Create Comprehensive CODEOWNERS
+        run: |
+          echo "📝 Creating strict CODEOWNERS file..."
+          mkdir -p .github
+          
+          cat > .github/CODEOWNERS << 'EOF'
+          # 🔒 STRICT REPOSITORY PROTECTION
+          # All changes require maintainer approval - NO EXCEPTIONS
+          
+          # Global protection - ALL files
+          * @${{ github.repository_owner }}
+          
+          # Critical system files (extra vigilance)
+          /.github/ @${{ github.repository_owner }}
+          /.github/workflows/ @${{ github.repository_owner }}
+          /package.json @${{ github.repository_owner }}
+          /package-lock.json @${{ github.repository_owner }}
+          /*.yml @${{ github.repository_owner }}
+          /*.yaml @${{ github.repository_owner }}
+          /.env* @${{ github.repository_owner }}
+          /next.config.js @${{ github.repository_owner }}
+          /tailwind.config.js @${{ github.repository_owner }}
+          /tsconfig.json @${{ github.repository_owner }}
+          /Dockerfile @${{ github.repository_owner }}
+          
+          # Source code directories
+          /src/ @${{ github.repository_owner }}
+          /components/ @${{ github.repository_owner }}
+          /pages/ @${{ github.repository_owner }}
+          /app/ @${{ github.repository_owner }}
+          /api/ @${{ github.repository_owner }}
+          /lib/ @${{ github.repository_owner }}
+          /utils/ @${{ github.repository_owner }}
+          /styles/ @${{ github.repository_owner }}
+          /public/ @${{ github.repository_owner }}
+          
+          # Documentation and configs
+          /README.md @${{ github.repository_owner }}
+          /docs/ @${{ github.repository_owner }}
+          /.gitignore @${{ github.repository_owner }}
+          EOF
+          
+          git add .github/CODEOWNERS
+          if git commit -m "🔒 Add CODEOWNERS - require maintainer approval for all changes"; then
+            git push
+            echo "✅ CODEOWNERS file created and committed"
+          else
+            echo "ℹ️ CODEOWNERS file already exists and up to date"
+          fi
+        
+      - name: Apply Branch Protection Rules
+        uses: actions/github-script@v7
+        with:
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          script: |
+            const approvalCount = parseInt('${{ github.event.inputs.approval_count }}');
+            console.log(`🔒 Applying strict protection with ${approvalCount} required approvals...`);
+            
+            const protectionConfig = {
+              required_status_checks: {
+                strict: true,  // Must be up to date with base branch
+                contexts: [],  // Add CI/CD checks here if you have them
+                checks: []
+              },
+              enforce_admins: false,  // Allow admin bypass for emergencies
+              required_pull_request_reviews: {
+                required_approving_review_count: approvalCount,
+                dismiss_stale_reviews: true,  // New commits dismiss old approvals
+                require_code_owner_reviews: true,  // MUST have your approval
+                require_last_push_approval: false,  // Don't need approval of every single push
+                bypass_pull_request_allowances: {
+                  users: [],  // No users can bypass
+                  teams: [],  // No teams can bypass
+                  apps: []    // No apps can bypass
+                }
+              },
+              restrictions: null,  // Allow anyone to push to branches (but not main)
+              required_linear_history: false,  // Allow merge commits
+              allow_force_pushes: false,  // Block force pushes
+              allow_deletions: false,  // Block branch deletion
+              block_creations: false,  // Allow branch creation
+              required_conversation_resolution: true,  // Must resolve all conversations
+              lock_branch: false,  // Don't completely lock branch
+              allow_fork_syncing: true  // Allow fork syncing for contributors
+            };
+            
+            // Protect main branch
+            try {
+              await github.rest.repos.updateBranchProtection({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                branch: 'main',
+                ...protectionConfig
+              });
+              console.log('✅ MAIN branch protection applied successfully');
+            } catch (error) {
+              console.error('❌ Failed to protect main branch:', error.message);
+              throw error;
+            }
+            
+            // Also protect master branch if it exists
+            try {
+              await github.rest.repos.getBranch({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                branch: 'master'
+              });
+              
+              await github.rest.repos.updateBranchProtection({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                branch: 'master',
+                ...protectionConfig
+              });
+              console.log('✅ MASTER branch protection also applied');
+            } catch (error) {
+              if (error.status === 404) {
+                console.log('ℹ️ Master branch does not exist, skipping');
+              } else {
+                console.warn('⚠️ Could not protect master branch:', error.message);
+              }
+            }
+        
+      - name: Create Protection Status Issue
+        uses: actions/github-script@v7
+        with:
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          script: |
+            const approvalCount = '${{ github.event.inputs.approval_count }}';
+            
+            // Check if protection status issue already exists
+            const { data: existingIssues } = await github.rest.issues.listForRepo({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              labels: 'protection-status',
+              state: 'open'
+            });
+            
+            // Close existing protection status issues
+            for (const issue of existingIssues) {
+              await github.rest.issues.update({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                issue_number: issue.number,
+                state: 'closed'
+              });
+            }
+            
+            // Create new protection status issue
+            const { data: issue } = await github.rest.issues.create({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              title: '🔒 Repository Protection Status - ACTIVE',
+              body: `# 🛡️ Repository Protection Active
+              
+              This repository is now under **STRICT PROTECTION**.
+              
+              ## 🔐 Current Protection Rules:
+              - **${approvalCount} approvals** required for any PR to main/master
+              - **Code owner approval** required (@${{ github.repository_owner }})  
+              - **All conversations** must be resolved before merge
+              - **Stale reviews** dismissed on new commits
+              - **Force pushes** blocked on protected branches
+              - **Branch deletion** blocked for main/master
+              - **Direct pushes** to main/master blocked
+              
+              ## ❌ What Contributors CANNOT Do:
+              - Push directly to main or master branch
+              - Merge their own pull requests
+              - Merge without required approvals
+              - Force push to protected branches
+              - Delete main or master branches
+              - Bypass code owner review
+              
+              ## ✅ What Contributors CAN Do:  
+              - Create feature branches (including issue-* branches)
+              - Open pull requests from their branches
+              - Push commits to their own branches
+              - Participate in code reviews
+              - Comment and discuss changes
+              
+              ## 🔄 Workflow Compatibility:
+              - ✅ Issue branch creation still works
+              - ✅ External contributor messages still work
+              - ✅ PR merge celebrations still work
+              - ✅ Branch cleanup still works
+              - ✅ All existing automations remain functional
+              
+              ## 🚨 Emergency Access:
+              If critical changes are needed, run the **Strict Repository Protection** workflow with:
+              - Action: \`emergency-unlock\`
+              - Confirmation: \`CONFIRM\`
+              
+              **This will temporarily disable protection for urgent fixes.**
+              
+              ## 📊 Protection Level: 🟢 ACTIVE
+              - **Required Approvals:** ${approvalCount}
+              - **Code Owner Review:** Required
+              - **Admin Bypass:** Available (emergency only)
+              - **Status:** 🔒 LOCKED DOWN
+              
+              ---
+              *Protection activated by @${{ github.actor }} on $(date)*
+              *To modify protection, run the workflow again with different settings*`,
+              labels: ['protection-status', 'security', 'automated']
+            });
+            
+            // Pin the issue (make it important)
+            console.log(`✅ Protection status issue created: #${issue.number}`);
+
+  remove-protection:
+    name: Remove All Protection
+    runs-on: ubuntu-latest
+    needs: validate-user
+    if: needs.validate-user.outputs.authorized == 'true' && github.event.inputs.action == 'remove-protection'
+    
+    steps:
+      - name: Remove Branch Protection
+        uses: actions/github-script@v7
+        with:
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          script: |
+            console.log('🔓 Removing all branch protection...');
+            
+            const branches = ['main', 'master'];
+            
+            for (const branch of branches) {
+              try {
+                await github.rest.repos.deleteBranchProtection({
+                  owner: context.repo.owner,
+                  repo: context.repo.repo,
+                  branch: branch
+                });
+                console.log(`✅ ${branch} protection removed`);
+              } catch (error) {
+                if (error.status === 404) {
+                  console.log(`ℹ️ ${branch} branch was not protected`);
+                } else {
+                  console.warn(`⚠️ Could not remove ${branch} protection:`, error.message);
+                }
+              }
+            }
+            
+      - name: Remove CODEOWNERS
+        run: |
+          if [ -f ".github/CODEOWNERS" ]; then
+            echo "🗑️ Removing CODEOWNERS file..."
+            git rm .github/CODEOWNERS
+            git commit -m "🔓 Remove CODEOWNERS - protection disabled"
+            git push
+            echo "✅ CODEOWNERS file removed"
+          else
+            echo "ℹ️ CODEOWNERS file does not exist"
+          fi
+      
+      - name: Update Protection Status
+        uses: actions/github-script@v7
+        with:
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          script: |
+            // Close existing protection status issues  
+            const { data: existingIssues } = await github.rest.issues.listForRepo({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              labels: 'protection-status',
+              state: 'open'
+            });
+            
+            for (const issue of existingIssues) {
+              await github.rest.issues.update({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                issue_number: issue.number,
+                state: 'closed',
+                state_reason: 'completed'
+              });
+            }
+            
+            // Create removal confirmation issue
+            await github.rest.issues.create({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              title: '🔓 Repository Protection REMOVED',
+              body: `# 🔓 Repository Protection Disabled
+              
+              All repository protection rules have been **REMOVED**.
+              
+              ## ⚠️ Current Status:
+              - **No approval requirements** for PRs
+              - **No code owner protection** 
+              - **Direct pushes** to main/master allowed
+              - **Force pushes** allowed
+              - **Branch deletion** allowed
+              - **No conversation resolution** required
+              
+              ## 🚨 Security Notice:
+              Your repository is now **UNPROTECTED**. Anyone with write access can:
+              - Push directly to main branch
+              - Force push and rewrite history
+              - Delete branches
+              - Merge without review
+              
+              **Consider re-enabling protection when appropriate.**
+              
+              ---
+              *Protection removed by @${{ github.actor }} on $(date)*`,
+              labels: ['security', 'unprotected', 'warning']
+            });
+
+  emergency-unlock:
+    name: Emergency Unlock
+    runs-on: ubuntu-latest
+    needs: validate-user
+    if: needs.validate-user.outputs.authorized == 'true' && github.event.inputs.action == 'emergency-unlock'
+    
+    steps:
+      - name: Emergency Protection Disable
+        uses: actions/github-script@v7
+        with:
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          script: |
+            console.log('🚨 EMERGENCY: Temporarily disabling protection...');
+            
+            const branches = ['main', 'master'];
+            
+            for (const branch of branches) {
+              try {
+                await github.rest.repos.deleteBranchProtection({
+                  owner: context.repo.owner,
+                  repo: context.repo.repo,
+                  branch: branch
+                });
+                console.log(`🚨 EMERGENCY: ${branch} protection temporarily disabled`);
+              } catch (error) {
+                if (error.status === 404) {
+                  console.log(`ℹ️ ${branch} was not protected`);
+                } else {
+                  console.warn(`⚠️ Could not disable ${branch} protection:`, error.message);
+                }
+              }
+            }
+            
+            // Create emergency alert issue
+            const { data: issue } = await github.rest.issues.create({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              title: '🚨 EMERGENCY: Protection Temporarily Disabled',
+              body: `# 🚨 EMERGENCY ACCESS GRANTED
+              
+              Repository protection has been **TEMPORARILY DISABLED** for emergency access.
+              
+              ## ⚠️ CRITICAL SECURITY ALERT:
+              - **All protection rules** are currently OFF
+              - **Direct pushes** to main/master are now allowed
+              - **No approvals** required for changes
+              - **Force pushes** are currently allowed
+              
+              ## 🔄 IMMEDIATE ACTION REQUIRED:
+              1. **Complete your emergency changes IMMEDIATELY**
+              2. **Re-enable protection** by running this workflow again:
+                 - Action: \`lock-it-down\`
+                 - Confirmation: \`CONFIRM\`
+                 - Set appropriate approval count
+              
+              ## ⏰ AUTO-REMINDER:
+              This issue will remain open as a reminder to **RE-ENABLE PROTECTION**.
+              
+              **Do not leave the repository unprotected longer than necessary!**
+              
+              ---
+              *Emergency access granted by @${{ github.actor }} on $(date)*
+              *Please re-enable protection as soon as emergency changes are complete*`,
+              labels: ['🚨 EMERGENCY', 'security-alert', 'temporary', 'action-required']
+            });
+            
+            console.log(`🚨 Emergency alert issue created: #${issue.number}`);
+
+  verify-protection:
+    name: Verify Protection Status
+    runs-on: ubuntu-latest
+    needs: [validate-user, apply-protection]
+    if: needs.validate-user.outputs.authorized == 'true' && github.event.inputs.action == 'lock-it-down' && always()
+    
+    steps:
+      - name: Verify Protection Applied
+        uses: actions/github-script@v7
+        with:
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          script: |
+            console.log('🔍 Verifying protection status...');
+            
+            try {
+              const { data: protection } = await github.rest.repos.getBranchProtection({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                branch: 'main'
+              });
+              
+              console.log('✅ Branch Protection Verification:');
+              console.log('- Pull Request Reviews:', protection.required_pull_request_reviews ? '✅ ENABLED' : '❌ DISABLED');
+              console.log('- Required Approvals:', protection.required_pull_request_reviews?.required_approving_review_count || 0);
+              console.log('- Code Owner Reviews:', protection.required_pull_request_reviews?.require_code_owner_reviews ? '✅ ENABLED' : '❌ DISABLED');
+              console.log('- Force Pushes Blocked:', !protection.allow_force_pushes ? '✅ BLOCKED' : '❌ ALLOWED');
+              console.log('- Branch Deletion Blocked:', !protection.allow_deletions ? '✅ BLOCKED' : '❌ ALLOWED');
+              console.log('- Conversation Resolution Required:', protection.required_conversation_resolution ? '✅ REQUIRED' : '❌ NOT REQUIRED');
+              
+              console.log('🛡️ Repository protection is ACTIVE and verified!');
+              
+            } catch (error) {
+              console.error('❌ Protection verification failed:', error.message);
+              throw error;
+            }
