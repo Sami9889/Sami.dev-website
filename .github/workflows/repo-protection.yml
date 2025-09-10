@@ -1,264 +1,231 @@
-name: Enhanced Repository Protection
+name: Issue Branch PR Workflow
 
 on:
+  issues:
+    types: [opened, assigned, labeled]
+  pull_request:
+    types: [opened, closed, synchronize]
   workflow_dispatch:
-    inputs:
-      action:
-        description: 'Protection action to perform'
-        required: true
-        type: choice
-        options: [lock-it-down, remove-protection, emergency-unlock, status-check]
-      confirmation:
-        description: 'Type "CONFIRM" to proceed (not needed for status-check)'
-        required: false
-        type: string
-      approval_count:
-        description: 'Required approvals (1-6)'
-        required: true
-        default: '2'
-        type: choice
-        options: ['1','2','3','4','5','6']
-      bypass_admin:
-        description: 'Allow admin bypass in emergencies?'
-        required: true
-        default: 'false'
-        type: choice
-        options: ['true','false']
-      auto_relock_hours:
-        description: 'Auto re-lock after emergency unlock (hours, 0=manual)'
-        required: true
-        default: '24'
-        type: choice
-        options: ['0','1','4','8','24','72']
-      maintainer_username:
-        description: 'Additional maintainer GitHub username (optional)'
-        required: false
-        type: string
+  schedule:
+    - cron: '0 2 * * 0'
 
 permissions:
   contents: write
   issues: write
   pull-requests: write
-  administration: write
-
-env:
-  PROTECTION_LABEL: 'repo-protection-status'
-  EMERGENCY_LABEL: '🚨-emergency-unlock'
-  FORBIDDEN_REGEX: "(\\.pem$|\\.key$|\\.p12$|\\.env$|/secrets/)"
 
 jobs:
-  # === USER VALIDATION ===
-  validate-user:
+  create-branch:
+    name: Create Branch from Issue
+    if: github.event_name == 'issues' && (github.event.action == 'opened' || github.event.action == 'assigned')
     runs-on: ubuntu-latest
-    outputs:
-      authorized: ${{ steps.check.outputs.authorized }}
-      skip_confirmation: ${{ steps.check.outputs.skip_confirmation }}
-      user_role: ${{ steps.check.outputs.user_role }}
     steps:
-      - id: check
-        run: |
-          maintainer="${{ github.event.inputs.maintainer_username }}"
-          if [ "${{ github.actor }}" != "${{ github.repository_owner }}" ] && [ "${{ github.actor }}" != "$maintainer" ]; then
-            echo "authorized=false" >> $GITHUB_OUTPUT
-            echo "user_role=unauthorized" >> $GITHUB_OUTPUT
-            exit 1
-          fi
-          if [ "${{ github.actor }}" == "${{ github.repository_owner }}" ]; then
-            echo "user_role=owner" >> $GITHUB_OUTPUT
-          else
-            echo "user_role=maintainer" >> $GITHUB_OUTPUT
-          fi
-          if [ "${{ github.event.inputs.action }}" = "status-check" ]; then
-            echo "skip_confirmation=true" >> $GITHUB_OUTPUT
-            echo "authorized=true" >> $GITHUB_OUTPUT
-            exit 0
-          fi
-          if [ "${{ github.event.inputs.confirmation }}" != "CONFIRM" ]; then
-            echo "authorized=false" >> $GITHUB_OUTPUT
-            exit 1
-          fi
-          echo "skip_confirmation=false" >> $GITHUB_OUTPUT
-          echo "authorized=true" >> $GITHUB_OUTPUT
-
-  # === SECURITY SCAN JOB ===
-  security-scan:
-    name: Security Scan
-    runs-on: ubuntu-latest
-    if: github.event_name == 'pull_request'
-    steps:
-      - uses: actions/checkout@v4
-
-      - name: Run CodeQL Init
-        uses: github/codeql-action/init@v3
+      - name: Checkout repository
+        uses: actions/checkout@v4
         with:
-          languages: javascript, typescript, python
-
-      - name: Analyze with CodeQL
-        uses: github/codeql-action/analyze@v3
-
-      - name: Secret & Forbidden File Scan
-        id: scan
+          token: ${{ secrets.GITHUB_TOKEN }}
+          fetch-depth: 0
+      - name: Setup Git
         run: |
-          echo "🔍 Scanning repository..."
-          issues=0
-
-          # Check for forbidden files
-          if git diff --name-only origin/main...HEAD | grep -E "${FORBIDDEN_REGEX}"; then
-            echo "❌ Forbidden file detected"
-            echo "found_forbidden=true" >> $GITHUB_OUTPUT
-            issues=1
-          fi
-
-          # Check for secrets
-          if grep -r --include="*.{js,ts,py,json,yml,yaml,env}" -E "(AKIA|SECRET|PASSWORD|TOKEN|PRIVATE_KEY)" .; then
-            echo "❌ Possible secret detected in code"
-            echo "found_secret=true" >> $GITHUB_OUTPUT
-            issues=1
-          fi
-
-          if [ $issues -eq 0 ]; then
-            echo "✅ No forbidden files or secrets found"
-            echo "safe=true" >> $GITHUB_OUTPUT
+          git config --global user.name "github-actions[bot]"
+          git config --global user.email "github-actions[bot]@users.noreply.github.com"
+      - name: Create issue branch
+        id: create_branch
+        run: |
+          ISSUE_NUMBER="${{ github.event.issue.number }}"
+          ISSUE_TITLE="${{ github.event.issue.title }}"
+          CLEAN_TITLE=$(echo "$ISSUE_TITLE" | sed 's/[^a-zA-Z0-9 ]//g' | tr '[:upper:]' '[:lower:]' | sed 's/ /-/g' | sed 's/--*/-/g' | sed 's/^-\|-$//g' | cut -c1-50)
+          BRANCH_NAME="issue-${ISSUE_NUMBER}-${CLEAN_TITLE}"
+          echo "Creating branch: $BRANCH_NAME"
+          if git ls-remote --heads origin "$BRANCH_NAME" | grep -q "$BRANCH_NAME"; then
+            echo "Branch $BRANCH_NAME already exists"
+            echo "branch_exists=true" >> $GITHUB_OUTPUT
           else
-            exit 1
+            git checkout -b "$BRANCH_NAME"
+            git push origin "$BRANCH_NAME"
+            echo "branch_exists=false" >> $GITHUB_OUTPUT
+            echo "Branch $BRANCH_NAME created successfully"
+          fi
+          echo "branch_name=$BRANCH_NAME" >> $GITHUB_OUTPUT
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      - name: Comment on issue
+        if: steps.create_branch.outputs.branch_exists == 'false'
+        uses: actions/github-script@v7
+        with:
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          script: |
+            const branchName = '${{ steps.create_branch.outputs.branch_name }}';
+            const issueNumber = context.issue.number;
+            const comment = `🔀 **Branch Created**
+A new branch has been created for this issue:
+- Branch: \`${branchName}\`
+- You can start working on this issue by checking out the branch
 
-      - name: Auto-Close PR if Security Violations Found
-        if: failure()
+\`\`\`bash
+git fetch origin
+git checkout ${branchName}
+\`\`\`
+
+**What you can do:**
+- Commit and push changes to this branch
+- Open a pull request referencing the issue
+
+**What you cannot do:**
+- Merge to \`main\` or \`dev\` without maintainer/owner review and certification
+- Bypass code review or branch protection
+
+When ready, create a pull request to merge your changes!`;
+            await github.rest.issues.createComment({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              issue_number: issueNumber,
+              body: comment
+            });
+
+  auto-create-pr:
+    name: Auto Create Pull Request
+    if: github.event_name == 'issues' && github.event.action == 'labeled' && github.event.label.name == 'ready-for-pr'
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
+          fetch-depth: 0
+      - name: Find and create PR for issue branch
+        uses: actions/github-script@v7
+        with:
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          script: |
+            const issue = context.payload.issue;
+            const issueNumber = issue.number;
+            const cleanTitle = issue.title.replace(/[^a-zA-Z0-9 ]/g, '').toLowerCase().replace(/\s+/g, '-').replace(/-+/g, '-').replace(/^-|-$/g, '').substring(0, 50);
+            const branchName = `issue-${issueNumber}-${cleanTitle}`;
+            try {
+              await github.rest.repos.getBranch({ owner: context.repo.owner, repo: context.repo.repo, branch: branchName });
+              const { data: existingPRs } = await github.rest.pulls.list({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                head: `${context.repo.owner}:${branchName}`,
+                state: 'open'
+              });
+              if (existingPRs.length > 0) {
+                await github.rest.issues.createComment({
+                  owner: context.repo.owner,
+                  repo: context.repo.repo,
+                  issue_number: issueNumber,
+                  body: `🔄 **Pull Request Already Exists**
+A pull request already exists for this issue:
+- PR: #${existingPRs[0].number}
+- Branch: \`${branchName}\`
+[View Pull Request](${existingPRs[0].html_url})`
+                });
+                return;
+              }
+              const { data: newPR } = await github.rest.pulls.create({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                title: `Fix #${issueNumber}: ${issue.title}`,
+                head: branchName,
+                base: 'main',
+                body: `Fixes #${issueNumber}\n\nAuto-created PR for issue branch.`,
+                draft: false
+              });
+              await github.rest.issues.createComment({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                issue_number: issueNumber,
+                body: `🚀 **Pull Request Created**
+A pull request has been automatically created for this issue:
+- PR: #${newPR.number}
+- Branch: \`${branchName}\`
+[View Pull Request](${newPR.html_url})`
+              });
+            } catch (error) {
+              if (error.status === 404) {
+                await github.rest.issues.createComment({
+                  owner: context.repo.owner,
+                  repo: context.repo.repo,
+                  issue_number: issueNumber,
+                  body: `❌ **Branch Not Found**
+Could not find branch \`${branchName}\` for this issue.`
+                });
+              } else {
+                await github.rest.issues.createComment({
+                  owner: context.repo.owner,
+                  repo: context.repo.repo,
+                  issue_number: issueNumber,
+                  body: `❌ **Error Creating Pull Request**
+An error occurred while creating the pull request: ${error.message}`
+                });
+              }
+            }
+
+  enforce-strict-pr-security:
+    name: Enforce Maintainer/Owner-Only Merge and PR Rules
+    if: github.event_name == 'pull_request' && (github.event.action == 'opened' || github.event.action == 'synchronize')
+    runs-on: ubuntu-latest
+    steps:
+      - name: Block non-maintainer PRs to protected branches and enforce issue reference
         uses: actions/github-script@v7
         with:
           github-token: ${{ secrets.GITHUB_TOKEN }}
           script: |
             const pr = context.payload.pull_request;
-            if (!pr) {
-              console.log("ℹ️ Not a PR context, skipping");
+            const username = pr.user.login;
+            const baseBranch = pr.base.ref;
+            const prTitle = pr.title || '';
+            const prBody = pr.body || '';
+            // List of maintainers/owners for gamingisrealyt
+            const maintainers = [
+              'gamingisrealyt', // main org account
+              // Add more usernames if you have more maintainers/owners
+            ];
+            // Only allow maintainers/owners to open PRs to main/dev
+            if ((baseBranch === 'main' || baseBranch === 'dev') && !maintainers.includes(username)) {
+              await github.rest.issues.createComment({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                issue_number: pr.number,
+                body: `🚫 **Security Policy**
+
+Only maintainers/owners from [gamingisrealyt](https://github.com/gamingisrealyt) can merge code directly to \`${baseBranch}\`.
+
+**What you can do:**
+- Work on an issue branch (e.g. \`issue-123-description\`)
+- Request a review from a maintainer/owner
+
+**What you cannot do:**
+- Merge to \`${baseBranch}\` without maintainer/owner approval and certification
+- Bypass code review or branch protection
+
+**Certification Required:**  
+All code must be checked and certified by a maintainer/owner before merging to \`${baseBranch}\`.  
+Your PR will be closed. If you believe this is a mistake, contact a repository maintainer or owner.`
+              });
+              await github.rest.pulls.update({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                pull_number: pr.number,
+                state: 'closed'
+              });
               return;
             }
-
-            await github.rest.issues.createComment({
-              owner: context.repo.owner,
-              repo: context.repo.repo,
-              issue_number: pr.number,
-              body: `🚨 **PR Closed Automatically**
-
-This pull request contained **forbidden files or secrets** and was automatically closed.
-
-❌ Forbidden files include: \`.pem\`, \`.key\`, \`.p12\`, \`.env\`, \`/secrets/\`  
-❌ Secrets detected include tokens, passwords, API keys, or private keys  
-
-Please remove these and open a new PR.`
-            });
-
-            await github.rest.pulls.update({
-              owner: context.repo.owner,
-              repo: context.repo.repo,
-              pull_number: pr.number,
-              state: "closed"
-            });
-
-            console.log(`🚨 Closed PR #${pr.number} due to security violations`);
-
-  # === APPLY PROTECTION ===
-  apply-protection:
-    needs: validate-user
-    runs-on: ubuntu-latest
-    if: needs.validate-user.outputs.authorized == 'true' && github.event.inputs.action == 'lock-it-down'
-    steps:
-      - run: |
-          mkdir -p .github
-          echo "# Repository Protection" > .github/CODEOWNERS
-          if [ -n "${{ github.event.inputs.maintainer_username }}" ]; then
-            echo "* @${{ github.repository_owner }} @${{ github.event.inputs.maintainer_username }}" >> .github/CODEOWNERS
-          else
-            echo "* @${{ github.repository_owner }}" >> .github/CODEOWNERS
-          fi
-          git add .github/CODEOWNERS
-          git commit -m "🔒 Update CODEOWNERS" || true
-          git push || true
-
-      - uses: actions/github-script@v7
-        with:
-          github-token: ${{ secrets.GITHUB_TOKEN }}
-          script: |
-            const approvals = parseInt('${{ github.event.inputs.approval_count }}');
-            const bypassAdmin = '${{ github.event.inputs.bypass_admin }}' === 'true';
-            const branches = ['main','master'];
-            for (const branch of branches) {
-              try {
-                await github.rest.repos.updateBranchProtection({
-                  owner: context.repo.owner, repo: context.repo.repo, branch,
-                  required_status_checks:{ strict:true, contexts:["security-scan"] },
-                  enforce_admins: !bypassAdmin,
-                  required_pull_request_reviews:{
-                    required_approving_review_count: approvals,
-                    dismiss_stale_reviews:true,
-                    require_code_owner_reviews:true
-                  },
-                  allow_force_pushes:false,
-                  allow_deletions:false,
-                  required_conversation_resolution:true
-                });
-                console.log(`✅ ${branch} secured`);
-              } catch (e) { console.log(`⚠️ ${branch}: ${e.message}`); }
-            }
-
-  # === SECURITY GUIDELINES ISSUE ===
-  create-security-guidelines:
-    name: Post Security Guidelines
-    runs-on: ubuntu-latest
-    needs: [validate-user, apply-protection]
-    if: needs.validate-user.outputs.authorized == 'true' && github.event.inputs.action == 'lock-it-down'
-    steps:
-      - uses: actions/github-script@v7
-        with:
-          github-token: ${{ secrets.GITHUB_TOKEN }}
-          script: |
-            const maintainer = '${{ github.event.inputs.maintainer_username }}';
-            const owner = '${{ github.repository_owner }}';
-            const reviewers = maintainer ? `@${owner} and @${maintainer}` : `@${owner}`;
-            const approvals = '${{ github.event.inputs.approval_count }}';
-
-            const { data: existing } = await github.rest.issues.listForRepo({
-              owner: context.repo.owner, repo: context.repo.repo,
-              labels: ['security-guidelines'], state: 'open'
-            });
-            for (const issue of existing) {
-              await github.rest.issues.update({
-                owner: context.repo.owner, repo: context.repo.repo,
-                issue_number: issue.number, state: 'closed', state_reason: 'completed'
+            // Require PR title or body to reference an issue
+            if (!prTitle.match(/#\d+/) && !prBody.match(/#\d+/)) {
+              await github.rest.issues.createComment({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                issue_number: pr.number,
+                body: `⚠️ **PR Must Reference an Issue**
+Your PR title or description must reference an issue (e.g., "Fix #123: ...").
+Please update your PR. This PR will be closed.`
+              });
+              await github.rest.pulls.update({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                pull_number: pr.number,
+                state: 'closed'
               });
             }
-
-            await github.rest.issues.create({
-              owner: context.repo.owner, repo: context.repo.repo,
-              title: '🔒 Security Rules & Contribution Guidelines',
-              body: `# 🔒 Repository Security Rules
-
-This repository is under **strict security protection**.  
-
----
-
-## ✅ Allowed
-- Branch off \`main\` / \`master\`
-- Open PRs for changes
-- Pass **security-scan**
-- Get ${approvals} approvals + code owner review
-- Fix issues raised in reviews
-
-## ❌ Forbidden
-- Direct pushes to protected branches
-- Merging PRs without approvals
-- Merging with failing security-scan
-- Merging with unresolved conversations
-- Adding **forbidden files** (\`.pem\`, \`.key\`, \`.p12\`, \`.env\`, \`/secrets/\`)
-- Committing secrets (tokens, API keys, passwords, private keys)
-- Force pushing or deleting branches
-
----
-
-⚠️ **PRs with forbidden files or secrets will be automatically CLOSED by the bot.**
-
-Maintainers: ${reviewers}  
-Activated by: @${{ github.actor }}  
-📌 *This issue is pinned for contributor reference*`,
-              labels: ['security-guidelines','documentation','pinned']
-            });
