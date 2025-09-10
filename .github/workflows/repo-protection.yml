@@ -34,7 +34,7 @@ jobs:
         run: |
           ISSUE_NUMBER="${{ github.event.issue.number }}"
           ISSUE_TITLE="${{ github.event.issue.title }}"
-          CLEAN_TITLE=$(echo "$ISSUE_TITLE" | sed 's/[^a-zA-Z0-9 ]//g' | tr '[:upper:]' '[:lower:]' | sed 's/ /-/g' | sed 's/--*/-/g' | sed 's/^-\|-$//g' | cut -c1-50)
+          CLEAN_TITLE=$(echo "$ISSUE_TITLE" | sed 's/[^a-zA-Z0-9 ]//g' | tr '[:upper:]' '[:lower:]' | sed 's/ /-/g' | sed 's/--*/-/g' | sed 's/^-|-$//g' | cut -c1-50)
           BRANCH_NAME="issue-${ISSUE_NUMBER}-${CLEAN_TITLE}"
           echo "Creating branch: $BRANCH_NAME"
           if git ls-remote --heads origin "$BRANCH_NAME" | grep -q "$BRANCH_NAME"; then
@@ -100,7 +100,7 @@ When ready, create a pull request to merge your changes!`;
           script: |
             const issue = context.payload.issue;
             const issueNumber = issue.number;
-            const cleanTitle = issue.title.replace(/[^a-zA-Z0-9 ]/g, '').toLowerCase().replace(/\s+/g, '-').replace(/-+/g, '-').replace(/^-|-$/g, '').substring(0, 50);
+            const cleanTitle = issue.title.replace(/[^a-zA-Z0-9 ]/g, '').toLowerCase().replace(/\s+/g, '-').replace(/-+/g, '-').replace(/^-|-$|/g, '').substring(0, 50);
             const branchName = `issue-${issueNumber}-${cleanTitle}`;
             try {
               await github.rest.repos.getBranch({ owner: context.repo.owner, repo: context.repo.repo, branch: branchName });
@@ -177,9 +177,8 @@ An error occurred while creating the pull request: ${error.message}`
             const baseBranch = pr.base.ref;
             const prTitle = pr.title || '';
             const prBody = pr.body || '';
-            // List of maintainers/owners for gamingisrealyt
             const maintainers = [
-              'gamingisrealyt', // main org account
+              'gamingisrealyt'
               // Add more usernames if you have more maintainers/owners
             ];
             // Only allow maintainers/owners to open PRs to main/dev
