@@ -1,4 +1,4 @@
-name: Enhanced Repository Protection
+name: Repository Protection
 
 on:
   workflow_dispatch:
@@ -35,6 +35,9 @@ on:
         required: false
         type: string
 
+  schedule:
+    - cron: '0 2 * * *' # Nightly at 2am UTC
+
 permissions:
   contents: write
   issues: write
@@ -54,7 +57,8 @@ jobs:
       skip_confirmation: ${{ steps.check.outputs.skip_confirmation }}
       user_role: ${{ steps.check.outputs.user_role }}
     steps:
-      - id: check
+      - name: Validate user and confirmation
+        id: check
         run: |
           maintainer="${{ github.event.inputs.maintainer_username }}"
           if [ "${{ github.actor }}" != "${{ github.repository_owner }}" ] && [ "${{ github.actor }}" != "$maintainer" ]; then
@@ -84,7 +88,8 @@ jobs:
     runs-on: ubuntu-latest
     if: github.event_name == 'pull_request'
     steps:
-      - uses: actions/checkout@v4
+      - name: Checkout repository
+        uses: actions/checkout@v4
 
       - name: Run CodeQL Init
         uses: github/codeql-action/init@v3
@@ -182,16 +187,16 @@ Please remove these and open a new PR.`
               try {
                 await github.rest.repos.updateBranchProtection({
                   owner: context.repo.owner, repo: context.repo.repo, branch,
-                  required_status_checks:{ strict:true, contexts:["security-scan"] },
+                  required_status_checks: { strict: true, contexts: ["security-scan"] },
                   enforce_admins: !bypassAdmin,
-                  required_pull_request_reviews:{
+                  required_pull_request_reviews: {
                     required_approving_review_count: approvals,
-                    dismiss_stale_reviews:true,
-                    require_code_owner_reviews:true
+                    dismiss_stale_reviews: true,
+                    require_code_owner_reviews: true
                   },
-                  allow_force_pushes:false,
-                  allow_deletions:false,
-                  required_conversation_resolution:true
+                  allow_force_pushes: false,
+                  allow_deletions: false,
+                  required_conversation_resolution: true
                 });
                 console.log(`✅ ${branch} secured`);
               } catch (e) { console.log(`⚠️ ${branch}: ${e.message}`); }
@@ -203,7 +208,8 @@ Please remove these and open a new PR.`
     needs: [validate-user, apply-protection]
     if: needs.validate-user.outputs.authorized == 'true' && github.event.inputs.action == 'lock-it-down'
     steps:
-      - uses: actions/github-script@v7
+      - name: Post security guideline issue
+        uses: actions/github-script@v7
         with:
           github-token: ${{ secrets.GITHUB_TOKEN }}
           script: |
@@ -212,6 +218,7 @@ Please remove these and open a new PR.`
             const reviewers = maintainer ? `@${owner} and @${maintainer}` : `@${owner}`;
             const approvals = '${{ github.event.inputs.approval_count }}';
 
+            // Close any existing open security-guidelines issues first
             const { data: existing } = await github.rest.issues.listForRepo({
               owner: context.repo.owner, repo: context.repo.repo,
               labels: ['security-guidelines'], state: 'open'
@@ -255,5 +262,48 @@ This repository is under **strict security protection**.
 Maintainers: ${reviewers}  
 Activated by: @${{ github.actor }}  
 📌 *This issue is pinned for contributor reference*`,
-              labels: ['security-guidelines','documentation','pinned']
+              labels:
+                - security-guidelines
+                - documentation
+                - pinned
             });
+
+  delete-stale-branches:
+    name: Delete Stale Branches
+    runs-on: ubuntu-latest
+    if: github.event_name == 'schedule' || github.event_name == 'workflow_dispatch'
+    steps:
+      - name: Delete old, closed, or merged branches
+        uses: actions/github-script@v7
+        with:
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          script: |
+            const defaultBranches = ['main', 'master'];
+            const { data: branches } = await github.rest.repos.listBranches({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              protected: false
+            });
+            for (const branch of branches) {
+              if (defaultBranches.includes(branch.name)) continue;
+              try {
+                // Check for open PRs on this branch
+                const prs = await github.rest.pulls.list({
+                  owner: context.repo.owner,
+                  repo: context.repo.repo,
+                  head: `${context.repo.owner}:${branch.name}`,
+                  state: 'open'
+                });
+                if (prs.data.length === 0) {
+                  // Try to delete the branch
+                  await github.rest.git.deleteRef({
+                    owner: context.repo.owner,
+                    repo: context.repo.repo,
+                    ref: `heads/${branch.name}`
+                  });
+                  console.log(`🗑️ Deleted stale branch: ${branch.name}`);
+                }
+              } catch (e) {
+                // Ignore errors (branch may already be deleted, protected, etc)
+              }
+            }
