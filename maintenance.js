@@ -5,7 +5,7 @@
 (function () {
   // ======= CONFIG =======
   const maintenance = {
-    active: true,              // true = maintenance ON, false = OFF
+    active: false,              // true = maintenance ON, false = OFF
     // Either set durationHours OR endTimeISO (ISO string). If both set, endTimeISO wins.
     durationHours: 5,          // e.g. 5 (hours). Ignored if endTimeISO provided.
     endTimeISO: null,          // e.g. "2025-09-06T12:00:00" or null
