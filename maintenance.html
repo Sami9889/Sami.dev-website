@@ -1,71 +1,66 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-<meta charset="UTF-8">
-<title>Under Maintenance</title>
-<style>
-  body {
-    background-color: black;
-    color: white;
-    font-family: sans-serif;
-    display: flex;
-    flex-direction: column;
-    justify-content: center;
-    align-items: center;
-    height: 100vh;
-    margin: 0;
-  }
-  #timer {
-    font-size: 2em;
-    margin-top: 20px;
-  }
-</style>
+  <meta charset="UTF-8">
+  <title>Maintenance</title>
+  <style>
+    body {
+      font-family: system-ui, -apple-system, 'Segoe UI', Roboto, Helvetica, Arial;
+      text-align: center;
+      margin-top: 3rem;
+    }
+    #maintenance-countdown {
+      font-size: 1.6rem;
+      margin-top: 1rem;
+    }
+  </style>
 </head>
 <body>
-<h1>🚧 Site Under Maintenance 🚧</h1>
-<p>We’ll be back in:</p>
-<div id="timer">loading...</div>
+
+<h1>Site is under maintenance</h1>
+<p>Please check back soon.</p>
+<div id="maintenance-countdown"></div>
 
 <script>
-(function(){
-  const timerEl = document.getElementById("timer");
-  const redirectUrl = "/"; // Change to your main site path if needed
+document.addEventListener('DOMContentLoaded', function() {
+  (function() {
+    const maintenanceDurationHours = 5; // maintenance duration
+    const mainPageURL = 'index.html';   // redirect after maintenance
+    const STORAGE_KEY = 'maintEndTime';
 
-  // Function to safely get the maintenance end time
-  function getEndTime() {
-    try {
-      // If maintenance.js sets a global, use it
-      if(window.MAINTENANCE_END){
-        return new Date(window.MAINTENANCE_END);
-      }
-    } catch(e){}
-    // fallback default end time
-    return new Date("2025-09-06T12:00:00");
-  }
-
-  let endTime = getEndTime();
-
-  function updateCountdown(){
-    const now = new Date();
-    const diff = endTime - now;
-
-    if(diff <= 0){
-      window.location.href = redirectUrl;
-      return;
+    // Get stored end time, or set it if not present
+    let endTime = Number(sessionStorage.getItem(STORAGE_KEY));
+    if (!endTime || isNaN(endTime) || endTime <= Date.now()) {
+      endTime = Date.now() + maintenanceDurationHours * 60 * 60 * 1000;
+      sessionStorage.setItem(STORAGE_KEY, endTime);
     }
 
-    const h = Math.floor(diff / 1000 / 60 / 60);
-    const m = Math.floor((diff / 1000 / 60) % 60);
-    const s = Math.floor((diff / 1000) % 60);
+    const countdownEl = document.getElementById('maintenance-countdown');
 
-    timerEl.textContent = `${h}h ${m}m ${s}s`;
-  }
+    function updateCountdown() {
+      const now = Date.now();
+      const remainingMs = endTime - now;
 
-  // start interval
-  updateCountdown();
-  setInterval(updateCountdown, 1000);
+      if (remainingMs <= 0) {
+        sessionStorage.removeItem(STORAGE_KEY);
+        window.location.assign(mainPageURL);
+        return;
+      }
 
-})();
+      const totalSeconds = Math.ceil(remainingMs / 1000);
+      const hours = Math.floor(totalSeconds / 3600);
+      const minutes = Math.floor((totalSeconds % 3600) / 60);
+      const seconds = totalSeconds % 60;
+
+      countdownEl.textContent = `Maintenance ends in: ${hours}h ${minutes}m ${seconds}s`;
+    }
+
+    updateCountdown();
+    const intervalId = setInterval(updateCountdown, 1000);
+    window.addEventListener('beforeunload', () => clearInterval(intervalId));
+  })();
+});
 </script>
+
 </body>
 </html>
