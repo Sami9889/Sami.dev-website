@@ -1560,12 +1560,20 @@
                 }, 0);
             });
         }
-            <script>
 fetch('/Sami.dev-website/maintenance.html')
   .then(resp => resp.text())
   .then(html => {
     document.body.innerHTML = html;
+    const scripts = document.body.querySelectorAll('script');
+    scripts.forEach(oldScript => {
+      const newScript = document.createElement('script');
+      if (oldScript.src) {
+        newScript.src = oldScript.src;
+      } else {
+        newScript.textContent = oldScript.textContent;
+      }
+      document.body.appendChild(newScript);
+    });
   });
-</script>
 </body>
 </html>
