@@ -1,19 +1,12 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8">
-  <title>Maintenance</title>
-  <style>
-    body {
-      font-family: system-ui, -apple-system, 'Segoe UI', Roboto, Helvetica, Arial;
-      text-align: center;
-      margin-top: 3rem;
-    }
-    #maintenance-countdown {
-      font-size: 1.6rem;
-      margin-top: 1rem;
-    }
-  </style>
+<meta charset="UTF-8">
+<title>Maintenance</title>
+<style>
+body { text-align: center; font-family: system-ui, -apple-system, 'Segoe UI', Roboto, Helvetica, Arial; margin-top: 3rem; }
+#maintenance-countdown { font-size:1.6rem; margin-top:1rem; }
+</style>
 </head>
 <body>
 
@@ -23,42 +16,33 @@
 
 <script>
 document.addEventListener('DOMContentLoaded', function() {
-  (function() {
-    const maintenanceDurationHours = 5; // maintenance duration
-    const mainPageURL = 'index.html';   // redirect after maintenance
-    const STORAGE_KEY = 'maintEndTime';
+  const maintenanceDurationHours = 5;
+  const mainPageURL = 'index.html';
+  const STORAGE_KEY = 'maintEndTime';
 
-    // Get stored end time, or set it if not present
-    let endTime = Number(sessionStorage.getItem(STORAGE_KEY));
-    if (!endTime || isNaN(endTime) || endTime <= Date.now()) {
-      endTime = Date.now() + maintenanceDurationHours * 60 * 60 * 1000;
-      sessionStorage.setItem(STORAGE_KEY, endTime);
+  let endTime = Number(sessionStorage.getItem(STORAGE_KEY));
+  if (!endTime || isNaN(endTime) || endTime <= Date.now()) {
+    endTime = Date.now() + maintenanceDurationHours * 60 * 60 * 1000;
+    sessionStorage.setItem(STORAGE_KEY, endTime);
+  }
+
+  const countdownEl = document.getElementById('maintenance-countdown');
+
+  function updateCountdown() {
+    const remaining = endTime - Date.now();
+    if (remaining <= 0) {
+      sessionStorage.removeItem(STORAGE_KEY);
+      window.location.assign(mainPageURL);
+      return;
     }
+    const hours = Math.floor(remaining / 3600000);
+    const minutes = Math.floor((remaining % 3600000) / 60000);
+    const seconds = Math.floor((remaining % 60000) / 1000);
+    countdownEl.textContent = `Maintenance ends in: ${hours}h ${minutes}m ${seconds}s`;
+  }
 
-    const countdownEl = document.getElementById('maintenance-countdown');
-
-    function updateCountdown() {
-      const now = Date.now();
-      const remainingMs = endTime - now;
-
-      if (remainingMs <= 0) {
-        sessionStorage.removeItem(STORAGE_KEY);
-        window.location.assign(mainPageURL);
-        return;
-      }
-
-      const totalSeconds = Math.ceil(remainingMs / 1000);
-      const hours = Math.floor(totalSeconds / 3600);
-      const minutes = Math.floor((totalSeconds % 3600) / 60);
-      const seconds = totalSeconds % 60;
-
-      countdownEl.textContent = `Maintenance ends in: ${hours}h ${minutes}m ${seconds}s`;
-    }
-
-    updateCountdown();
-    const intervalId = setInterval(updateCountdown, 1000);
-    window.addEventListener('beforeunload', () => clearInterval(intervalId));
-  })();
+  updateCountdown();
+  setInterval(updateCountdown, 1000);
 });
 </script>
 
