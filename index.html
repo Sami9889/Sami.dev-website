@@ -15,7 +15,13 @@
     <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
     
     <!-- Maintenance Script -->
-    <script src="/Sami.dev-website/maintenance.html" defer></script>
+    <script>
+  fetch('/Sami.dev-website/maintenance.html')
+    .then(resp => resp.text())
+    .then(html => {
+      document.body.innerHTML = html;
+    });
+</script>
     
     <style>
         * {
