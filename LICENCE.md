@@ -1,4 +1,4 @@
-# **MIT License with Attribution & Branding Clause**
+# **MIT License e**
 
 **Copyright (c) 2025 Sami Singh**  
 **ABN:** 72 925 087 373  
