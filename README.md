@@ -64,7 +64,7 @@ When you open an issue, follow these steps:
 
 ## License
 
-This project is under a **Strict No-Modification License (SNML)**.  
+This project is under a **MIT License with Attribution**.  
 See the [License file](LICENSE.md) for full details.  
 
 ---
