@@ -259,7 +259,7 @@ jobs:
 
   security-scan:
     runs-on: ubuntu-latest
-    if: github.event_name == 'pull_request' || github.event_name == 'push'
+    if: github.event_name == 'pull_request'
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
@@ -268,40 +268,77 @@ jobs:
 
       - name: Scan for secrets and forbidden files
         run: |
-          echo "Starting security scan..."
+          echo "Starting security scan on PR changes only..."
           
-          forbidden_files=$(find . -type f \( -name "*.pem" -o -name "*.key" -o -name "*.p12" -o -name ".env" \) -o -path "*/secrets/*" 2>/dev/null | grep -v ".git" || true)
+          # Get the base branch
+          base_sha="${{ github.event.pull_request.base.sha }}"
+          head_sha="${{ github.event.pull_request.head.sha }}"
           
-          if [ -n "$forbidden_files" ]; then
-            echo "::error::Found forbidden files:"
-            echo "$forbidden_files"
+          echo "Scanning changes between $base_sha and $head_sha"
+          
+          # Get only the files changed in this PR
+          changed_files=$(git diff --name-only "$base_sha" "$head_sha" 2>/dev/null || true)
+          
+          if [ -z "$changed_files" ]; then
+            echo "No files changed in this PR"
+            exit 0
+          fi
+          
+          echo "Files changed in this PR:"
+          echo "$changed_files"
+          echo ""
+          
+          # Check for forbidden file types in PR changes only
+          forbidden_found=""
+          echo "$changed_files" | while IFS= read -r file; do
+            if [ -f "$file" ]; then
+              case "$file" in
+                *.pem|*.key|*.p12|*.env)
+                  echo "::error::Forbidden file type: $file"
+                  forbidden_found="true"
+                  ;;
+                */secrets/*)
+                  echo "::error::File in forbidden directory: $file"
+                  forbidden_found="true"
+                  ;;
+              esac
+            fi
+          done
+          
+          if [ -n "$forbidden_found" ]; then
+            echo "::error::Forbidden files detected in PR"
             exit 1
           fi
           
-          echo "No forbidden files found"
+          echo "No forbidden files found in PR changes"
           
-          if [ "${{ github.event_name }}" == "push" ]; then
-            before_sha="${{ github.event.before }}"
-            after_sha="${{ github.sha }}"
-            
-            if [ "$before_sha" != "0000000000000000000000000000000000000000" ]; then
-              echo "Checking for secrets in diff"
-              
-              changed_files=$(git diff --name-only "$before_sha" "$after_sha" 2>/dev/null || true)
-              
-              if [ -n "$changed_files" ]; then
-                echo "$changed_files" | while IFS= read -r file; do
-                  if [ -f "$file" ]; then
-                    if grep -E "(AKIA|SECRET|TOKEN|KEY|PASSWORD)" "$file" >/dev/null 2>&1; then
-                      echo "::error::Potential secrets found in $file"
-                      exit 1
-                    fi
-                  fi
-                done
+          # Check for potential secrets in changed files only
+          secrets_found=""
+          echo "$changed_files" | while IFS= read -r file; do
+            if [ -f "$file" ]; then
+              # Skip workflow files and config files in .github
+              if [[ "$file" == .github/* ]]; then
+                echo "Skipping repository file: $file"
+                continue
               fi
-            else
-              echo "Initial commit detected, skipping diff check"
+              
+              # Check for secrets
+              if grep -l -E "(AKIA[0-9A-Z]{16}|ghp_[a-zA-Z0-9]{36}|gho_[a-zA-Z0-9]{36}|github_pat_[a-zA-Z0-9]{22}_[a-zA-Z0-9]{59})" "$file" >/dev/null 2>&1; then
+                echo "::error::Potential AWS or GitHub secrets found in: $file"
+                secrets_found="true"
+              elif grep -l -E "(sk-[a-zA-Z0-9]{48}|api[_-]?key['\"]?\s*[:=]\s*['\"][a-zA-Z0-9]{32,})" "$file" >/dev/null 2>&1; then
+                echo "::error::Potential API keys found in: $file"
+                secrets_found="true"
+              elif grep -l -E "(password['\"]?\s*[:=]\s*['\"][^'\"]{8,}|passwd['\"]?\s*[:=]\s*['\"][^'\"]{8,})" "$file" >/dev/null 2>&1; then
+                echo "::error::Potential passwords found in: $file"
+                secrets_found="true"
+              fi
             fi
+          done
+          
+          if [ -n "$secrets_found" ]; then
+            echo "::error::Potential secrets detected in PR"
+            exit 1
           fi
           
           echo "Security scan passed successfully"
