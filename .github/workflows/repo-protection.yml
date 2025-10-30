@@ -1,4 +1,4 @@
-name: Repository Protection
+name:  Repository Protection
 
 on:
   workflow_dispatch:
@@ -30,7 +30,7 @@ on:
         type: string
 
   schedule:
-    - cron: '0 2 * * *'  # Run at 2 AM UTC daily
+    - cron: '0 2 * * *'
 
 permissions:
   contents: write
@@ -55,7 +55,6 @@ jobs:
         run: |
           maintainer="${{ github.event.inputs.maintainer_username }}"
           
-          # Empty maintainer check - treat empty string as no maintainer
           if [ -z "$maintainer" ]; then
             maintainer="NONE_SET"
           fi
@@ -63,7 +62,7 @@ jobs:
           if [ "${{ github.actor }}" != "${{ github.repository_owner }}" ] && [ "${{ github.actor }}" != "$maintainer" ]; then
             echo "authorized=false" >> $GITHUB_OUTPUT
             echo "user_role=unauthorized" >> $GITHUB_OUTPUT
-            echo "::error::User ${{ github.actor }} is not authorized. Only owner or maintainer can run this workflow."
+            echo "::error::User ${{ github.actor }} is not authorized"
             exit 1
           fi
           
@@ -89,7 +88,6 @@ jobs:
         run: |
           git fetch --prune origin
           
-          # Get list of branches excluding protected ones
           branches=$(git branch -r | grep -v "HEAD\|main\|master" | sed 's/origin\///' || true)
           
           if [ -z "$branches" ]; then
@@ -97,16 +95,13 @@ jobs:
             exit 0
           fi
           
-          for branch in $branches; do
-            # Trim whitespace
+          echo "$branches" | while IFS= read -r branch; do
             branch=$(echo "$branch" | xargs)
             
-            # Skip if empty
             if [ -z "$branch" ]; then
               continue
             fi
             
-            # Check if branch exists and get last commit time
             if git rev-parse --verify "origin/$branch" >/dev/null 2>&1; then
               last_commit=$(git log -1 --format=%at "origin/$branch" 2>/dev/null || echo "0")
               current_time=$(date +%s)
@@ -114,7 +109,7 @@ jobs:
               
               if [ $days_old -gt 30 ]; then
                 echo "Deleting old branch: $branch (${days_old} days old)"
-                git push origin --delete "$branch" || echo "Failed to delete $branch, continuing..."
+                git push origin --delete "$branch" || echo "Failed to delete $branch"
               else
                 echo "Branch $branch is only $days_old days old, keeping"
               fi
@@ -133,7 +128,7 @@ jobs:
       - name: Validate confirmation
         run: |
           if [ "${{ github.event.inputs.confirmation }}" != "CONFIRM" ]; then
-            echo "::error::Confirmation required. Please type 'CONFIRM' in the confirmation field to proceed."
+            echo "::error::Confirmation required. Type CONFIRM to proceed"
             exit 1
           fi
       
@@ -148,8 +143,8 @@ jobs:
             const approvals = parseInt('${{ github.event.inputs.approval_count }}');
             const bypassAdmin = '${{ github.event.inputs.bypass_admin }}' === 'true';
             
-            console.log(`Applying protection with ${approvals} required approvals`);
-            console.log(`Admin bypass: ${bypassAdmin}`);
+            console.log('Applying protection with ' + approvals + ' required approvals');
+            console.log('Admin bypass: ' + bypassAdmin);
             
             for (const branch of ['main', 'master']) {
               try {
@@ -172,12 +167,12 @@ jobs:
                   allow_deletions: false,
                   required_conversation_resolution: true
                 });
-                console.log(`[SUCCESS] Protected ${branch} branch`);
+                console.log('[SUCCESS] Protected ' + branch + ' branch');
               } catch (e) {
                 if (e.status === 404) {
-                  console.log(`[SKIP] Branch ${branch} not found, skipping`);
+                  console.log('[SKIP] Branch ' + branch + ' not found');
                 } else {
-                  console.error(`[FAILED] Could not protect ${branch}: ${e.message}`);
+                  console.error('[FAILED] Could not protect ' + branch + ': ' + e.message);
                   throw e;
                 }
               }
@@ -199,18 +194,17 @@ jobs:
           script: |
             const maintainer = '${{ github.event.inputs.maintainer_username }}';
             const owner = '${{ github.repository_owner }}';
-            const reviewers = maintainer ? `@${owner} and @${maintainer}` : `@${owner}`;
+            const reviewers = maintainer ? '@' + owner + ' and @' + maintainer : '@' + owner;
             const approvals = '${{ github.event.inputs.approval_count }}';
 
-            // Close any existing open security-guidelines issues first
-            const { data: existing } = await github.rest.issues.listForRepo({
+            const existing = await github.rest.issues.listForRepo({
               owner: context.repo.owner,
               repo: context.repo.repo,
               labels: ['security-guidelines'],
               state: 'open'
             });
             
-            for (const issue of existing) {
+            for (const issue of existing.data) {
               await github.rest.issues.update({
                 owner: context.repo.owner,
                 repo: context.repo.repo,
@@ -218,46 +212,39 @@ jobs:
                 state: 'closed',
                 state_reason: 'completed'
               });
-              console.log(`Closed previous security guidelines issue #${issue.number}`);
+              console.log('Closed previous security guidelines issue #' + issue.number);
             }
 
             const newIssue = await github.rest.issues.create({
               owner: context.repo.owner,
               repo: context.repo.repo,
               title: 'LOCKDOWN: Security Rules and Contribution Guidelines',
-              body: `# Repository Security Rules
-
-This repository is under strict security protection.
-
----
-
-## Allowed Actions
-- Branch off main or master
-- Open pull requests for changes
-- Pass the security-scan check
-- Get ${approvals} approvals plus code owner review
-- Fix issues raised in reviews
-
-## Forbidden Actions
-- Direct pushes to protected branches
-- Merging PRs without required approvals
-- Merging with failing security-scan
-- Merging with unresolved conversations
-- Adding forbidden files (.pem, .key, .p12, .env, /secrets/)
-- Committing secrets (tokens, API keys, passwords, private keys)
-- Force pushing or deleting branches
-
----
-
-WARNING: PRs with forbidden files or secrets will be automatically CLOSED by the bot.
-
-Maintainers: ${reviewers}
-Activated by: @${{ github.actor }}
-This issue is pinned for contributor reference`,
+              body: '# Repository Security Rules\n\n' +
+                    'This repository is under strict security protection.\n\n' +
+                    '---\n\n' +
+                    '## Allowed Actions\n' +
+                    '- Branch off main or master\n' +
+                    '- Open pull requests for changes\n' +
+                    '- Pass the security-scan check\n' +
+                    '- Get ' + approvals + ' approvals plus code owner review\n' +
+                    '- Fix issues raised in reviews\n\n' +
+                    '## Forbidden Actions\n' +
+                    '- Direct pushes to protected branches\n' +
+                    '- Merging PRs without required approvals\n' +
+                    '- Merging with failing security-scan\n' +
+                    '- Merging with unresolved conversations\n' +
+                    '- Adding forbidden files (.pem, .key, .p12, .env, /secrets/)\n' +
+                    '- Committing secrets (tokens, API keys, passwords, private keys)\n' +
+                    '- Force pushing or deleting branches\n\n' +
+                    '---\n\n' +
+                    'WARNING: PRs with forbidden files or secrets will be automatically CLOSED by the bot.\n\n' +
+                    'Maintainers: ' + reviewers + '\n' +
+                    'Activated by: @${{ github.actor }}\n' +
+                    'This issue is pinned for contributor reference',
               labels: ['security-guidelines', 'documentation', 'pinned']
             });
             
-            console.log(`Created security guidelines issue #${newIssue.data.number}`);
+            console.log('Created security guidelines issue #' + newIssue.data.number);
 
   security-scan:
     runs-on: ubuntu-latest
@@ -272,7 +259,6 @@ This issue is pinned for contributor reference`,
         run: |
           echo "Starting security scan..."
           
-          # Check for forbidden files
           forbidden_files=$(find . -type f \( -name "*.pem" -o -name "*.key" -o -name "*.p12" -o -name ".env" \) -o -path "*/secrets/*" 2>/dev/null | grep -v ".git" || true)
           
           if [ -n "$forbidden_files" ]; then
@@ -283,27 +269,24 @@ This issue is pinned for contributor reference`,
           
           echo "No forbidden files found"
           
-          # Check for potential secrets in changes (only on push events with valid before SHA)
           if [ "${{ github.event_name }}" == "push" ]; then
             before_sha="${{ github.event.before }}"
             after_sha="${{ github.sha }}"
             
-            # Check if this is not the initial commit
             if [ "$before_sha" != "0000000000000000000000000000000000000000" ]; then
-              echo "Checking for secrets in diff between $before_sha and $after_sha"
+              echo "Checking for secrets in diff"
               
               changed_files=$(git diff --name-only "$before_sha" "$after_sha" 2>/dev/null || true)
               
               if [ -n "$changed_files" ]; then
-                # Check each changed file for potential secrets
-                while IFS= read -r file; do
+                echo "$changed_files" | while IFS= read -r file; do
                   if [ -f "$file" ]; then
                     if grep -E "(AKIA|SECRET|TOKEN|KEY|PASSWORD)" "$file" >/dev/null 2>&1; then
                       echo "::error::Potential secrets found in $file"
                       exit 1
                     fi
                   fi
-                done <<< "$changed_files"
+                done
               fi
             else
               echo "Initial commit detected, skipping diff check"
