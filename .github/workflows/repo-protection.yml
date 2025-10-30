@@ -1,4 +1,4 @@
-name:  Repository Protection
+name: Enhanced Repository Protection
 
 on:
   workflow_dispatch:
@@ -31,6 +31,17 @@ on:
 
   schedule:
     - cron: '0 2 * * *'
+  
+  issue_comment:
+    types: [created]
+  
+  pull_request:
+    types: [opened, synchronize, reopened]
+  
+  push:
+    branches:
+      - main
+      - master
 
 permissions:
   contents: write
@@ -294,3 +305,146 @@ jobs:
           fi
           
           echo "Security scan passed successfully"
+      
+      - name: Comment on PR with scan results
+        if: github.event_name == 'pull_request' && always()
+        uses: actions/github-script@v7
+        with:
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          script: |
+            const scanPassed = '${{ job.status }}' === 'success';
+            const prNumber = context.issue.number;
+            
+            let body = '';
+            if (scanPassed) {
+              body = '### Security Scan Results\n\n' +
+                     'Status: PASSED\n\n' +
+                     'All security checks completed successfully:\n' +
+                     '- No forbidden files detected (.pem, .key, .p12, .env, /secrets/)\n' +
+                     '- No potential secrets found in changes\n\n' +
+                     'This PR is clear for code review.\n\n' +
+                     '---\n' +
+                     'Awaiting maintainer approval. Maintainers can approve by commenting:\n' +
+                     '- `/bot approve` - Approve and allow merge\n' +
+                     '- `/bot reject` - Reject with reason';
+            } else {
+              body = '### Security Scan Results\n\n' +
+                     'Status: FAILED\n\n' +
+                     'Security issues detected in this PR. Please review the workflow logs for details.\n\n' +
+                     'Common issues:\n' +
+                     '- Forbidden file types included (.pem, .key, .p12, .env)\n' +
+                     '- Files in /secrets/ directory\n' +
+                     '- Potential secrets in code (tokens, API keys, passwords)\n\n' +
+                     'Please remove any sensitive files and secrets before requesting review.';
+            }
+            
+            await github.rest.issues.createComment({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              issue_number: prNumber,
+              body: body
+            });
+
+  bot-command-handler:
+    name: Handle Bot Commands
+    runs-on: ubuntu-latest
+    if: github.event_name == 'issue_comment' && github.event.issue.pull_request
+    steps:
+      - name: Check if commenter is authorized
+        id: auth_check
+        uses: actions/github-script@v7
+        with:
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          script: |
+            const commenter = context.payload.comment.user.login;
+            const owner = context.repo.owner;
+            const maintainer = process.env.MAINTAINER_USERNAME || '';
+            
+            const isAuthorized = commenter === owner || commenter === maintainer;
+            core.setOutput('authorized', isAuthorized);
+            core.setOutput('commenter', commenter);
+            
+            return isAuthorized;
+      
+      - name: Process bot command
+        if: steps.auth_check.outputs.authorized == 'true'
+        uses: actions/github-script@v7
+        with:
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          script: |
+            const comment = context.payload.comment.body.trim().toLowerCase();
+            const prNumber = context.issue.number;
+            const commenter = '${{ steps.auth_check.outputs.commenter }}';
+            
+            if (comment.startsWith('/bot approve')) {
+              await github.rest.issues.createComment({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                issue_number: prNumber,
+                body: '### PR Approved by Maintainer\n\n' +
+                      'Approved by: @' + commenter + '\n\n' +
+                      'This PR has been reviewed and approved. ' +
+                      'Once all required approvals are met and checks pass, this PR can be merged.\n\n' +
+                      'Status: APPROVED'
+              });
+              
+              await github.rest.issues.addLabels({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                issue_number: prNumber,
+                labels: ['approved', 'ready-to-merge']
+              });
+              
+              console.log('PR #' + prNumber + ' approved by ' + commenter);
+              
+            } else if (comment.startsWith('/bot reject')) {
+              const reason = comment.replace('/bot reject', '').trim() || 'No reason provided';
+              
+              await github.rest.issues.createComment({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                issue_number: prNumber,
+                body: '### PR Rejected by Maintainer\n\n' +
+                      'Rejected by: @' + commenter + '\n' +
+                      'Reason: ' + reason + '\n\n' +
+                      'Please address the feedback and request review again.\n\n' +
+                      'Status: CHANGES REQUESTED'
+              });
+              
+              await github.rest.issues.addLabels({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                issue_number: prNumber,
+                labels: ['changes-requested']
+              });
+              
+              console.log('PR #' + prNumber + ' rejected by ' + commenter);
+              
+            } else if (comment.startsWith('/bot')) {
+              await github.rest.issues.createComment({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                issue_number: prNumber,
+                body: '### Unknown Bot Command\n\n' +
+                      'Available commands:\n' +
+                      '- `/bot approve` - Approve this PR\n' +
+                      '- `/bot reject [reason]` - Reject with optional reason\n\n' +
+                      'Only repository maintainers can use bot commands.'
+              });
+            }
+      
+      - name: Unauthorized command attempt
+        if: steps.auth_check.outputs.authorized == 'false'
+        uses: actions/github-script@v7
+        with:
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          script: |
+            const comment = context.payload.comment.body.trim();
+            if (comment.toLowerCase().startsWith('/bot')) {
+              await github.rest.issues.createComment({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                issue_number: context.issue.number,
+                body: 'Sorry, only repository maintainers can use bot commands.'
+              });
+            }
