@@ -1,4 +1,4 @@
-name: Enhanced Repository Protection
+name: Repository Protection
 
 on:
   workflow_dispatch:
@@ -41,7 +41,7 @@ permissions:
 
 env:
   PROTECTION_LABEL: 'repo-protection-status'
-  EMERGENCY_LABEL: '🚨-emergency-unlock'
+  EMERGENCY_LABEL: 'emergency-unlock'
 
 jobs:
   validate-user:
@@ -54,11 +54,19 @@ jobs:
         id: check
         run: |
           maintainer="${{ github.event.inputs.maintainer_username }}"
+          
+          # Empty maintainer check - treat empty string as no maintainer
+          if [ -z "$maintainer" ]; then
+            maintainer="NONE_SET"
+          fi
+          
           if [ "${{ github.actor }}" != "${{ github.repository_owner }}" ] && [ "${{ github.actor }}" != "$maintainer" ]; then
             echo "authorized=false" >> $GITHUB_OUTPUT
             echo "user_role=unauthorized" >> $GITHUB_OUTPUT
+            echo "::error::User ${{ github.actor }} is not authorized. Only owner or maintainer can run this workflow."
             exit 1
           fi
+          
           if [ "${{ github.actor }}" == "${{ github.repository_owner }}" ]; then
             echo "user_role=owner" >> $GITHUB_OUTPUT
           else
@@ -68,7 +76,7 @@ jobs:
 
   cleanup-old-branches:
     needs: validate-user
-    if: needs.validate-user.outputs.authorized == 'true'
+    if: needs.validate-user.outputs.authorized == 'true' && github.event_name == 'schedule'
     runs-on: ubuntu-latest
     steps:
       - name: Checkout repository
@@ -82,25 +90,53 @@ jobs:
           git fetch --prune origin
           
           # Get list of branches excluding protected ones
-          branches=$(git branch -r | grep -v "HEAD\|main\|master" | sed 's/origin\///')
+          branches=$(git branch -r | grep -v "HEAD\|main\|master" | sed 's/origin\///' || true)
+          
+          if [ -z "$branches" ]; then
+            echo "No branches to process"
+            exit 0
+          fi
           
           for branch in $branches; do
-            # Check if branch has no open PRs and is older than 30 days
-            last_commit=$(git log -1 --format=%at origin/$branch)
-            current_time=$(date +%s)
-            days_old=$(( ($current_time - $last_commit) / 86400 ))
+            # Trim whitespace
+            branch=$(echo "$branch" | xargs)
             
-            if [ $days_old -gt 30 ]; then
-              echo "Deleting old branch: $branch (${days_old} days old)"
-              git push origin --delete $branch || true
+            # Skip if empty
+            if [ -z "$branch" ]; then
+              continue
+            fi
+            
+            # Check if branch exists and get last commit time
+            if git rev-parse --verify "origin/$branch" >/dev/null 2>&1; then
+              last_commit=$(git log -1 --format=%at "origin/$branch" 2>/dev/null || echo "0")
+              current_time=$(date +%s)
+              days_old=$(( ($current_time - $last_commit) / 86400 ))
+              
+              if [ $days_old -gt 30 ]; then
+                echo "Deleting old branch: $branch (${days_old} days old)"
+                git push origin --delete "$branch" || echo "Failed to delete $branch, continuing..."
+              else
+                echo "Branch $branch is only $days_old days old, keeping"
+              fi
+            else
+              echo "Branch $branch no longer exists, skipping"
             fi
           done
 
   apply-protection:
     needs: validate-user
-    if: needs.validate-user.outputs.authorized == 'true' && github.event.inputs.action == 'lock-it-down'
+    if: |
+      needs.validate-user.outputs.authorized == 'true' && 
+      github.event.inputs.action == 'lock-it-down'
     runs-on: ubuntu-latest
     steps:
+      - name: Validate confirmation
+        run: |
+          if [ "${{ github.event.inputs.confirmation }}" != "CONFIRM" ]; then
+            echo "::error::Confirmation required. Please type 'CONFIRM' in the confirmation field to proceed."
+            exit 1
+          fi
+      
       - name: Checkout repository
         uses: actions/checkout@v4
         
@@ -111,6 +147,9 @@ jobs:
           script: |
             const approvals = parseInt('${{ github.event.inputs.approval_count }}');
             const bypassAdmin = '${{ github.event.inputs.bypass_admin }}' === 'true';
+            
+            console.log(`Applying protection with ${approvals} required approvals`);
+            console.log(`Admin bypass: ${bypassAdmin}`);
             
             for (const branch of ['main', 'master']) {
               try {
@@ -133,19 +172,24 @@ jobs:
                   allow_deletions: false,
                   required_conversation_resolution: true
                 });
-                console.log(`✅ Protected ${branch} branch`);
+                console.log(`[SUCCESS] Protected ${branch} branch`);
               } catch (e) {
-                if (e.status !== 404) {
+                if (e.status === 404) {
+                  console.log(`[SKIP] Branch ${branch} not found, skipping`);
+                } else {
+                  console.error(`[FAILED] Could not protect ${branch}: ${e.message}`);
                   throw e;
                 }
-                console.log(`Branch ${branch} not found, skipping`);
               }
             }
 
   create-security-guidelines:
     name: Post Security Guidelines
     needs: [validate-user, apply-protection]
-    if: needs.validate-user.outputs.authorized == 'true' && github.event.inputs.action == 'lock-it-down'
+    if: |
+      needs.validate-user.outputs.authorized == 'true' && 
+      github.event.inputs.action == 'lock-it-down' &&
+      needs.apply-protection.result == 'success'
     runs-on: ubuntu-latest
     steps:
       - name: Post security guideline issue
@@ -165,6 +209,7 @@ jobs:
               labels: ['security-guidelines'],
               state: 'open'
             });
+            
             for (const issue of existing) {
               await github.rest.issues.update({
                 owner: context.repo.owner,
@@ -173,46 +218,50 @@ jobs:
                 state: 'closed',
                 state_reason: 'completed'
               });
+              console.log(`Closed previous security guidelines issue #${issue.number}`);
             }
 
-            await github.rest.issues.create({
+            const newIssue = await github.rest.issues.create({
               owner: context.repo.owner,
               repo: context.repo.repo,
-              title: '🔒 Security Rules & Contribution Guidelines',
-              body: `# 🔒 Repository Security Rules
+              title: 'LOCKDOWN: Security Rules and Contribution Guidelines',
+              body: `# Repository Security Rules
 
-This repository is under **strict security protection**.  
+This repository is under strict security protection.
 
 ---
 
-## ✅ Allowed
-- Branch off \`main\` / \`master\`
-- Open PRs for changes
-- Pass **security-scan**
-- Get ${approvals} approvals + code owner review
+## Allowed Actions
+- Branch off main or master
+- Open pull requests for changes
+- Pass the security-scan check
+- Get ${approvals} approvals plus code owner review
 - Fix issues raised in reviews
 
-## ❌ Forbidden
+## Forbidden Actions
 - Direct pushes to protected branches
-- Merging PRs without approvals
+- Merging PRs without required approvals
 - Merging with failing security-scan
 - Merging with unresolved conversations
-- Adding **forbidden files** (\`.pem\`, \`.key\`, \`.p12\`, \`.env\`, \`/secrets/\`)
+- Adding forbidden files (.pem, .key, .p12, .env, /secrets/)
 - Committing secrets (tokens, API keys, passwords, private keys)
 - Force pushing or deleting branches
 
 ---
 
-⚠️ **PRs with forbidden files or secrets will be automatically CLOSED by the bot.**
+WARNING: PRs with forbidden files or secrets will be automatically CLOSED by the bot.
 
-Maintainers: ${reviewers}  
-Activated by: @${{ github.actor }}  
-📌 *This issue is pinned for contributor reference*`,
+Maintainers: ${reviewers}
+Activated by: @${{ github.actor }}
+This issue is pinned for contributor reference`,
               labels: ['security-guidelines', 'documentation', 'pinned']
             });
+            
+            console.log(`Created security guidelines issue #${newIssue.data.number}`);
 
   security-scan:
     runs-on: ubuntu-latest
+    if: github.event_name == 'pull_request' || github.event_name == 'push'
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
@@ -221,17 +270,44 @@ Activated by: @${{ github.actor }}
 
       - name: Scan for secrets and forbidden files
         run: |
+          echo "Starting security scan..."
+          
           # Check for forbidden files
-          forbidden_files=$(find . -type f -regex ".*\.\(pem\|key\|p12\|env\)" -o -path "*/secrets/*")
-          if [ ! -z "$forbidden_files" ]; then
+          forbidden_files=$(find . -type f \( -name "*.pem" -o -name "*.key" -o -name "*.p12" -o -name ".env" \) -o -path "*/secrets/*" 2>/dev/null | grep -v ".git" || true)
+          
+          if [ -n "$forbidden_files" ]; then
             echo "::error::Found forbidden files:"
             echo "$forbidden_files"
             exit 1
           fi
           
-          # Check for potential secrets
-          if git diff --name-only ${{ github.event.before }} ${{ github.sha }} | 
-             xargs grep -l -E "(AKIA|SECRET|TOKEN|KEY|PASSWORD)" 2>/dev/null; then
-            echo "::error::Potential secrets found in changes"
-            exit 1
+          echo "No forbidden files found"
+          
+          # Check for potential secrets in changes (only on push events with valid before SHA)
+          if [ "${{ github.event_name }}" == "push" ]; then
+            before_sha="${{ github.event.before }}"
+            after_sha="${{ github.sha }}"
+            
+            # Check if this is not the initial commit
+            if [ "$before_sha" != "0000000000000000000000000000000000000000" ]; then
+              echo "Checking for secrets in diff between $before_sha and $after_sha"
+              
+              changed_files=$(git diff --name-only "$before_sha" "$after_sha" 2>/dev/null || true)
+              
+              if [ -n "$changed_files" ]; then
+                # Check each changed file for potential secrets
+                while IFS= read -r file; do
+                  if [ -f "$file" ]; then
+                    if grep -E "(AKIA|SECRET|TOKEN|KEY|PASSWORD)" "$file" >/dev/null 2>&1; then
+                      echo "::error::Potential secrets found in $file"
+                      exit 1
+                    fi
+                  fi
+                done <<< "$changed_files"
+              fi
+            else
+              echo "Initial commit detected, skipping diff check"
+            fi
           fi
+          
+          echo "Security scan passed successfully"
