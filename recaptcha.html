@@ -112,10 +112,10 @@ body {
 <!-- reCAPTCHA Box -->
 <div class="recaptcha-container">
     <h1>Verify You're Human</h1>
-    <form action="home.html?verified=true" method="GET">
+    <form id="recapForm">
         <div class="g-recaptcha" data-sitekey="6LcRBhAsAAAAACatryubAg_7jPQPb5i_tcAIoCa-"></div>
         <br><br>
-        <button type="submit" style="padding:0.75rem 2rem; font-size:1rem; border:none; border-radius:6px; background:#007bff; color:white; cursor:pointer;">
+        <button type="button" onclick="submitRecap()" style="padding:0.75rem 2rem; font-size:1rem; border:none; border-radius:6px; background:#007bff; color:white; cursor:pointer;">
             Verify
         </button>
     </form>
@@ -137,6 +137,17 @@ document.addEventListener('mousedown', () => {
 document.addEventListener('mouseup', () => {
     cursor.style.transform = 'translate(-50%, -50%) scale(1)';
 });
+
+// ===== reCAPTCHA Redirect =====
+function submitRecap() {
+    const response = grecaptcha.getResponse();
+    if(response.length === 0) {
+        alert("Please complete the reCAPTCHA first!");
+    } else {
+        // Redirect to index.html
+        window.location.href = "index.html";
+    }
+}
 </script>
 
 </body>
