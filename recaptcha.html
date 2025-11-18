@@ -1,83 +1,141 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Verify Human - sami.dev</title>
-
-<link rel="preconnect" href="https://fonts.googleapis.com">
-<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width,initial-scale=1" />
+<title>Verify - sami.is-a.dev</title>
 
 <style>
-body {
-    font-family: 'Space Grotesk', system-ui, sans-serif;
-    margin: 0; padding: 0;
-    height: 100vh; display: flex;
-    justify-content: center; align-items: center;
-    background: linear-gradient(135deg, #f8f9fa 0%, #e3f2fd 50%, #f3e5f5 100%);
-    background-size: 400% 400%; animation: gradientShift 15s ease infinite;
-    cursor: none;
-}
-@keyframes gradientShift {
-    0% { background-position: 0% 50%; }
-    50% { background-position: 100% 50%; }
-    100% { background-position: 0% 50%; }
-}
-.floating-shapes { position: fixed; top:0; left:0; width:100%; height:100%; pointer-events:none; z-index:0; overflow:hidden; }
-.shape { position: absolute; opacity:0.15; animation: float 20s infinite; }
-.shape:nth-child(1) { width:80px;height:80px;background:linear-gradient(135deg,#007bff,#28a745); border-radius:50%; top:20%; left:10%; animation-duration:25s; }
-.shape:nth-child(2) { width:60px;height:60px;background:linear-gradient(135deg,#28a745,#ffc107); border-radius:30% 70% 70% 30%; top:60%; right:15%; animation-duration:30s; }
-@keyframes float { 0%,100%{transform:translate(0,0) rotate(0deg);} 25%{transform:translate(30px,-30px) rotate(90deg);} 50%{transform:translate(-20px,20px) rotate(180deg);} 75%{transform:translate(40px,10px) rotate(270deg);} }
-.recaptcha-container {
-    position:relative; z-index:10;
-    background: rgba(255,255,255,0.95);
-    padding: 3rem 4rem; border-radius:12px;
-    box-shadow:0 8px 30px rgba(0,0,0,0.15);
-    text-align:center;
-}
-.cursor { position:fixed; top:0; left:0; width:20px; height:20px; border:2px solid #007bff; border-radius:50%; transform:translate(-50%, -50%); pointer-events:none; z-index:20; transition: transform 0.1s ease, width 0.2s ease, height 0.2s ease; }
+  /* Minimal styling so it looks like your site */
+  html,body{height:100%;margin:0;font-family:Inter,system-ui,Arial,sans-serif}
+  body{display:flex;align-items:center;justify-content:center;background:linear-gradient(135deg,#f8f9fa,#e3f2fd);cursor:auto}
+  .box{background:rgba(255,255,255,0.95);padding:28px;border-radius:12px;box-shadow:0 8px 30px rgba(0,0,0,.12);text-align:center;max-width:520px}
+  h1{margin:0 0 12px;font-size:20px}
+  p {margin:0 0 18px;color:#444}
 </style>
+
+<!-- Don't load reCAPTCHA automatically yet -->
 </head>
 <body>
+  <div class="box" id="box">
+    <h1>Verify you're human</h1>
+    <p id="status">Checking verification status…</p>
 
-<div class="floating-shapes">
-    <div class="shape"></div>
-    <div class="shape"></div>
-</div>
+    <!-- placeholder for widget; will be inserted only when needed -->
+    <div id="recaptcha-placeholder" style="min-height:78px"></div>
+  </div>
 
-<div class="recaptcha-container">
-    <h1>Verify You're Human</h1>
-    <div class="g-recaptcha" data-sitekey="6LcRBhAsAAAAACatryubAg_7jPQPb5i_tcAIoCa-" data-callback="onRecaptchaSuccess"></div>
-</div>
-
-<div class="cursor"></div>
-
-<script src="https://www.google.com/recaptcha/api.js" async defer></script>
 <script>
-// Custom cursor
-const cursor = document.querySelector('.cursor');
-document.addEventListener('mousemove', e => { cursor.style.top = e.clientY + 'px'; cursor.style.left = e.clientX + 'px'; });
-document.addEventListener('mousedown', () => { cursor.style.transform = 'translate(-50%, -50%) scale(0.7)'; });
-document.addEventListener('mouseup', () => { cursor.style.transform = 'translate(-50%, -50%) scale(1)'; });
+/*
+  Robust client-side only solution:
+  - Uses cookie "sami_verified=true" to remember verification (7 days).
+  - If cookie present -> redirect straight to main (adds ?verified=true as extra flag).
+  - If not present -> dynamically load reCAPTCHA script and render widget.
+  - On success: set cookie, then location.replace() to main with param.
+  - Console logs included for debugging.
+*/
 
-// Generate a unique client ID if not exists
-if(!localStorage.getItem('clientId')){
-    localStorage.setItem('clientId', 'user-' + Date.now() + '-' + Math.floor(Math.random()*10000));
+const SITE = 'https://sami.is-a.dev';              // your main domain
+const MAIN_URL = SITE + '/?verified=true#';       // target after verification
+const COOKIE_NAME = 'sami_verified';
+const COOKIE_DAYS = 7;
+
+function setCookie(name, value, days) {
+  const d = new Date();
+  d.setTime(d.getTime() + (days*24*60*60*1000));
+  const expires = "expires=" + d.toUTCString();
+  // path=/ ensures cookie works across pages on same domain
+  document.cookie = `${name}=${value};${expires};path=/;SameSite=Lax`;
 }
 
-// Check if verified
-if(localStorage.getItem('verified') === localStorage.getItem('clientId')){
-    window.location.href = 'https://sami.is-a.dev/#';
+function getCookie(name) {
+  const pairs = document.cookie.split(';').map(s => s.trim());
+  for (const p of pairs) {
+    if (!p) continue;
+    const [k,v] = p.split('=');
+    if (k === name) return v;
+  }
+  return null;
 }
 
-// On successful CAPTCHA
-function onRecaptchaSuccess(token){
-    // Save current clientId as verified
-    localStorage.setItem('verified', localStorage.getItem('clientId'));
-    window.location.href = 'https://sami.is-a.dev/#';
+function debug(msg) {
+  console.debug('[recaptcha] ' + msg);
+  const statusEl = document.getElementById('status');
+  if (statusEl) statusEl.textContent = msg;
+}
+
+/* 1) If already verified — skip everything */
+if (getCookie(COOKIE_NAME) === 'true') {
+  debug('Cookie present → already verified. Redirecting to main...');
+  // replace so Back button doesn't return to captcha
+  window.location.replace(MAIN_URL);
+} else {
+  debug('Not verified. Loading reCAPTCHA…');
+
+  /* 2) Dynamically load the reCAPTCHA script (so it only runs when needed) */
+  (function loadRecaptcha() {
+    const s = document.createElement('script');
+    s.src = 'https://www.google.com/recaptcha/api.js?onload=__recaptchaOnLoad&render=explicit';
+    s.async = true;
+    s.defer = true;
+    s.onerror = () => debug('Failed to load reCAPTCHA script — check console/network.');
+    document.head.appendChild(s);
+  })();
+
+  /* 3) Expose callback for Google script to call after load */
+  window.__recaptchaOnLoad = function() {
+    debug('reCAPTCHA script loaded. Rendering widget...');
+    renderWidget();
+  };
+
+  /* 4) Render the widget inside #recaptcha-placeholder */
+  function renderWidget() {
+    // create container if not present
+    const holder = document.getElementById('recaptcha-placeholder');
+    if (!holder) return debug('Missing placeholder for reCAPTCHA.');
+
+    // clear placeholder
+    holder.innerHTML = '';
+
+    // create widget wrapper
+    const widget = document.createElement('div');
+    widget.id = 'g-recaptcha-widget';
+    holder.appendChild(widget);
+
+    // render explicit widget
+    try {
+      window.grecaptcha.render(widget.id, {
+        'sitekey': '6LcRBhAsAAAAACatryubAg_7jPQPb5i_tcAIoCa-', // <-- your exact key
+        'callback': onRecaptchaSuccess,
+        'theme': 'light'
+      });
+      debug('Widget rendered. Complete the CAPTCHA.');
+    } catch (e) {
+      console.error(e);
+      debug('Error rendering widget — check sitekey and domain.');
+    }
+  }
+
+  /* 5) Success handler called by Google with token */
+  function onRecaptchaSuccess(token) {
+    debug('CAPTCHA solved — token received.');
+
+    // IMPORTANT: don't redirect instantly — make sure cookie write completes.
+    try {
+      setCookie(COOKIE_NAME, 'true', COOKIE_DAYS);
+      debug('Cookie set. Redirecting to main page...');
+      // Use replace to avoid back button looping
+      window.location.replace(MAIN_URL);
+    } catch (err) {
+      console.error('Failed to set cookie:', err);
+      // fallback to redirect with query param anyway
+      window.location.replace(MAIN_URL);
+    }
+  }
+
+  // Expose to global so grecaptcha callback can call (some versions require global)
+  window.onRecaptchaSuccess = onRecaptchaSuccess;
 }
 </script>
-
 </body>
 </html>
