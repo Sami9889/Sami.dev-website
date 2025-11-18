@@ -3,35 +3,14 @@
 <head>
     <title>Verify Access</title>
     <script src="https://www.google.com/recaptcha/enterprise.js" async defer></script>
-
-    <style>
-        body {
-            margin: 0;
-            background: #111;
-            color: white;
-            font-family: Arial;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            height: 100vh;
-            flex-direction: column;
-            gap: 20px;
-        }
-        .captcha-box {
-            padding: 20px;
-            background: #1a1a1a;
-            border: 3px solid #444;
-            border-radius: 15px;
-            box-shadow: 0 0 12px rgba(0,255,255,0.2);
-        }
-    </style>
 </head>
-<body>
+
+<body style="background:#111;color:white;font-family:Arial;display:flex;justify-content:center;align-items:center;height:100vh;flex-direction:column;gap:20px;">
 
 <h2>🔒 Verification Required</h2>
 <p>Please verify you are human.</p>
 
-<div class="captcha-box">
+<div style="padding:20px;background:#1a1a1a;border:3px solid #444;border-radius:15px;">
     <div class="g-recaptcha"
         data-sitekey="6LcRBhAsAAAAACatryubAg_7jPQPb5i_tcAIoCa-"
         data-callback="captchaComplete">
@@ -40,7 +19,9 @@
 
 <script>
 function captchaComplete(token) {
-    window.location.href = "index.html"; // Go back to main page
+    console.log("CAPTCHA solved, saving...");
+    localStorage.setItem("captcha_ok", "true");
+    window.location.href = "index.html";
 }
 </script>
 
