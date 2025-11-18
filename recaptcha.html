@@ -99,15 +99,6 @@ body {
     z-index: 20;
     transition: transform 0.1s ease, width 0.2s ease, height 0.2s ease;
 }
-button {
-    padding:0.75rem 2rem;
-    font-size:1rem;
-    border:none;
-    border-radius:6px;
-    background:#007bff;
-    color:white;
-    cursor:pointer;
-}
 </style>
 </head>
 <body>
@@ -119,14 +110,12 @@ button {
 </div>
 
 <!-- reCAPTCHA Box -->
-<div class="recaptcha-container" id="captcha-box">
+<div class="recaptcha-container">
     <h1>Verify You're Human</h1>
     <div class="g-recaptcha" 
          data-sitekey="6LcRBhAsAAAAACatryubAg_7jPQPb5i_tcAIoCa-" 
          data-callback="onRecaptchaSuccess">
     </div>
-    <br><br>
-    <button onclick="submitRecaptcha()">Verify</button>
 </div>
 
 <!-- Custom Cursor -->
@@ -146,30 +135,31 @@ document.addEventListener('mouseup', () => {
     cursor.style.transform = 'translate(-50%, -50%) scale(1)';
 });
 
-// ===== Verification Logic =====
-function redirectToHome() {
-    window.location.href = "https://sami.is-a.dev/#";
+// ===== Cookie Handling =====
+function setCookie(name, value, days) {
+    const d = new Date();
+    d.setTime(d.getTime() + (days*24*60*60*1000));
+    document.cookie = `${name}=${value};expires=${d.toUTCString()};path=/`;
 }
 
-// Check if user is already verified
-if (localStorage.getItem('verified') === 'true') {
-    redirectToHome();
-}
-
-// Callback when CAPTCHA is solved
-function onRecaptchaSuccess(token) {
-    localStorage.setItem('verified', 'true');
-    redirectToHome();
-}
-
-// Optional: manual submit button for accessibility
-function submitRecaptcha() {
-    const response = grecaptcha.getResponse();
-    if (response.length === 0) {
-        alert("Please complete the CAPTCHA first!");
-    } else {
-        onRecaptchaSuccess(response);
+function getCookie(name) {
+    const cookies = document.cookie.split(';');
+    for(let c of cookies) {
+        const [key, val] = c.trim().split('=');
+        if(key === name) return val;
     }
+    return null;
+}
+
+// If already verified, redirect immediately
+if(getCookie('verified') === 'true') {
+    window.location.href = 'https://sami.is-a.dev/#';
+}
+
+// Callback from reCAPTCHA
+function onRecaptchaSuccess(token) {
+    setCookie('verified', 'true', 7); // Store for 7 days
+    window.location.href = 'https://sami.is-a.dev/#';
 }
 </script>
 
