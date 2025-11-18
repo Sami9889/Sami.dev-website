@@ -1,26 +1,142 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
-    <title>Verify Access</title>
-    <script src="https://www.google.com/recaptcha/enterprise.js" async defer></script>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Verify Human - sami.dev</title>
+
+<!-- Google Fonts -->
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+
+<!-- Google reCAPTCHA -->
+<script src="https://www.google.com/recaptcha/api.js" async defer></script>
+
+<style>
+/* ===== Main Body ===== */
+body {
+    font-family: 'Space Grotesk', system-ui, -apple-system, sans-serif;
+    margin: 0;
+    padding: 0;
+    overflow: hidden;
+    height: 100vh;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    background: linear-gradient(135deg, #f8f9fa 0%, #e3f2fd 50%, #f3e5f5 100%);
+    background-size: 400% 400%;
+    animation: gradientShift 15s ease infinite;
+    cursor: none; /* hide default cursor for custom */
+}
+
+@keyframes gradientShift {
+    0% { background-position: 0% 50%; }
+    50% { background-position: 100% 50%; }
+    100% { background-position: 0% 50%; }
+}
+
+/* ===== Floating Shapes ===== */
+.floating-shapes {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    pointer-events: none;
+    z-index: 0;
+    overflow: hidden;
+}
+.shape {
+    position: absolute;
+    opacity: 0.15;
+    animation: float 20s infinite;
+}
+.shape:nth-child(1) { width: 80px; height: 80px; background: linear-gradient(135deg,#007bff,#28a745); border-radius:50%; top:20%; left:10%; animation-duration:25s; }
+.shape:nth-child(2) { width: 60px; height: 60px; background: linear-gradient(135deg,#28a745,#ffc107); border-radius:30% 70% 70% 30%; top:60%; right:15%; animation-duration:30s; }
+
+@keyframes float {
+    0%,100% { transform: translate(0,0) rotate(0deg); }
+    25% { transform: translate(30px,-30px) rotate(90deg); }
+    50% { transform: translate(-20px,20px) rotate(180deg); }
+    75% { transform: translate(40px,10px) rotate(270deg); }
+}
+
+/* ===== reCAPTCHA Container ===== */
+.recaptcha-container {
+    position: relative;
+    z-index: 10;
+    background: rgba(255,255,255,0.95);
+    padding: 3rem 4rem;
+    border-radius: 12px;
+    box-shadow: 0 8px 30px rgba(0,0,0,0.15);
+    text-align: center;
+    animation: fadeIn 1.5s ease;
+}
+.recaptcha-container h1 {
+    font-size: 2rem;
+    margin-bottom: 2rem;
+    color: #212529;
+}
+
+/* ===== Fade In ===== */
+@keyframes fadeIn {
+    from { opacity: 0; transform: translateY(-20px);}
+    to { opacity: 1; transform: translateY(0);}
+}
+
+/* ===== Custom Cursor ===== */
+.cursor {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 20px;
+    height: 20px;
+    border: 2px solid #007bff;
+    border-radius: 50%;
+    transform: translate(-50%, -50%);
+    pointer-events: none;
+    z-index: 20;
+    transition: transform 0.1s ease, width 0.2s ease, height 0.2s ease;
+}
+</style>
 </head>
-<body style="background:#111;color:white;font-family:Arial;display:flex;justify-content:center;align-items:center;height:100vh;flex-direction:column;gap:20px;">
+<body>
 
-<h2>🔒 Verification Required</h2>
-<p>Please verify you are human.</p>
-
-<div style="padding:20px;background:#1a1a1a;border:3px solid #444;border-radius:15px;">
-    <div class="g-recaptcha"
-         data-sitekey="6LcRBhAsAAAAACatryubAg_7jPQPb5i_tcAIoCa-"
-         data-callback="captchaComplete">
-    </div>
+<!-- Floating Shapes -->
+<div class="floating-shapes">
+    <div class="shape"></div>
+    <div class="shape"></div>
 </div>
 
+<!-- reCAPTCHA Box -->
+<div class="recaptcha-container">
+    <h1>Verify You're Human</h1>
+    <form action="home.html?verified=true" method="GET">
+        <div class="g-recaptcha" data-sitekey="6LcRBhAsAAAAACatryubAg_7jPQPb5i_tcAIoCa-"></div>
+        <br><br>
+        <button type="submit" style="padding:0.75rem 2rem; font-size:1rem; border:none; border-radius:6px; background:#007bff; color:white; cursor:pointer;">
+            Verify
+        </button>
+    </form>
+</div>
+
+<!-- Custom Cursor -->
+<div class="cursor"></div>
+
 <script>
-function captchaComplete(token) {
-    // Append a URL parameter to indicate verification
-    window.location.href = "index.html?verified=true";
-}
+// ===== Cursor Tracking =====
+const cursor = document.querySelector('.cursor');
+document.addEventListener('mousemove', e => {
+    cursor.style.top = e.clientY + 'px';
+    cursor.style.left = e.clientX + 'px';
+});
+document.addEventListener('mousedown', () => {
+    cursor.style.transform = 'translate(-50%, -50%) scale(0.7)';
+});
+document.addEventListener('mouseup', () => {
+    cursor.style.transform = 'translate(-50%, -50%) scale(1)';
+});
 </script>
 
 </body>
