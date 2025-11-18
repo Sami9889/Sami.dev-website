@@ -2,14 +2,31 @@
 <html lang="en">
 <head>
     <script>
-// Check URL for verified parameter
-const params = new URLSearchParams(window.location.search);
-const verified = params.get("verified");
-
-// If not verified, redirect to reCAPTCHA page
-if (verified !== "true") {
-    window.location.href = "recaptcha.html";
-}
+/* index HEAD snippet — paste at top of <head> */
+(function(){
+  function getCookie(name){
+    const pairs=document.cookie.split(';').map(s=>s.trim());
+    for(const p of pairs) if(p.startsWith(name + '=')) return p.split('=')[1];
+    return null;
+  }
+  const COOKIE_NAME = 'sami_verified';
+  const params = new URLSearchParams(window.location.search);
+  // Allow either cookie OR URL param verified=1 OR localStorage as proof
+  const ok = (getCookie(COOKIE_NAME) === 'true') || (params.get('verified') === '1') || (localStorage.getItem(COOKIE_NAME) === 'true');
+  if (!ok) {
+    // send to recaptcha page only if not verified
+    window.location.replace('/recaptcha.html');
+  } else {
+    // optional: remove verified query param so the URL stays clean
+    if (params.get('verified') === '1') {
+      // remove param without reload
+      const u = new URL(window.location);
+      u.searchParams.delete('verified');
+      u.searchParams.delete('ts');
+      history.replaceState(null, '', u.toString());
+    }
+  }
+})();
 </script>
 <!-- Your main content here -->
     <script id="Cookiebot" src="https://consent.cookiebot.com/uc.js" data-cbid="19711b51-4b0b-4bf8-a4e1-c47f78f27459" data-blockingmode="auto" type="text/javascript"></script>
