@@ -28,7 +28,6 @@
   }
 })();
 </script>
-<!-- Your main content here -->
     <script id="Cookiebot" src="https://consent.cookiebot.com/uc.js" data-cbid="19711b51-4b0b-4bf8-a4e1-c47f78f27459" data-blockingmode="auto" type="text/javascript"></script>
     
     <!-- Google tag (gtag.js) -->
@@ -1399,10 +1398,9 @@
                 <h2>Ready to work together?</h2>
                 <p>I'm always interested in hearing about new opportunities and interesting projects. Whether you have a project in mind, want to collaborate, or just want to say hello, feel free to reach out!</p>
                 
-                <form class="contact-form" id="contactForm" onsubmit="handleFormSubmit(event)">
+                <form class="contact-form" id="contactForm" action="https://api.web3forms.com/submit" method="POST">
                     <input type="hidden" name="access_key" value="4fa555fc-094d-4437-bcaf-579864458244">
-                    <input type="hidden" name="subject" value="New Contact Form Submission from Portfolio">
-                    <input type="hidden" name="from_name" value="Portfolio Contact Form">
+                    <input type="hidden" name="redirect" value="?success=true">
                     
                     <div class="form-group">
                         <label for="name">Name *</label>
@@ -1416,7 +1414,7 @@
                     
                     <div class="form-group">
                         <label for="subject">Subject *</label>
-                        <input type="text" id="subject" name="custom_subject" required placeholder="What's this about?">
+                        <input type="text" id="subject" name="subject" required placeholder="What's this about?">
                     </div>
                     
                     <div class="form-group">
@@ -1729,69 +1727,44 @@
             }
         }
 
-        async function handleFormSubmit(event) {
-            event.preventDefault();
-            
-            const submitBtn = document.getElementById('submitBtn');
-            const formMessage = document.getElementById('formMessage');
+        // Handle form submission with reCAPTCHA validation
+        document.getElementById('contactForm').addEventListener('submit', function(event) {
             const recaptchaResponse = grecaptcha.getResponse();
+            const formMessage = document.getElementById('formMessage');
             
-            // Verify reCAPTCHA
             if (!recaptchaResponse) {
+                event.preventDefault();
                 formMessage.className = 'form-message error';
                 formMessage.textContent = 'Please complete the reCAPTCHA verification.';
-                return;
+                return false;
             }
             
-            // Disable submit button
+            // Show loading state
+            const submitBtn = document.getElementById('submitBtn');
             submitBtn.disabled = true;
             submitBtn.textContent = 'Sending...';
-            formMessage.style.display = 'none';
+        });
+
+        // Check for success message in URL
+        window.addEventListener('load', function() {
+            const urlParams = new URLSearchParams(window.location.search);
+            const formMessage = document.getElementById('formMessage');
             
-            // Get form data
-            const formData = new FormData(event.target);
-            
-            // Add Web3Forms access key
-            formData.append('access_key', '4fa555fc-094d-4437-bcaf-579864458244'); // Get free key from web3forms.com
-            
-            // Add recipient email
-            formData.append('to', 'samisingh988@gmail.com');
-            
-            // Add reCAPTCHA response
-            formData.append('g-recaptcha-response', recaptchaResponse);
-            
-            // Optional: Redirect URL after submission
-            formData.append('redirect', window.location.href + '?success=true');
-            
-            try {
-                // Send email via Web3Forms API
-                const response = await fetch('https://api.web3forms.com/submit', {
-                    method: 'POST',
-                    body: formData
-                });
+            if (urlParams.get('success') === 'true') {
+                showPage('contact');
+                formMessage.className = 'form-message success';
+                formMessage.textContent = '✅ Thank you! Your message has been sent successfully. I\'ll get back to you soon!';
                 
-                const data = await response.json();
-                
-                if (data.success) {
-                    formMessage.className = 'form-message success';
-                    formMessage.textContent = '✅ Thank you! Your message has been sent successfully. I\'ll get back to you soon!';
-                    
-                    // Reset form
-                    document.getElementById('contactForm').reset();
+                // Reset form
+                document.getElementById('contactForm').reset();
+                if (typeof grecaptcha !== 'undefined') {
                     grecaptcha.reset();
-                } else {
-                    throw new Error(data.message || 'Submission failed');
                 }
-            } catch (error) {
-                console.error('Form submission error:', error);
-                formMessage.className = 'form-message error';
-                formMessage.textContent = '❌ Oops! Something went wrong. Please try again or email me directly at samisingh988@gmail.com';
-            } finally {
-                // Re-enable submit button
-                submitBtn.disabled = false;
-                submitBtn.textContent = 'Send Message';
+                
+                // Clean up URL
+                window.history.replaceState({}, document.title, window.location.pathname);
             }
-        }
+        });
 
         createParticles();
     </script>
