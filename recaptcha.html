@@ -36,7 +36,7 @@
 
   <script>
     const SITE = location.origin.replace(/\/$/,''); // e.g. https://sami.is-a.dev
-    const MAIN = SITE + '/?verified=1';
+    const MAIN = SITE + '/';
     const COOKIE_NAME = 'sami_verified';
     const COOKIE_DAYS = 7;
 
@@ -60,13 +60,22 @@
       'page_location': window.location.href
     });
 
-    if(getCookie(COOKIE_NAME) === 'true'){
+    // Check if user came from successful verification
+    const urlParams = new URLSearchParams(window.location.search);
+    if (urlParams.get('verified') === '1') {
+      // User just verified, redirect to main page
+      window.dataLayer.push({
+        'event': 'verification_redirect',
+        'verification_status': 'redirecting_to_main'
+      });
+      window.location.replace(MAIN + '?verified=1&ts=' + Date.now());
+    } else if(getCookie(COOKIE_NAME) === 'true' || localStorage.getItem(COOKIE_NAME) === 'true'){
       // User already verified - push event and redirect
       window.dataLayer.push({
         'event': 'verification_skipped',
         'verification_status': 'already_verified'
       });
-      window.location.replace(MAIN + '&ts=' + Date.now());
+      window.location.replace(MAIN + '?verified=1&ts=' + Date.now());
     } else {
       // Load reCAPTCHA
       const s=document.createElement('script');
@@ -102,17 +111,22 @@
           'verification_method': 'recaptcha_v2'
         });
 
+        // Set both cookie and localStorage
         setCookie(COOKIE_NAME,'true', COOKIE_DAYS);
-        localStorage.setItem(COOKIE_NAME, 'true');
+        try {
+          localStorage.setItem(COOKIE_NAME, 'true');
+        } catch(e) {
+          // localStorage might be blocked in some browsers/modes
+          console.log('localStorage not available');
+        }
         
-        // Small delay to ensure GTM event is sent
-        setTimeout(function(){
-          window.location.replace(MAIN + '&ts=' + Date.now());
-        }, 100);
+        // Redirect with verified parameter
+        window.location.replace(MAIN + '?verified=1&ts=' + Date.now());
       }
 
       window.onRecaptchaSuccess = onRecaptchaSuccess;
     }
+  </script>
   </script>
 </body>
 </html>
