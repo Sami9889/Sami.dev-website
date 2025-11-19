@@ -3,7 +3,7 @@ document.addEventListener("DOMContentLoaded", () => {
     // ==========================
     // CONFIGURATION
     // ==========================
-    const MAINTENANCE_MODE = true;        // true = ON, false = OFF
+    const MAINTENANCE_MODE = false;        // true = ON, false = OFF
     const MAINTENANCE_DURATION_HOURS = 2; // hours
     const MAIN_PAGE_URL = "index.html";   // page to go after maintenance
 
