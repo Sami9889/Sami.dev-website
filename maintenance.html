@@ -2,17 +2,12 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Maintenance</title>
+<link rel="stylesheet" href="maintenance.css">
 <style>
-    body {
-        text-align: center;
-        font-family: system-ui, -apple-system, 'Segoe UI', Roboto, Helvetica, Arial;
-        margin-top: 3rem;
-    }
-    #maintenance-countdown {
-        font-size: 1.6rem;
-        margin-top: 1rem;
-    }
+body { text-align: center; font-family: system-ui, -apple-system, 'Segoe UI', Roboto, Helvetica, Arial; margin-top: 3rem; background:#fff; color:#000;}
+#maintenance-countdown { font-size:1.6rem; margin-top:1rem; }
 </style>
 </head>
 <body>
@@ -21,56 +16,6 @@
 <p>Please check back soon.</p>
 <div id="maintenance-countdown"></div>
 
-<script>
-
-const MAINTENANCE_MODE = true;
-
-// Duration the site is locked for
-const maintenanceDurationHours = 2;
-const mainPageURL = "index.html";
-const STORAGE_KEY = "maint_end_time";
-
-document.addEventListener("DOMContentLoaded", () => {
-
-    // If maintenance OFF → go to site immediately
-    if (MAINTENANCE_MODE === false) {
-        window.location.href = mainPageURL;
-        return;
-    }
-
-    // If maintenance ON → enforce lock
-    let endTime = Number(sessionStorage.getItem(STORAGE_KEY));
-
-    // No endTime saved OR expired → create new window
-    if (!endTime || endTime <= Date.now()) {
-        endTime = Date.now() + (maintenanceDurationHours * 60 * 60 * 1000);
-        sessionStorage.setItem(STORAGE_KEY, endTime);
-    }
-
-    const countdownEl = document.getElementById("maintenance-countdown");
-
-    function updateCountdown() {
-        const remaining = endTime - Date.now();
-
-        // When finished → unlock site
-        if (remaining <= 0) {
-            sessionStorage.removeItem(STORAGE_KEY);
-            window.location.href = mainPageURL;
-            return;
-        }
-
-        const h = Math.floor(remaining / 3600000);
-        const m = Math.floor((remaining % 3600000) / 60000);
-        const s = Math.floor((remaining % 60000) / 1000);
-
-        countdownEl.textContent =
-            `Maintenance ends in: ${h}h ${m}m ${s}s`;
-    }
-
-    updateCountdown();
-    setInterval(updateCountdown, 1000);
-});
-</script>
-
+<script src="maintenance.js"></script>
 </body>
 </html>
