@@ -11,15 +11,33 @@
   }
   const COOKIE_NAME = 'sami_verified';
   const params = new URLSearchParams(window.location.search);
-  // Allow either cookie OR URL param verified=1 OR localStorage as proof
-  const ok = (getCookie(COOKIE_NAME) === 'true') || (params.get('verified') === '1') || (localStorage.getItem(COOKIE_NAME) === 'true');
-  if (!ok) {
-    // send to recaptcha page only if not verified
+  
+  // Check if user is verified via cookie, localStorage, or URL param
+  const hasCookie = getCookie(COOKIE_NAME) === 'true';
+  const hasLocalStorage = localStorage.getItem(COOKIE_NAME) === 'true';
+  const hasUrlParam = params.get('verified') === '1';
+  
+  const isVerified = hasCookie || hasLocalStorage || hasUrlParam;
+  
+  if (!isVerified) {
+    // Not verified - redirect to recaptcha page
     window.location.replace('/recaptcha.html');
   } else {
-    // optional: remove verified query param so the URL stays clean
-    if (params.get('verified') === '1') {
-      // remove param without reload
+    // Verified! Set cookie and localStorage if coming from URL param
+    if (hasUrlParam) {
+      // Set cookie
+      const d = new Date();
+      d.setTime(d.getTime() + (7*24*60*60*1000)); // 7 days
+      document.cookie = `${COOKIE_NAME}=true;expires=${d.toUTCString()};path=/;SameSite=Lax`;
+      
+      // Set localStorage (with try-catch for incognito mode)
+      try {
+        localStorage.setItem(COOKIE_NAME, 'true');
+      } catch(e) {
+        console.log('localStorage not available');
+      }
+      
+      // Clean URL - remove verification params
       const u = new URL(window.location);
       u.searchParams.delete('verified');
       u.searchParams.delete('ts');
@@ -59,8 +77,6 @@
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
     
-    <!-- Google reCAPTCHA -->
-    <script src="https://www.google.com/recaptcha/api.js" async defer></script>
     <style>
         * {
             margin: 0;
@@ -914,12 +930,6 @@
             resize: vertical;
         }
 
-        .recaptcha-wrapper {
-            display: flex;
-            justify-content: center;
-            margin: 1.5rem 0;
-        }
-
         .submit-btn {
             background: var(--accent);
             color: white;
@@ -1724,19 +1734,8 @@
             }
         }
 
-        // Handle form submission with reCAPTCHA validation
+        // Handle form submission
         document.getElementById('contactForm').addEventListener('submit', function(event) {
-            const recaptchaResponse = grecaptcha.getResponse();
-            const formMessage = document.getElementById('formMessage');
-            
-            if (!recaptchaResponse) {
-                event.preventDefault();
-                formMessage.className = 'form-message error';
-                formMessage.textContent = 'Please complete the reCAPTCHA verification.';
-                return false;
-            }
-            
-            // Show loading state
             const submitBtn = document.getElementById('submitBtn');
             submitBtn.disabled = true;
             submitBtn.textContent = 'Sending...';
@@ -1754,9 +1753,6 @@
                 
                 // Reset form
                 document.getElementById('contactForm').reset();
-                if (typeof grecaptcha !== 'undefined') {
-                    grecaptcha.reset();
-                }
                 
                 // Clean up URL
                 window.history.replaceState({}, document.title, window.location.pathname);
