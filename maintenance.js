@@ -1,49 +1,157 @@
-document.addEventListener("DOMContentLoaded", () => {
+document.addEventListener('DOMContentLoaded', async function() {
+  const config = MAINTENANCE_CONFIG;
+  const BYPASS_KEY = config.storageKeys.bypass;
 
-    // ==========================
-    // CONFIGURATION
-    // ==========================
-    const MAINTENANCE_MODE = true;        // true = ON, false = OFF
-    const MAINTENANCE_DURATION_HOURS = 2; // hours
-    const MAIN_PAGE_URL = "index.html";   // page to go after maintenance
+  // Check if maintenance has been bypassed
+  const bypassFlag = localStorage.getItem(BYPASS_KEY);
+  if (bypassFlag === 'true') {
+    window.location.replace(config.mainPageURL);
+    return;
+  }
 
-    if (!MAINTENANCE_MODE) {
-        window.location.href = MAIN_PAGE_URL;
-        return;
+  const elements = {
+    title: document.getElementById('maintenance-title'),
+    description: document.getElementById('maintenance-description'),
+    countdown: document.getElementById('maintenance-countdown'),
+    components: document.getElementById('affected-components')
+  };
+
+  let activeMaintenance = null;
+  let countdownInterval = null;
+
+  // Fetch active maintenance from API
+  async function fetchActiveMaintenance() {
+    try {
+      const response = await fetch(`${config.apiBase}/scheduled-maintenances/active.json`);
+      const data = await response.json();
+      
+      if (data.scheduled_maintenances && data.scheduled_maintenances.length > 0) {
+        return data.scheduled_maintenances[0]; // Get first active maintenance
+      }
+      
+      // If no active, check upcoming
+      const upcomingResponse = await fetch(`${config.apiBase}/scheduled-maintenances/upcoming.json`);
+      const upcomingData = await upcomingResponse.json();
+      
+      if (upcomingData.scheduled_maintenances && upcomingData.scheduled_maintenances.length > 0) {
+        return upcomingData.scheduled_maintenances[0];
+      }
+      
+      return null;
+    } catch (error) {
+      console.error('Error fetching maintenance:', error);
+      return null;
+    }
+  }
+
+  // Fetch component statuses
+  async function fetchComponents() {
+    try {
+      const response = await fetch(`${config.apiBase}/components.json`);
+      const data = await response.json();
+      return data.components || [];
+    } catch (error) {
+      console.error('Error fetching components:', error);
+      return [];
+    }
+  }
+
+  // Display maintenance info
+  async function displayMaintenance(maintenance) {
+    if (!maintenance) {
+      elements.title.textContent = 'No Active Maintenance';
+      elements.description.textContent = 'Checking for scheduled maintenance...';
+      elements.countdown.textContent = 'Redirecting to main site...';
+      
+      setTimeout(() => {
+        localStorage.setItem(BYPASS_KEY, 'true');
+        window.location.replace(config.mainPageURL);
+      }, 2000);
+      return;
     }
 
-    // Initialize endTime in localStorage
-    let endTime = Number(localStorage.getItem("maintEndTime"));
-    if (!endTime || isNaN(endTime) || endTime <= Date.now()) {
-        endTime = Date.now() + MAINTENANCE_DURATION_HOURS * 60 * 60 * 1000;
-        localStorage.setItem("maintEndTime", endTime);
+    // Set title and description
+    elements.title.textContent = maintenance.name;
+    
+    const latestUpdate = maintenance.incident_updates[0];
+    if (latestUpdate) {
+      elements.description.innerHTML = `
+        <span class="impact-badge impact-${maintenance.impact}">${maintenance.impact.toUpperCase()}</span>
+        <br>${latestUpdate.body}
+      `;
     }
 
-    // Ensure user stays on maintenance page
-    if (!window.location.href.includes("maintenance.html")) {
-        window.location.href = "maintenance.html";
-        return;
+    // Display affected components
+    const components = await fetchComponents();
+    const affectedComponents = components.filter(c => 
+      c.status !== 'operational'
+    );
+
+    if (affectedComponents.length > 0) {
+      let componentsHTML = '<h3>Affected Services:</h3>';
+      affectedComponents.forEach(comp => {
+        const statusClass = comp.status.replace('_', '-');
+        componentsHTML += `
+          <div class="component-item">
+            <span class="component-status status-${statusClass}"></span>
+            <span>${comp.name}: ${comp.status.replace('_', ' ')}</span>
+          </div>
+        `;
+      });
+      elements.components.innerHTML = componentsHTML;
     }
 
-    const countdownEl = document.getElementById("maintenance-countdown");
+    // Start countdown
+    const scheduledUntil = new Date(maintenance.scheduled_until);
+    startCountdown(scheduledUntil);
+  }
+
+  // Countdown timer
+  function startCountdown(endTime) {
+    if (countdownInterval) clearInterval(countdownInterval);
 
     function updateCountdown() {
-        const remaining = endTime - Date.now();
+      const remaining = endTime - Date.now();
+      
+      if (remaining <= 0) {
+        elements.countdown.textContent = 'Maintenance complete! Redirecting...';
+        localStorage.setItem(BYPASS_KEY, 'true');
+        setTimeout(() => {
+          window.location.replace(config.mainPageURL);
+        }, 2000);
+        return;
+      }
 
-        if (remaining <= 0) {
-            localStorage.removeItem("maintEndTime");
-            window.location.href = MAIN_PAGE_URL;
-            return;
-        }
-
-        const h = Math.floor(remaining / 3600000);
-        const m = Math.floor((remaining % 3600000) / 60000);
-        const s = Math.floor((remaining % 60000) / 1000);
-
-        countdownEl.textContent = `Maintenance ends in: ${h}h ${m}m ${s}s`;
+      const hours = Math.floor(remaining / 3600000);
+      const minutes = Math.floor((remaining % 3600000) / 60000);
+      const seconds = Math.floor((remaining % 60000) / 1000);
+      
+      elements.countdown.textContent = `Estimated completion: ${hours}h ${minutes}m ${seconds}s`;
     }
 
     updateCountdown();
-    setInterval(updateCountdown, 1000);
+    countdownInterval = setInterval(updateCountdown, 1000);
+  }
 
+  // Check if maintenance is still active periodically
+  async function checkMaintenanceStatus() {
+    const newMaintenance = await fetchActiveMaintenance();
+    
+    if (!newMaintenance) {
+      // No active maintenance, redirect
+      localStorage.setItem(BYPASS_KEY, 'true');
+      window.location.replace(config.mainPageURL);
+    } else if (!activeMaintenance || newMaintenance.id !== activeMaintenance.id) {
+      // New maintenance detected
+      activeMaintenance = newMaintenance;
+      await displayMaintenance(activeMaintenance);
+    }
+  }
+
+  // Initial load
+  activeMaintenance = await fetchActiveMaintenance();
+  await displayMaintenance(activeMaintenance);
+
+  // Periodic check
+  setInterval(checkMaintenanceStatus, config.checkInterval * 1000);
 });
