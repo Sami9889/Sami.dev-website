@@ -1,10 +1,14 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <script>
+  <!-- Add this to your index.html <head> section -->
+<!-- This checks the Status API for active maintenance -->
+
+<script src="https://cdn.statuspage.io/se-v2.js"></script>
+<script>
 (function() {
   const BYPASS_KEY = 'maintenanceBypass';
-  const API_BASE = 'https://8tq16kv1cnxh.statuspage.io/api/v2';
+  const STATUS_PAGE_ID = '8tq16kv1cnxh';
   
   // Check if we've already bypassed maintenance
   const bypassFlag = localStorage.getItem(BYPASS_KEY);
@@ -12,20 +16,34 @@
     return; // Allow access to main site
   }
   
-  // Check for active maintenance
-  fetch(API_BASE + '/scheduled-maintenances/active.json')
-    .then(res => res.json())
-    .then(data => {
+  // Check for active maintenance using StatusPage widget
+  const sp = new StatusPage.page({ page: STATUS_PAGE_ID });
+  
+  sp.scheduledMaintenances({
+    filter: 'active',
+    success: function(data) {
       if (data.scheduled_maintenances && data.scheduled_maintenances.length > 0) {
         // Active maintenance found, redirect
         localStorage.removeItem(BYPASS_KEY);
         window.location.replace('maintenance.html');
+      } else {
+        // Check upcoming maintenance
+        sp.scheduledMaintenances({
+          filter: 'upcoming',
+          success: function(upcomingData) {
+            if (upcomingData.scheduled_maintenances && upcomingData.scheduled_maintenances.length > 0) {
+              localStorage.removeItem(BYPASS_KEY);
+              window.location.replace('maintenance.html');
+            }
+          }
+        });
       }
-    })
-    .catch(err => {
+    },
+    error: function(err) {
       console.error('Error checking maintenance status:', err);
       // On error, allow access to site
-    });
+    }
+  });
 })();
 </script>
   <script>
