@@ -19,41 +19,53 @@ document.addEventListener('DOMContentLoaded', async function() {
   let activeMaintenance = null;
   let countdownInterval = null;
 
-  // Fetch active maintenance from API
-  async function fetchActiveMaintenance() {
-    try {
-      const response = await fetch(`${config.apiBase}/scheduled-maintenances/active.json`);
-      const data = await response.json();
-      
-      if (data.scheduled_maintenances && data.scheduled_maintenances.length > 0) {
-        return data.scheduled_maintenances[0]; // Get first active maintenance
-      }
-      
-      // If no active, check upcoming
-      const upcomingResponse = await fetch(`${config.apiBase}/scheduled-maintenances/upcoming.json`);
-      const upcomingData = await upcomingResponse.json();
-      
-      if (upcomingData.scheduled_maintenances && upcomingData.scheduled_maintenances.length > 0) {
-        return upcomingData.scheduled_maintenances[0];
-      }
-      
-      return null;
-    } catch (error) {
-      console.error('Error fetching maintenance:', error);
-      return null;
-    }
+  // Initialize StatusPage widget
+  const sp = new StatusPage.page({ page: config.statusPageId });
+
+  // Fetch active maintenance using widget
+  function fetchActiveMaintenance() {
+    return new Promise((resolve) => {
+      sp.scheduledMaintenances({
+        filter: 'active',
+        success: function(data) {
+          if (data.scheduled_maintenances && data.scheduled_maintenances.length > 0) {
+            resolve(data.scheduled_maintenances[0]);
+          } else {
+            // Check upcoming if no active
+            sp.scheduledMaintenances({
+              filter: 'upcoming',
+              success: function(upcomingData) {
+                if (upcomingData.scheduled_maintenances && upcomingData.scheduled_maintenances.length > 0) {
+                  resolve(upcomingData.scheduled_maintenances[0]);
+                } else {
+                  resolve(null);
+                }
+              },
+              error: function() {
+                resolve(null);
+              }
+            });
+          }
+        },
+        error: function() {
+          resolve(null);
+        }
+      });
+    });
   }
 
   // Fetch component statuses
-  async function fetchComponents() {
-    try {
-      const response = await fetch(`${config.apiBase}/components.json`);
-      const data = await response.json();
-      return data.components || [];
-    } catch (error) {
-      console.error('Error fetching components:', error);
-      return [];
-    }
+  function fetchComponents() {
+    return new Promise((resolve) => {
+      sp.components({
+        success: function(data) {
+          resolve(data.components || []);
+        },
+        error: function() {
+          resolve([]);
+        }
+      });
+    });
   }
 
   // Display maintenance info
@@ -90,11 +102,11 @@ document.addEventListener('DOMContentLoaded', async function() {
     if (affectedComponents.length > 0) {
       let componentsHTML = '<h3>Affected Services:</h3>';
       affectedComponents.forEach(comp => {
-        const statusClass = comp.status.replace('_', '-');
+        const statusClass = comp.status.replace(/_/g, '-');
         componentsHTML += `
           <div class="component-item">
             <span class="component-status status-${statusClass}"></span>
-            <span>${comp.name}: ${comp.status.replace('_', ' ')}</span>
+            <span>${comp.name}: ${comp.status.replace(/_/g, ' ')}</span>
           </div>
         `;
       });
@@ -119,6 +131,7 @@ document.addEventListener('DOMContentLoaded', async function() {
         setTimeout(() => {
           window.location.replace(config.mainPageURL);
         }, 2000);
+        clearInterval(countdownInterval);
         return;
       }
 
