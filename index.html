@@ -1,7 +1,33 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <script src="https://samidev.statuspage.io/embed/script.js"></script>
+  <script>
+(function() {
+  const BYPASS_KEY = 'maintenanceBypass';
+  const API_BASE = 'https://8tq16kv1cnxh.statuspage.io/api/v2';
+  
+  // Check if we've already bypassed maintenance
+  const bypassFlag = localStorage.getItem(BYPASS_KEY);
+  if (bypassFlag === 'true') {
+    return; // Allow access to main site
+  }
+  
+  // Check for active maintenance
+  fetch(API_BASE + '/scheduled-maintenances/active.json')
+    .then(res => res.json())
+    .then(data => {
+      if (data.scheduled_maintenances && data.scheduled_maintenances.length > 0) {
+        // Active maintenance found, redirect
+        localStorage.removeItem(BYPASS_KEY);
+        window.location.replace('maintenance.html');
+      }
+    })
+    .catch(err => {
+      console.error('Error checking maintenance status:', err);
+      // On error, allow access to site
+    });
+})();
+</script>
   <script>
 /* index HEAD snippet — paste at top of <head> */
 (function(){
