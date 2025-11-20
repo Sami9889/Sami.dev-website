@@ -1,18 +1,21 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Maintenance</title>
-<link rel="stylesheet" href="maintenance.css">
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Site Maintenance</title>
+  <link rel="stylesheet" href="maintenance.css">
 </head>
 <body>
   <div class="maintenance-container">
-    <h1>Site is under maintenance</h1>
-    <p>Please check back soon.</p>
-    <div id="maintenance-countdown">Loading timer...</div>
+    <div class="icon">🔧</div>
+    <h1 id="maintenance-title">Scheduled Maintenance</h1>
+    <p id="maintenance-description">Loading maintenance information...</p>
+    <div id="maintenance-countdown"></div>
+    <div id="affected-components"></div>
+    <p class="subtext">Thank you for your patience.</p>
   </div>
-
+  <script src="maintenance-config.js"></script>
   <script src="maintenance.js"></script>
 </body>
 </html>
