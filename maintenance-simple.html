@@ -1,0 +1,108 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Site Maintenance - Sami.dev</title>
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body {
+      font-family: 'Space Grotesk', system-ui, Arial, sans-serif;
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      min-height: 100vh;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 20px;
+    }
+    .container {
+      background: white;
+      border-radius: 20px;
+      padding: 60px 40px;
+      text-align: center;
+      max-width: 600px;
+      box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+    }
+    .icon { font-size: 80px; margin-bottom: 20px; animation: rotate 3s linear infinite; }
+    @keyframes rotate { to { transform: rotate(360deg); } }
+    h1 { font-size: 2.5rem; color: #333; margin-bottom: 15px; }
+    p { font-size: 1.2rem; color: #666; margin-bottom: 30px; line-height: 1.6; }
+    .badge {
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      color: white; padding: 12px 24px; border-radius: 25px;
+      font-weight: 600; margin: 20px 0; display: inline-block;
+    }
+    .info { background: #f8f9fa; border-radius: 10px; padding: 20px; margin: 20px 0; text-align: left; }
+    .info h3 { color: #333; margin-bottom: 10px; }
+    .info p { color: #666; margin: 0; }
+    .link { color: #667eea; text-decoration: none; font-weight: 600; }
+    @media (max-width: 600px) { .container { padding: 40px 25px; } h1 { font-size: 2rem; } }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <div class="icon">🔧</div>
+    <h1>We'll Be Right Back</h1>
+    <p>We're currently performing scheduled maintenance to improve your experience.</p>
+    
+    <div class="badge" id="status">🔄 Maintenance in Progress</div>
+    
+    <div class="info">
+      <h3>What's happening?</h3>
+      <p>We're performing updates and improvements to make the site better for you. This should only take a short while.</p>
+    </div>
+    
+    <div class="info" id="countdown" style="display:none;">
+      <h3>Time Remaining</h3>
+      <p id="timer" style="font-size:1.2rem;font-weight:600;color:#667eea;"></p>
+    </div>
+    
+    <div class="info">
+      <h3>Need help?</h3>
+      <p>For urgent matters, please email <a href="mailto:samisingh988@gmail.com" class="link">samisingh988@gmail.com</a></p>
+    </div>
+    
+    <p style="color:#999;margin-top:30px;">Thank you for your patience!</p>
+  </div>
+
+  <script>
+    // MAINTENANCE SETTINGS
+    const SETTINGS = {
+      enabled: true,                    // true = show maintenance, false = redirect to main site
+      endTime: null,                   // '2024-12-31T23:59:59Z' or null
+      redirectUrl: '/',                // where to go when maintenance ends
+      checkInterval: 30                // seconds
+    };
+    
+    // LOGIC
+    if (!SETTINGS.enabled) {
+      window.location.href = SETTINGS.redirectUrl;
+    } else if (SETTINGS.endTime) {
+      const end = new Date(SETTINGS.endTime);
+      document.getElementById('countdown').style.display = 'block';
+      
+      function update() {
+        const now = new Date();
+        const diff = end - now;
+        
+        if (diff <= 0) {
+          document.getElementById('timer').textContent = '✅ Complete! Redirecting...';
+          setTimeout(() => window.location.href = SETTINGS.redirectUrl, 2000);
+          return;
+        }
+        
+        const h = Math.floor(diff / 3600000);
+        const m = Math.floor((diff % 3600000) / 60000);
+        const s = Math.floor((diff % 60000) / 1000);
+        document.getElementById('timer').textContent = `${h}h ${m}m ${s}s`;
+      }
+      
+      update();
+      setInterval(update, 1000);
+      setInterval(() => {
+        if (new Date() > end) window.location.href = SETTINGS.redirectUrl;
+      }, SETTINGS.checkInterval * 1000);
+    }
+  </script>
+</body>
+</html>
