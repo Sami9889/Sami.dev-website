@@ -4,11 +4,6 @@
   <script>
     // MAINTENANCE MODE TOGGLE
     const MAINTENANCE_MODE = false; // Change to true to enable maintenance
-    if (MAINTENANCE_MODE) { 
-      window.location.replace('/maintenance.html'); 
-      throw new Error('Maintenance mode active');
-    }
-    const MAINTENANCE_MODE = true; // Change to true to enable maintenance
     if (MAINTENANCE_MODE) { window.location.replace('/maintenance.html'); }
   </script>
   
