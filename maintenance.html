@@ -3,20 +3,265 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Site Maintenance</title>
-  <link rel="stylesheet" href="maintenance.css">
-  <script src="https://cdn.statuspage.io/se-v2.js"></script>
+  <title>Site Maintenance - Sami.dev</title>
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    body {
+      font-family: 'Space Grotesk', system-ui, -apple-system, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      min-height: 100vh;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 20px;
+    }
+
+    .maintenance-container {
+      background: white;
+      border-radius: 20px;
+      padding: 60px 40px;
+      text-align: center;
+      max-width: 600px;
+      box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+      animation: fadeIn 0.6s ease;
+    }
+
+    @keyframes fadeIn {
+      from {
+        opacity: 0;
+        transform: translateY(20px);
+      }
+      to {
+        opacity: 1;
+        transform: translateY(0);
+      }
+    }
+
+    .icon {
+      font-size: 80px;
+      margin-bottom: 20px;
+      animation: rotate 3s linear infinite;
+    }
+
+    @keyframes rotate {
+      from { transform: rotate(0deg); }
+      to { transform: rotate(360deg); }
+    }
+
+    h1 {
+      font-size: 2.5rem;
+      color: #333;
+      margin-bottom: 15px;
+      font-weight: 700;
+    }
+
+    p {
+      font-size: 1.2rem;
+      color: #666;
+      margin-bottom: 30px;
+      line-height: 1.6;
+    }
+
+    .status-badge {
+      display: inline-block;
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      color: white;
+      padding: 12px 24px;
+      border-radius: 25px;
+      font-weight: 600;
+      font-size: 1rem;
+      margin: 20px 0;
+    }
+
+    .info-box {
+      background: #f8f9fa;
+      border-radius: 10px;
+      padding: 20px;
+      margin: 20px 0;
+      text-align: left;
+    }
+
+    .info-box h3 {
+      font-size: 1.1rem;
+      color: #333;
+      margin-bottom: 10px;
+      font-weight: 600;
+    }
+
+    .info-box p {
+      font-size: 1rem;
+      color: #666;
+      margin: 0;
+    }
+
+    .subtext {
+      font-size: 1rem;
+      color: #999;
+      margin-top: 30px;
+      margin-bottom: 0;
+    }
+
+    .link {
+      color: #667eea;
+      text-decoration: none;
+      font-weight: 600;
+    }
+
+    .link:hover {
+      text-decoration: underline;
+    }
+
+    @media (max-width: 600px) {
+      .maintenance-container {
+        padding: 40px 25px;
+      }
+      
+      h1 {
+        font-size: 2rem;
+      }
+      
+      .icon {
+        font-size: 60px;
+      }
+    }
+  </style>
 </head>
 <body>
   <div class="maintenance-container">
     <div class="icon">🔧</div>
-    <h1 id="maintenance-title">Scheduled Maintenance</h1>
-    <p id="maintenance-description">Loading maintenance information...</p>
-    <div id="maintenance-countdown"></div>
-    <div id="affected-components"></div>
-    <p class="subtext">Thank you for your patience.</p>
+    <h1>We'll Be Right Back</h1>
+    <p>We're currently performing scheduled maintenance to improve your experience.</p>
+    
+    <div class="status-badge">🔄 Maintenance in Progress</div>
+    
+    <div class="info-box">
+      <h3>What's happening?</h3>
+      <p>We're performing updates and improvements to make the site better for you. This should only take a short while.</p>
+    </div>
+    
+    <div class="info-box">
+      <h3>Need help?</h3>
+      <p>For urgent matters, please email <a href="mailto:samisingh988@gmail.com" class="link">samisingh988@gmail.com</a></p>
+    </div>
+    
+    <p class="subtext">Thank you for your patience!</p>
   </div>
-  <script src="maintenance-config.js"></script>
-  <script src="maintenance.js"></script>
+
+  <script>
+    // ============================================
+    // MAINTENANCE SETTINGS - EASY TO CONFIGURE
+    // ============================================
+    const MAINTENANCE_SETTINGS = {
+      // Enable/disable maintenance mode
+      enabled: true,
+      
+      // Set end time (null = no auto-redirect, or use ISO date string)
+      // Example: '2024-12-31T23:59:59Z' or null
+      endTime: null,
+      
+      // Estimated duration in hours (for display only)
+      estimatedDuration: 2,
+      
+      // Auto-redirect URL when maintenance ends
+      redirectUrl: '/',
+      
+      // Check interval in seconds (how often to check if maintenance is over)
+      checkInterval: 30,
+      
+      // Display settings
+      display: {
+        title: "We'll Be Right Back",
+        message: "We're currently performing scheduled maintenance to improve your experience.",
+        statusText: "🔄 Maintenance in Progress",
+        showEstimate: true
+      }
+    };
+    
+    // ============================================
+    // AUTO-GENERATED MAINTENANCE LOGIC
+    // ============================================
+    
+    // Update display based on settings
+    if (MAINTENANCE_SETTINGS.display.title) {
+      document.querySelector('h1').textContent = MAINTENANCE_SETTINGS.display.title;
+    }
+    
+    if (MAINTENANCE_SETTINGS.display.message) {
+      document.querySelector('p').textContent = MAINTENANCE_SETTINGS.display.message;
+    }
+    
+    if (MAINTENANCE_SETTINGS.display.statusText) {
+      document.querySelector('.status-badge').textContent = MAINTENANCE_SETTINGS.display.statusText;
+    }
+    
+    // Show estimated duration if enabled
+    if (MAINTENANCE_SETTINGS.display.showEstimate && MAINTENANCE_SETTINGS.estimatedDuration) {
+      const duration = MAINTENANCE_SETTINGS.estimatedDuration;
+      const durationText = duration === 1 ? '1 hour' : `${duration} hours`;
+      const estimateBox = document.createElement('div');
+      estimateBox.className = 'info-box';
+      estimateBox.innerHTML = `
+        <h3>Estimated Duration</h3>
+        <p>Expected to complete in approximately ${durationText}. We'll be back online shortly!</p>
+      `;
+      document.querySelector('.info-box').insertAdjacentElement('beforebegin', estimateBox);
+    }
+    
+    // Handle auto-redirect
+    if (MAINTENANCE_SETTINGS.enabled && MAINTENANCE_SETTINGS.endTime) {
+      const endTime = new Date(MAINTENANCE_SETTINGS.endTime);
+      
+      // Show countdown
+      const countdownDiv = document.createElement('div');
+      countdownDiv.className = 'info-box';
+      countdownDiv.id = 'countdown-box';
+      countdownDiv.innerHTML = `
+        <h3>Time Remaining</h3>
+        <p id="countdown-text" style="font-size: 1.2rem; font-weight: 600; color: #667eea;">Calculating...</p>
+      `;
+      document.querySelector('.status-badge').insertAdjacentElement('afterend', countdownDiv);
+      
+      function updateCountdown() {
+        const now = new Date();
+        const remaining = endTime - now;
+        
+        if (remaining <= 0) {
+          document.getElementById('countdown-text').textContent = '✅ Maintenance complete! Redirecting...';
+          setTimeout(() => {
+            window.location.href = MAINTENANCE_SETTINGS.redirectUrl;
+          }, 2000);
+          return;
+        }
+        
+        const hours = Math.floor(remaining / 3600000);
+        const minutes = Math.floor((remaining % 3600000) / 60000);
+        const seconds = Math.floor((remaining % 60000) / 1000);
+        
+        document.getElementById('countdown-text').textContent = 
+          `${hours}h ${minutes}m ${seconds}s`;
+      }
+      
+      updateCountdown();
+      setInterval(updateCountdown, 1000);
+      
+      // Check for completion
+      const checkInterval = setInterval(() => {
+        if (new Date() > endTime) {
+          clearInterval(checkInterval);
+          window.location.href = MAINTENANCE_SETTINGS.redirectUrl;
+        }
+      }, MAINTENANCE_SETTINGS.checkInterval * 1000);
+    }
+    
+    // If maintenance is disabled, redirect immediately
+    if (!MAINTENANCE_SETTINGS.enabled) {
+      window.location.href = MAINTENANCE_SETTINGS.redirectUrl;
+    }
+  </script>
 </body>
 </html>
