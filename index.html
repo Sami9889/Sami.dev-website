@@ -1,9 +1,22 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
+  <script>
+    // ==================================
+    // MAINTENANCE MODE TOGGLE - RUNS FIRST!
+    // ==================================
+    const MAINTENANCE_MODE = true; // Change to false to disable maintenance
+    
+    if (MAINTENANCE_MODE) {
+      window.location.replace('/maintenance.html');
+      throw new Error('Maintenance mode active'); // Stop all other scripts
+    }
+  </script>
+  
   <script
   src="https://js-de.sentry-cdn.com/19f914da843ff91848281a5e4be175e8.min.js"
   crossorigin="anonymous"
+  ></script>
   <script>
 /* index HEAD snippet — paste at top of <head> */
 (function(){
@@ -49,10 +62,10 @@
   }
 })();
 </script>
-    <script id="Cookiebot" src="https://consent.cookiebot.com/uc.js" data-cbid="19711b51-4b0b-4bf8-a4e1-c47f78f27459" data-blockingmode="auto" type="text/javascript"></script>
+    <script id="Cookiebot" src="https://consent.cookiebot.com/uc.js" data-cbid="19711b51-4b0b-4bf8-a4e1-c47f78f27459" data-blockingmode="auto" type="text/javascript" crossorigin="anonymous"></script>
     
     <!-- Google tag (gtag.js) -->
-    <script async src="https://www.googletagmanager.com/gtag/js?id=G-N56LK2Y7B9"></script>
+    <script async src="https://www.googletagmanager.com/gtag/js?id=G-N56LK2Y7B9" crossorigin="anonymous"></script>
     <script>
       window.dataLayer = window.dataLayer || [];
       function gtag(){dataLayer.push(arguments);}
@@ -64,7 +77,7 @@
     <script>(function(w,d,s,l,i){w[l]=w[l]||[];w[l].push({'gtm.start':
     new Date().getTime(),event:'gtm.js'});var f=d.getElementsByTagName(s)[0],
     j=d.createElement(s),dl=l!='dataLayer'?'&l='+l:'';j.async=true;j.src=
-    'https://www.googletagmanager.com/gtm.js?id='+i+dl;f.parentNode.insertBefore(j,f);
+    'https://www.googletagmanager.com/gtm.js?id='+i+dl;j.crossOrigin='anonymous';f.parentNode.insertBefore(j,f);
     })(window,document,'script','dataLayer','GTM-W3LFMLDQ');</script>
     
     <meta charset="UTF-8">
