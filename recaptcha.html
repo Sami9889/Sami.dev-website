@@ -1,7 +1,13 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <script src="https://samidev.statuspage.io/embed/script.js"></script>
+  <script>
+    // MAINTENANCE MODE TOGGLE
+    const MAINTENANCE_MODE = false; // Change to true to enable maintenance
+    if (MAINTENANCE_MODE) { window.location.replace('/maintenance.html'); }
+  </script>
+  
+  <script src="https://samidev.statuspage.io/embed/script.js" crossorigin="anonymous"></script>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width,initial-scale=1">
   <title>Verify - sami.is-a.dev</title>
@@ -10,7 +16,7 @@
   <script>(function(w,d,s,l,i){w[l]=w[l]||[];w[l].push({'gtm.start':
   new Date().getTime(),event:'gtm.js'});var f=d.getElementsByTagName(s)[0],
   j=d.createElement(s),dl=l!='dataLayer'?'&l='+l:'';j.async=true;j.src=
-  'https://www.googletagmanager.com/gtm.js?id='+i+dl;f.parentNode.insertBefore(j,f);
+  'https://www.googletagmanager.com/gtm.js?id='+i+dl;j.crossOrigin='anonymous';f.parentNode.insertBefore(j,f);
   })(window,document,'script','dataLayer','GTM-W3LFMLDQ');</script>
   <!-- End Google Tag Manager -->
   
