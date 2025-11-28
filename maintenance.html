@@ -5,6 +5,9 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Site Maintenance - Sami.dev</title>
   <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body {
+      font-family: 'Space Grotesk', system-ui, Arial, sans-serif;
     * {
       margin: 0;
       padding: 0;
@@ -171,6 +174,7 @@
       estimatedDuration: 2,
       
       // Auto-redirect URL when maintenance ends
+      redirectUrl: '/',
       redirectUrl: '/index.html',
       
       // Check interval in seconds (how often to check if maintenance is over)
