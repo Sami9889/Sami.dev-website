@@ -1,9 +1,43 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
+  <!-- Prevent Caching -->
+  <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
+  <meta http-equiv="Pragma" content="no-cache">
+  <meta http-equiv="Expires" content="0">
+  
+  <script>
+    // MAINTENANCE MODE
+    const MAINTENANCE_MODE = false;
+    if (MAINTENANCE_MODE) {
+      window.location.replace('/maintenance.html');
+      throw new Error('Maintenance mode active');
+    }
+  </script>
+  
   <script
   src="https://js-de.sentry-cdn.com/19f914da843ff91848281a5e4be175e8.min.js"
   crossorigin="anonymous"
+  ></script>
+  
+  <script>
+    // Sentry (only if cookies accepted)
+    if (typeof Sentry !== 'undefined' && localStorage.getItem('cookieConsent') === 'accepted') {
+      Sentry.onLoad(function() {
+        Sentry.init({
+          integrations: [
+            Sentry.replayIntegration({
+              maskAllText: false,
+              blockAllMedia: false,
+            }),
+          ],
+          replaysSessionSampleRate: 0.1,
+          replaysOnErrorSampleRate: 1.0,
+        });
+      });
+    }
+  </script>
+  
   <script>
 /* index HEAD snippet — paste at top of <head> */
 (function(){
@@ -49,23 +83,44 @@
   }
 })();
 </script>
-    <script id="Cookiebot" src="https://consent.cookiebot.com/uc.js" data-cbid="19711b51-4b0b-4bf8-a4e1-c47f78f27459" data-blockingmode="auto" type="text/javascript"></script>
     
-    <!-- Google tag (gtag.js) -->
-    <script async src="https://www.googletagmanager.com/gtag/js?id=G-N56LK2Y7B9"></script>
+    <!-- Custom Cookie Consent (loads Analytics only after consent) -->
     <script>
-      window.dataLayer = window.dataLayer || [];
-      function gtag(){dataLayer.push(arguments);}
-      gtag('js', new Date());
-      gtag('config', 'G-N56LK2Y7B9');
+      // Check if user already gave consent
+      const cookieConsent = localStorage.getItem('cookieConsent');
+      
+      // Function to load Google Analytics & Tag Manager
+      function loadAnalytics() {
+        // Google Analytics
+        const gaScript = document.createElement('script');
+        gaScript.src = 'https://www.googletagmanager.com/gtag/js?id=G-N56LK2Y7B9';
+        gaScript.async = true;
+        gaScript.crossOrigin = 'anonymous';
+        document.head.appendChild(gaScript);
+        
+        gaScript.onload = function() {
+          window.dataLayer = window.dataLayer || [];
+          function gtag(){dataLayer.push(arguments);}
+          gtag('js', new Date());
+          gtag('config', 'G-N56LK2Y7B9', {
+            'anonymize_ip': true,
+            'cookie_flags': 'SameSite=Lax;Secure'
+          });
+        };
+        
+        // Google Tag Manager
+        (function(w,d,s,l,i){w[l]=w[l]||[];w[l].push({'gtm.start':
+        new Date().getTime(),event:'gtm.js'});var f=d.getElementsByTagName(s)[0],
+        j=d.createElement(s),dl=l!='dataLayer'?'&l='+l:'';j.async=true;j.src=
+        'https://www.googletagmanager.com/gtm.js?id='+i+dl;j.crossOrigin='anonymous';f.parentNode.insertBefore(j,f);
+        })(window,document,'script','dataLayer','GTM-W3LFMLDQ');
+      }
+      
+      // If already accepted, load immediately
+      if (cookieConsent === 'accepted') {
+        loadAnalytics();
+      }
     </script>
-    
-    <!-- Google Tag Manager -->
-    <script>(function(w,d,s,l,i){w[l]=w[l]||[];w[l].push({'gtm.start':
-    new Date().getTime(),event:'gtm.js'});var f=d.getElementsByTagName(s)[0],
-    j=d.createElement(s),dl=l!='dataLayer'?'&l='+l:'';j.async=true;j.src=
-    'https://www.googletagmanager.com/gtm.js?id='+i+dl;f.parentNode.insertBefore(j,f);
-    })(window,document,'script','dataLayer','GTM-W3LFMLDQ');</script>
     
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -1184,9 +1239,213 @@
                 --gray-700: #3a3a3a;
             }
         }
+        
+        /* Timeline Styles */
+        .timeline {
+            position: relative;
+            padding: 2rem 0;
+        }
+        
+        .timeline::before {
+            content: '';
+            position: absolute;
+            left: 20px;
+            top: 0;
+            bottom: 0;
+            width: 3px;
+            background: linear-gradient(180deg, var(--accent), var(--success));
+        }
+        
+        .timeline-item {
+            position: relative;
+            padding-left: 60px;
+            margin-bottom: 3rem;
+        }
+        
+        .timeline-dot {
+            position: absolute;
+            left: 9px;
+            top: 0;
+            width: 25px;
+            height: 25px;
+            background: white;
+            border: 4px solid var(--accent);
+            border-radius: 50%;
+            z-index: 1;
+        }
+        
+        .timeline-dot.active {
+            background: var(--accent);
+            box-shadow: 0 0 0 4px rgba(0, 123, 255, 0.2);
+            animation: pulse 2s infinite;
+        }
+        
+        @keyframes pulse {
+            0%, 100% { box-shadow: 0 0 0 4px rgba(0, 123, 255, 0.2); }
+            50% { box-shadow: 0 0 0 8px rgba(0, 123, 255, 0.4); }
+        }
+        
+        .timeline-content {
+            background: var(--white);
+            border: 1px solid var(--gray-200);
+            border-radius: 8px;
+            padding: 2rem;
+            transition: var(--transition);
+        }
+        
+        .timeline-content:hover {
+            transform: translateX(10px);
+            box-shadow: var(--shadow);
+            border-color: var(--accent);
+        }
+        
+        .timeline-date {
+            font-size: 0.85rem;
+            color: var(--accent);
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            margin-bottom: 0.5rem;
+        }
+        
+        .timeline-content h3 {
+            font-size: 1.5rem;
+            color: var(--black);
+            margin-bottom: 1rem;
+        }
+        
+        .timeline-content p {
+            color: var(--gray-700);
+            line-height: 1.6;
+            margin-bottom: 1rem;
+        }
+        
+        .timeline-tags {
+            display: flex;
+            gap: 0.5rem;
+            flex-wrap: wrap;
+        }
+        
+        /* Cookie Consent Banner */
+        .cookie-banner {
+            position: fixed;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            background: rgba(0, 0, 0, 0.95);
+            backdrop-filter: blur(10px);
+            color: white;
+            padding: 20px;
+            z-index: 10001;
+            display: none;
+            animation: slideUp 0.4s ease;
+        }
+        
+        @keyframes slideUp {
+            from { transform: translateY(100%); }
+            to { transform: translateY(0); }
+        }
+        
+        .cookie-banner.show {
+            display: block;
+        }
+        
+        .cookie-content {
+            max-width: 1200px;
+            margin: 0 auto;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 20px;
+            flex-wrap: wrap;
+        }
+        
+        .cookie-text {
+            flex: 1;
+            min-width: 300px;
+        }
+        
+        .cookie-text h3 {
+            margin: 0 0 8px 0;
+            font-size: 1.1rem;
+            font-weight: 600;
+        }
+        
+        .cookie-text p {
+            margin: 0;
+            font-size: 0.9rem;
+            opacity: 0.9;
+            line-height: 1.5;
+        }
+        
+        .cookie-buttons {
+            display: flex;
+            gap: 12px;
+            flex-wrap: wrap;
+        }
+        
+        .cookie-btn {
+            padding: 12px 24px;
+            border: none;
+            border-radius: 6px;
+            font-weight: 600;
+            font-size: 0.95rem;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            font-family: var(--primary-font);
+        }
+        
+        .cookie-btn.accept {
+            background: linear-gradient(135deg, #667eea, #764ba2);
+            color: white;
+        }
+        
+        .cookie-btn.accept:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(102, 126, 234, 0.4);
+        }
+        
+        .cookie-btn.decline {
+            background: transparent;
+            color: white;
+            border: 2px solid rgba(255, 255, 255, 0.3);
+        }
+        
+        .cookie-btn.decline:hover {
+            background: rgba(255, 255, 255, 0.1);
+            border-color: white;
+        }
+        
+        @media (max-width: 768px) {
+            .cookie-content {
+                flex-direction: column;
+                align-items: flex-start;
+            }
+            
+            .cookie-buttons {
+                width: 100%;
+            }
+            
+            .cookie-btn {
+                flex: 1;
+            }
+        }
     </style>
 </head>
 <body>
+    <!-- Cookie Consent Banner -->
+    <div class="cookie-banner" id="cookieBanner">
+        <div class="cookie-content">
+            <div class="cookie-text">
+                <h3>🍪 We value your privacy</h3>
+                <p>We use cookies and analytics to improve your experience. By clicking "Accept", you consent to our use of cookies and Google Analytics.</p>
+            </div>
+            <div class="cookie-buttons">
+                <button class="cookie-btn decline" onclick="declineCookies()">Decline</button>
+                <button class="cookie-btn accept" onclick="acceptCookies()">Accept All</button>
+            </div>
+        </div>
+    </div>
     <!-- Google Tag Manager (noscript) -->
     <noscript><iframe src="https://www.googletagmanager.com/ns.html?id=GTM-W3LFMLDQ"
     height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
@@ -1208,7 +1467,7 @@
                 <ul class="nav-links" id="nav-links">
                     <li><a href="#" onclick="showPage('home'); return false;" class="active" aria-label="Go to home page">Home</a></li>
                     <li><a href="#" onclick="showPage('about'); return false;" aria-label="Go to about page">About</a></li>
-                    <li><a href="#" onclick="showPage('skills'); return false;" aria-label="Go to skills page">Skills</a></li>
+                    <li><a href="#" onclick="showPage('services'); return false;" aria-label="Go to services page">Services</a></li>
                     <li><a href="#" onclick="showPage('projects'); return false;" aria-label="Go to projects page">Projects</a></li>
                     <li><a href="#" onclick="showPage('contact'); return false;" aria-label="Go to contact page">Contact</a></li>
                 </ul>
@@ -1223,6 +1482,7 @@
                     <h1>Samrath "Sami" Singh</h1>
                     <p class="tagline">Full-Stack Developer & Software Engineer</p>
                     <em>// Building the web, one line of code at a time</em>
+                    
                     <div class="social-links">
                         <a href="mailto:samisingh988@gmail.com" aria-label="Send email">Email</a>
                         <a href="https://github.com/Sami9889" target="_blank" rel="noopener noreferrer" aria-label="Visit GitHub profile">GitHub</a>
@@ -1241,7 +1501,7 @@
                         <span class="stat-label">Projects Built</span>
                     </div>
                     <div class="stat-item">
-                        <span class="stat-number">8+</span>
+                        <span class="stat-number">10+</span>
                         <span class="stat-label">Technologies</span>
                     </div>
                     <div class="stat-item">
@@ -1260,36 +1520,54 @@
             
             <div class="about-content">
                 <div class="about-text">
-                    <p>I'm Sami, a full-stack developer passionate about creating powerful, modern, and elegant web solutions that merge performance with style. My journey in software development started with curiosity and has evolved into a deep commitment to building exceptional digital experiences.</p>
+                    <p>I'm Samrath "Sami" Singh, a motivated junior developer from Point Cook, VIC with hands-on experience in coding, system design, and client support. My journey started at age 14 when I registered my own ABN and launched my first business, and I've been building ICT solutions ever since.</p>
                     
-                    <p>I specialize in creating robust web applications using modern technologies and best practices. Whether it's crafting responsive user interfaces or building scalable backend systems, I approach every project with attention to detail and a focus on clean, maintainable code.</p>
+                    <p>I specialize in creating user-focused web applications and digital solutions. From designing 3D models for 3DPrintzAU to building custom Minecraft plugins and web apps through Procoders Coding Service, I approach every project with attention to detail and a commitment to quality.</p>
                     
-                    <p>My development philosophy centers around user-first design, performance optimization, and writing code that's not just functional but also elegant and maintainable. I believe in the power of technology to solve real-world problems and create meaningful connections.</p>
+                    <p>My development philosophy centers around gathering requirements, thorough testing, and clear documentation. I believe in building systems that are not just functional, but secure, well-documented, and truly solve problems for users.</p>
                     
-                    <p>When I'm not coding, you'll find me exploring new technologies, contributing to open-source projects, or sharing knowledge with the developer community. I believe in continuous learning and staying at the forefront of web development trends.</p>
+                    <p>Currently studying at Point Cook College, I balance education with running multiple businesses and freelance development work. I'm passionate about continuous learning and contributing to impactful projects.</p>
+                    
+                    <div style="margin-top: 2rem; padding: 1.5rem; background: var(--gray-100); border-radius: 8px;">
+                        <h3 style="margin-bottom: 1rem;">What I Bring to Projects</h3>
+                        <ul style="list-style: none; padding: 0;">
+                            <li style="padding: 0.5rem 0; border-bottom: 1px solid var(--gray-300);">
+                                <strong>Requirements Analysis:</strong> Gather and understand client needs through clear communication
+                            </li>
+                            <li style="padding: 0.5rem 0; border-bottom: 1px solid var(--gray-300);">
+                                <strong>System Testing:</strong> Thorough functional and integration testing for reliability
+                            </li>
+                            <li style="padding: 0.5rem 0; border-bottom: 1px solid var(--gray-300);">
+                                <strong>Documentation:</strong> Clear technical specs, user guides, and support materials
+                            </li>
+                            <li style="padding: 0.5rem 0;">
+                                <strong>Client Support:</strong> Ongoing technical assistance and troubleshooting
+                            </li>
+                        </ul>
+                    </div>
                 </div>
                 
                 <aside class="about-info">
                     <h3>Personal Info</h3>
                     <div class="info-item">
                         <span class="info-label">Location</span>
-                        <span class="info-value">Remote</span>
+                        <span class="info-value">Point Cook, VIC</span>
                     </div>
                     <div class="info-item">
                         <span class="info-label">Experience</span>
                         <span class="info-value">2+ Years</span>
                     </div>
                     <div class="info-item">
-                        <span class="info-label">Focus</span>
-                        <span class="info-value">Full-Stack</span>
+                        <span class="info-label">Education</span>
+                        <span class="info-value">Point Cook College</span>
+                    </div>
+                    <div class="info-item">
+                        <span class="info-label">ABN</span>
+                        <span class="info-value">72 925 087 373</span>
                     </div>
                     <div class="info-item">
                         <span class="info-label">Availability</span>
                         <span class="info-value">Open to Work</span>
-                    </div>
-                    <div class="info-item">
-                        <span class="info-label">Languages</span>
-                        <span class="info-value">English, Hindi</span>
                     </div>
                 </aside>
             </div>
@@ -1303,82 +1581,232 @@
             
             <div class="skills-grid">
                 <article class="skill-category">
-                    <h3>Frontend Development</h3>
+                    <h3>Programming Languages</h3>
                     <ul class="skill-list">
-                        <li>HTML5 & CSS3</li>
-                        <li>JavaScript (ES6+)</li>
-                        <li>React.js & Redux</li>
-                        <li>Responsive Design</li>
-                        <li>CSS Frameworks (Bootstrap, Tailwind)</li>
-                        <li>Modern Build Tools</li>
+                        <li>HTML & CSS</li>
+                        <li>JavaScript</li>
+                        <li>Python</li>
+                        <li>PHP</li>
+                        <li>JSON & YAML</li>
                     </ul>
-                    <div class="skill-level advanced">Advanced</div>
+                    <div class="skill-level advanced">Proficient</div>
                 </article>
                 
                 <article class="skill-category">
-                    <h3>Backend Development</h3>
+                    <h3>Web & APIs</h3>
                     <ul class="skill-list">
-                        <li>Python & Django</li>
-                        <li>Node.js & Express</li>
-                        <li>RESTful APIs</li>
-                        <li>Database Design</li>
-                        <li>Server Management</li>
-                        <li>Authentication & Security</li>
+                        <li>REST APIs</li>
+                        <li>WebSockets</li>
+                        <li>HTTP/HTTPS Protocols</li>
+                        <li>Bootstrap Framework</li>
+                        <li>Cloudflare Workers</li>
+                        <li>NGINX</li>
                     </ul>
-                    <div class="skill-level intermediate">Intermediate</div>
+                    <div class="skill-level advanced">Proficient</div>
                 </article>
                 
                 <article class="skill-category">
-                    <h3>Database & Storage</h3>
+                    <h3>Development Tools</h3>
                     <ul class="skill-list">
-                        <li>PostgreSQL & MySQL</li>
-                        <li>MongoDB</li>
-                        <li>Redis Caching</li>
-                        <li>Database Optimization</li>
-                        <li>Data Modeling</li>
-                        <li>Cloud Storage</li>
+                        <li>Visual Studio Code</li>
+                        <li>GitHub & Git</li>
+                        <li>Postman (API Testing)</li>
+                        <li>Replit Online IDE</li>
+                        <li>FTP & cPanel</li>
+                        <li>Markdown</li>
                     </ul>
-                    <div class="skill-level intermediate">Intermediate</div>
+                    <div class="skill-level">Experienced</div>
                 </article>
                 
                 <article class="skill-category">
-                    <h3>Tools & Technologies</h3>
+                    <h3>Infrastructure & Security</h3>
                     <ul class="skill-list">
-                        <li>Git & GitHub</li>
-                        <li>VS Code & JetBrains</li>
-                        <li>Linux/Unix Systems</li>
-                        <li>Package Managers</li>
-                        <li>Development Workflows</li>
-                        <li>API Testing Tools</li>
+                        <li>Cloudflare DNS & SSL</li>
+                        <li>Data Privacy Principles</li>
+                        <li>Access Controls</li>
+                        <li>Cybersecurity Basics</li>
+                        <li>Windows, macOS, iOS, Linux</li>
                     </ul>
-                    <div class="skill-level">Proficient</div>
+                    <div class="skill-level">Competent</div>
                 </article>
                 
                 <article class="skill-category">
-                    <h3>DevOps & Deployment</h3>
+                    <h3>Data & Databases</h3>
                     <ul class="skill-list">
-                        <li>Docker Containers</li>
-                        <li>Shell Scripting</li>
-                        <li>CI/CD Pipelines</li>
-                        <li>Cloud Services (AWS, Vercel)</li>
-                        <li>Monitoring & Logging</li>
-                        <li>Performance Optimization</li>
+                        <li>SQL Queries</li>
+                        <li>JSON & YAML Data</li>
+                        <li>CSV Handling</li>
+                        <li>Data Analysis</li>
+                        <li>Performance Metrics</li>
                     </ul>
-                    <div class="skill-level learning">Learning</div>
+                    <div class="skill-level">Competent</div>
                 </article>
                 
                 <article class="skill-category">
-                    <h3>Design & UX</h3>
+                    <h3>Professional Skills</h3>
                     <ul class="skill-list">
-                        <li>UI/UX Principles</li>
-                        <li>Figma & Design Tools</li>
-                        <li>User Research</li>
-                        <li>Accessibility (WCAG)</li>
-                        <li>Design Systems</li>
-                        <li>Prototyping</li>
+                        <li>Requirements Gathering</li>
+                        <li>System Testing</li>
+                        <li>Technical Documentation</li>
+                        <li>Client Support</li>
+                        <li>Agile Methodologies</li>
+                        <li>Problem Solving</li>
                     </ul>
-                    <div class="skill-level learning">Learning</div>
+                    <div class="skill-level">Experienced</div>
                 </article>
+            </div>
+        </section>
+
+        <section class="page" id="services">
+            <div class="page-header">
+                <h1>Services Offered</h1>
+                <p class="page-subtitle">Professional development and technical services</p>
+            </div>
+            
+            <div class="projects-grid">
+                <article class="project-card">
+                    <h3>Custom Web Development</h3>
+                    <p>Build custom websites, web applications, and landing pages using modern technologies. Responsive design, clean code, and optimized performance.</p>
+                    <div class="project-tags">
+                        <span class="tag">HTML/CSS/JS</span>
+                        <span class="tag">Responsive</span>
+                        <span class="tag">APIs</span>
+                    </div>
+                </article>
+                
+                <article class="project-card">
+                    <h3>Minecraft Plugin Development</h3>
+                    <p>Custom Minecraft plugins tailored to your server needs. From gameplay mechanics to administrative tools, delivered with full documentation.</p>
+                    <div class="project-tags">
+                        <span class="tag">Python</span>
+                        <span class="tag">Custom Features</span>
+                        <span class="tag">Testing</span>
+                    </div>
+                </article>
+                
+                <article class="project-card">
+                    <h3>eCommerce Solutions</h3>
+                    <p>Shopify store setup, customization, and optimization. Front-end modifications, API integrations, and performance improvements.</p>
+                    <div class="project-tags">
+                        <span class="tag">Shopify</span>
+                        <span class="tag">UI/UX</span>
+                        <span class="tag">Analytics</span>
+                    </div>
+                </article>
+                
+                <article class="project-card">
+                    <h3>Technical Support</h3>
+                    <p>System debugging, issue resolution, and technical documentation. Help with web hosting, DNS, SSL, and deployment issues.</p>
+                    <div class="project-tags">
+                        <span class="tag">Debugging</span>
+                        <span class="tag">DNS/SSL</span>
+                        <span class="tag">Support</span>
+                    </div>
+                </article>
+                
+                <article class="project-card">
+                    <h3>3D Design & Printing</h3>
+                    <p>Custom 3D model design and printing services. From concept to delivery, with technical consultation and prototyping support.</p>
+                    <div class="project-tags">
+                        <span class="tag">3D Modeling</span>
+                        <span class="tag">Prototyping</span>
+                        <span class="tag">Manufacturing</span>
+                    </div>
+                </article>
+                
+                <article class="project-card">
+                    <h3>API Integration</h3>
+                    <p>Connect systems together with REST APIs, webhooks, and automation. Data synchronization, workflow automation, and custom integrations.</p>
+                    <div class="project-tags">
+                        <span class="tag">REST APIs</span>
+                        <span class="tag">Webhooks</span>
+                        <span class="tag">Automation</span>
+                    </div>
+                </article>
+            </div>
+            
+            <div style="text-align: center; margin-top: 4rem; padding: 3rem; background: var(--gray-100); border-radius: 12px;">
+                <h2 style="margin-bottom: 1rem;">Ready to work together?</h2>
+                <p style="color: var(--gray-600); margin-bottom: 2rem; max-width: 600px; margin-left: auto; margin-right: auto;">
+                    Whether you need a custom solution, technical support, or want to discuss a project idea, get in touch.
+                </p>
+                <a href="#" onclick="showPage('contact'); return false;" style="display: inline-block; background: var(--accent); color: white; padding: 1rem 2rem; border-radius: 6px; text-decoration: none; font-weight: 600; transition: var(--transition);">Contact Me</a>
+            </div>
+        </section>
+
+        <section class="page" id="experience">
+            <div class="page-header">
+                <h1>Experience & Journey</h1>
+                <p class="page-subtitle">My path in software development and key milestones</p>
+            </div>
+            
+            <div style="max-width: 900px; margin: 0 auto;">
+                <div class="timeline">
+                    <div class="timeline-item">
+                        <div class="timeline-dot"></div>
+                        <div class="timeline-content">
+                            <div class="timeline-date">2022 - Present</div>
+                            <h3>Founder – 3DPrintzAU</h3>
+                            <p>Designed 3D models and managed digital manufacturing from concept to delivery. Maintained and troubleshot 3D printer systems (hardware/software), documented client requirements, and delivered tailored solutions with technical support.</p>
+                            <div class="timeline-tags">
+                                <span class="tag">3D Design</span>
+                                <span class="tag">Manufacturing</span>
+                                <span class="tag">Client Support</span>
+                                <span class="tag">Documentation</span>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="timeline-item">
+                        <div class="timeline-dot"></div>
+                        <div class="timeline-content">
+                            <div class="timeline-date">2023 - Present</div>
+                            <h3>Freelance Developer – Procoders Coding Service</h3>
+                            <p>Delivered client-specific Minecraft plugins, live camera/web apps, and backend services. Conducted requirements analysis, testing, debugging, and support. Implemented secure data handling and responsive interfaces.</p>
+                            <div class="timeline-tags">
+                                <span class="tag">Python</span>
+                                <span class="tag">JavaScript</span>
+                                <span class="tag">APIs</span>
+                                <span class="tag">Testing</span>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="timeline-item">
+                        <div class="timeline-dot active"></div>
+                        <div class="timeline-content">
+                            <div class="timeline-date">2024 - Present</div>
+                            <h3>Founder – Bad to the Bone (Shopify)</h3>
+                            <p>Created and managed an eCommerce store with custom UI modifications. Handled product fulfilment, digital operations, and analytics. Coded front-end adjustments and integrated API-based tools focused on system usability and performance.</p>
+                            <div class="timeline-tags">
+                                <span class="tag">Shopify</span>
+                                <span class="tag">eCommerce</span>
+                                <span class="tag">Front-End</span>
+                                <span class="tag">Analytics</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="certifications-section" style="margin-top: 4rem;">
+                    <h2 style="text-align: center; margin-bottom: 2rem; font-size: 2rem;">Key Achievements</h2>
+                    <div class="projects-grid">
+                        <div class="project-card">
+                            <h3 style="font-size: 1.2rem;">Young Entrepreneur</h3>
+                            <p>Registered ABN and paid ASIC fees at age 14, launching multiple successful businesses</p>
+                        </div>
+                        
+                        <div class="project-card">
+                            <h3 style="font-size: 1.2rem;">Multiple Businesses</h3>
+                            <p>Created and maintained 3DPrintzAU, Bad to the Bone, and Procoders Coding Service</p>
+                        </div>
+                        
+                        <div class="project-card">
+                            <h3 style="font-size: 1.2rem;">Production Systems</h3>
+                            <p>Built and maintained live web tools, plugins, and systems with real clients</p>
+                        </div>
+                    </div>
+                </div>
             </div>
         </section>
 
@@ -1399,6 +1827,163 @@
             </div>
             
             <div class="projects-grid" id="projects-container"></div>
+        </section>
+
+        <section class="page" id="privacy">
+            <div class="page-header">
+                <h1>Privacy Policy</h1>
+                <p class="page-subtitle">How we collect, use, and protect your information</p>
+            </div>
+            
+            <div style="max-width: 800px; margin: 0 auto;">
+                <div style="background: var(--gray-100); padding: 2rem; border-radius: 8px; margin-bottom: 2rem;">
+                    <p><strong>Effective Date:</strong> December 2024</p>
+                    <p><strong>Contact:</strong> samisingh988@gmail.com</p>
+                    <p><strong>ABN:</strong> 72 925 087 373</p>
+                </div>
+                
+                <div style="background: white; border: 1px solid var(--gray-200); padding: 2rem; border-radius: 8px; margin-bottom: 2rem;">
+                    <h3>Information We Collect</h3>
+                    <ul>
+                        <li>Contact information when you reach out via forms or email</li>
+                        <li>Technical information through cookies and analytics (with your consent)</li>
+                        <li>Project requirements and specifications for service delivery</li>
+                    </ul>
+                </div>
+                
+                <div style="background: white; border: 1px solid var(--gray-200); padding: 2rem; border-radius: 8px; margin-bottom: 2rem;">
+                    <h3>How We Use Your Information</h3>
+                    <ul>
+                        <li>To respond to your inquiries and provide requested services</li>
+                        <li>To deliver custom development and technical solutions</li>
+                        <li>To improve our website and services through analytics (with consent)</li>
+                        <li>To maintain security and prevent misuse</li>
+                    </ul>
+                </div>
+                
+                <div style="background: white; border: 1px solid var(--gray-200); padding: 2rem; border-radius: 8px; margin-bottom: 2rem;">
+                    <h3>Data Protection</h3>
+                    <p>We implement appropriate security measures to protect your information. Personal data is stored securely and only accessed by authorized personnel for legitimate business purposes.</p>
+                </div>
+                
+                <div style="background: white; border: 1px solid var(--gray-200); padding: 2rem; border-radius: 8px; margin-bottom: 2rem;">
+                    <h3>Cookies & Analytics</h3>
+                    <p>We use cookies and Google Analytics (Google Tag Manager, gtag.js) only with your explicit consent via our cookie banner. Cookies are used to:</p>
+                    <ul>
+                        <li>Remember your cookie consent preference</li>
+                        <li>Analyze website traffic and usage patterns (with consent)</li>
+                        <li>Improve user experience and website functionality</li>
+                    </ul>
+                    <p>You can withdraw consent at any time by clearing your browser's local storage or declining cookies when prompted.</p>
+                </div>
+                
+                <div style="background: white; border: 1px solid var(--gray-200); padding: 2rem; border-radius: 8px; margin-bottom: 2rem;">
+                    <h3>Error Tracking & Monitoring</h3>
+                    <p>We use Sentry (sentry.io) for error tracking and session replay (only with consent). This helps us:</p>
+                    <ul>
+                        <li>Identify and fix technical issues</li>
+                        <li>Improve website stability and performance</li>
+                        <li>Understand user experience problems</li>
+                    </ul>
+                    <p>Error data includes technical information (browser, OS, error messages) but no personally identifiable information unless explicitly provided by you.</p>
+                </div>
+                
+                <div style="background: white; border: 1px solid var(--gray-200); padding: 2rem; border-radius: 8px; margin-bottom: 2rem;">
+                    <h3>Third-Party Services</h3>
+                    <p>We use the following third-party services:</p>
+                    <ul>
+                        <li><strong>Google Analytics & Tag Manager:</strong> Website analytics (with consent)</li>
+                        <li><strong>Sentry:</strong> Error monitoring and session replay (with consent)</li>
+                        <li><strong>Cloudflare:</strong> DNS, SSL, and security services</li>
+                        <li><strong>GitHub Pages:</strong> Website hosting</li>
+                        <li><strong>Web3Forms:</strong> Contact form submissions</li>
+                    </ul>
+                    <p>These services have their own privacy policies. We recommend reviewing them.</p>
+                </div>
+                
+                <div style="background: white; border: 1px solid var(--gray-200); padding: 2rem; border-radius: 8px; margin-bottom: 2rem;">
+                    <h3>Data Retention</h3>
+                    <p>Contact form data and project communications are retained for the duration of the business relationship and as required by Australian law (typically 7 years for business records). Analytics data is retained according to Google Analytics and Sentry retention policies.</p>
+                </div>
+                
+                <div style="background: white; border: 1px solid var(--gray-200); padding: 2rem; border-radius: 8px; margin-bottom: 2rem;">
+                    <h3>Security Measures</h3>
+                    <p>We implement industry-standard security measures:</p>
+                    <ul>
+                        <li>HTTPS/SSL encryption for all website traffic (via Cloudflare)</li>
+                        <li>Secure coding practices and regular security updates</li>
+                        <li>Access controls and authentication for sensitive systems</li>
+                        <li>Regular backups via GitHub version control</li>
+                        <li>CORS policies to prevent unauthorized access</li>
+                    </ul>
+                </div>
+                
+                <div style="background: white; border: 1px solid var(--gray-200); padding: 2rem; border-radius: 8px; margin-bottom: 2rem;">
+                    <h3>Your Rights (Australian Privacy Act)</h3>
+                    <p>Under Australian privacy law, you have the right to:</p>
+                    <ul>
+                        <li>Access your personal information we hold</li>
+                        <li>Correct inaccurate or incomplete information</li>
+                        <li>Request deletion of your personal information</li>
+                        <li>Withdraw consent for data processing</li>
+                        <li>Lodge a complaint with the Office of the Australian Information Commissioner (OAIC)</li>
+                    </ul>
+                    <p>Contact us at samisingh988@gmail.com for any privacy-related requests.</p>
+                </div>
+                
+                <div style="background: white; border: 1px solid var(--gray-200); padding: 2rem; border-radius: 8px;">
+                    <h3>Changes to This Policy</h3>
+                    <p>We may update this privacy policy from time to time. Changes will be posted on this page with an updated effective date. Continued use of our services after changes constitutes acceptance of the updated policy.</p>
+                </div>
+            </div>
+        </section>
+
+        <section class="page" id="terms">
+            <div class="page-header">
+                <h1>Terms of Service</h1>
+                <p class="page-subtitle">Terms and conditions for our services</p>
+            </div>
+            
+            <div style="max-width: 800px; margin: 0 auto;">
+                <div style="background: var(--gray-100); padding: 2rem; border-radius: 8px; margin-bottom: 2rem;">
+                    <p><strong>Service Provider:</strong> Samrath Singh</p>
+                    <p><strong>ABN:</strong> 72 925 087 373</p>
+                    <p><strong>Location:</strong> Point Cook, VIC, Australia</p>
+                    <p><strong>Contact:</strong> samisingh988@gmail.com</p>
+                </div>
+                
+                <div style="background: white; border: 1px solid var(--gray-200); padding: 2rem; border-radius: 8px; margin-bottom: 2rem;">
+                    <h3>Services Offered</h3>
+                    <ul>
+                        <li>Custom web development and programming</li>
+                        <li>Minecraft plugin development</li>
+                        <li>eCommerce solutions and Shopify customization</li>
+                        <li>Technical support and troubleshooting</li>
+                        <li>3D design and printing services</li>
+                        <li>API integration and automation</li>
+                    </ul>
+                </div>
+                
+                <div style="background: white; border: 1px solid var(--gray-200); padding: 2rem; border-radius: 8px; margin-bottom: 2rem;">
+                    <h3>Service Agreement</h3>
+                    <p>Services are provided based on agreed specifications and requirements. Project scope, timeline, and pricing are confirmed before work commences. Changes to scope may affect timeline and costs.</p>
+                </div>
+                
+                <div style="background: white; border: 1px solid var(--gray-200); padding: 2rem; border-radius: 8px; margin-bottom: 2rem;">
+                    <h3>Payment Terms</h3>
+                    <p>Payment terms are agreed upon per project. Australian Consumer Law applies to all transactions. ABN: 72 925 087 373.</p>
+                </div>
+                
+                <div style="background: white; border: 1px solid var(--gray-200); padding: 2rem; border-radius: 8px; margin-bottom: 2rem;">
+                    <h3>Intellectual Property</h3>
+                    <p>Custom work becomes the property of the client upon full payment, unless otherwise agreed. We retain rights to general methodologies and non-specific technical knowledge.</p>
+                </div>
+                
+                <div style="background: white; border: 1px solid var(--gray-200); padding: 2rem; border-radius: 8px;">
+                    <h3>Limitation of Liability</h3>
+                    <p>Services are provided to the best of our ability. We are not liable for indirect or consequential damages. Our maximum liability is limited to the project value.</p>
+                </div>
+            </div>
         </section>
 
         <section class="page" id="contact">
@@ -1451,7 +2036,51 @@
         </section>
 
         <footer class="footer">
-            <p>&copy; 2024 Samrath Singh. Built with passion and precision. Made with ❤️ using pure HTML, CSS & JavaScript.</p>
+            <div style="max-width: 1200px; margin: 0 auto;">
+                <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: 3rem; margin-bottom: 3rem; text-align: left;">
+                    <div>
+                        <h3 style="margin-bottom: 1rem; font-size: 1.2rem;">Samrath Singh</h3>
+                        <p style="color: var(--gray-600); margin-bottom: 1rem;">Junior Developer | Point Cook, VIC</p>
+                        <p style="color: var(--gray-600); font-size: 0.9rem;">Building user-focused web solutions with clean code and attention to detail.</p>
+                    </div>
+                    
+                    <div>
+                        <h3 style="margin-bottom: 1rem; font-size: 1.2rem;">Legal</h3>
+                        <div style="display: flex; flex-direction: column; gap: 0.5rem;">
+                            <a href="#" onclick="showPage('privacy'); return false;" style="color: var(--gray-600); text-decoration: none;">Privacy Policy</a>
+                            <a href="#" onclick="showPage('terms'); return false;" style="color: var(--gray-600); text-decoration: none;">Terms of Service</a>
+                        </div>
+                    </div>
+                    
+                    <div>
+                        <h3 style="margin-bottom: 1rem; font-size: 1.2rem;">Connect</h3>
+                        <div style="display: flex; flex-direction: column; gap: 0.5rem;">
+                            <a href="mailto:samisingh988@gmail.com" style="color: var(--gray-600); text-decoration: none;">samisingh988@gmail.com</a>
+                            <a href="https://github.com/Sami9889" target="_blank" style="color: var(--gray-600); text-decoration: none;">GitHub</a>
+                            <a href="https://www.linkedin.com/in/samrath-singh-400705297" target="_blank" style="color: var(--gray-600); text-decoration: none;">LinkedIn</a>
+                            <a href="https://discord.gg/fhvGABfw" target="_blank" style="color: var(--gray-600); text-decoration: none;">Discord</a>
+                        </div>
+                    </div>
+                    
+                    <div>
+                        <h3 style="margin-bottom: 1rem; font-size: 1.2rem;">Businesses</h3>
+                        <div style="display: flex; flex-direction: column; gap: 0.5rem;">
+                            <p style="color: var(--gray-600); margin: 0;">3DPrintzAU</p>
+                            <p style="color: var(--gray-600); margin: 0;">Procoders Coding</p>
+                            <p style="color: var(--gray-600); margin: 0;">Bad to the Bone</p>
+                        </div>
+                    </div>
+                </div>
+                
+                <div style="border-top: 1px solid var(--gray-300); padding-top: 2rem; text-align: center;">
+                    <p>&copy; 2024 Samrath Singh. ABN: 72 925 087 373</p>
+                    <p style="margin-top: 0.5rem; color: var(--gray-600); font-size: 0.9rem;">
+                        <a href="#" onclick="showPage('privacy'); return false;" style="color: var(--gray-600); text-decoration: underline;">Privacy Policy</a> | 
+                        <a href="#" onclick="showPage('terms'); return false;" style="color: var(--gray-600); text-decoration: underline;">Terms of Service</a>
+                    </p>
+                    <p style="margin-top: 0.5rem; color: var(--gray-600); font-size: 0.9rem;">Built with ❤️ using pure HTML, CSS & JavaScript.</p>
+                </div>
+            </div>
         </footer>
     </div>
 
@@ -1484,8 +2113,12 @@
                 'home': 'Samrath "Sami" Singh - Full-Stack Developer',
                 'about': 'About - Samrath Singh',
                 'skills': 'Skills - Samrath Singh',
+                'services': 'Services - Samrath Singh',
+                'experience': 'Experience - Samrath Singh',
                 'projects': 'Projects - Samrath Singh',
-                'contact': 'Contact - Samrath Singh'
+                'contact': 'Contact - Samrath Singh',
+                'privacy': 'Privacy Policy - Samrath Singh',
+                'terms': 'Terms of Service - Samrath Singh'
             };
             document.title = pageTitles[pageId] || 'Samrath Singh';
             
@@ -1763,6 +2396,45 @@
         });
 
         createParticles();
+        
+        // ============================================
+        // COOKIE CONSENT BANNER
+        // ============================================
+        function acceptCookies() {
+            localStorage.setItem('cookieConsent', 'accepted');
+            document.getElementById('cookieBanner').classList.remove('show');
+            loadAnalytics(); // Load analytics after consent
+            
+            // Initialize Sentry Session Replay after consent
+            if (typeof Sentry !== 'undefined') {
+                Sentry.init({
+                    integrations: [
+                        Sentry.replayIntegration({
+                            maskAllText: false,
+                            blockAllMedia: false,
+                        }),
+                    ],
+                    replaysSessionSampleRate: 0.1, // 10% of sessions
+                    replaysOnErrorSampleRate: 1.0, // 100% when error occurs
+                });
+            }
+        }
+        
+        function declineCookies() {
+            localStorage.setItem('cookieConsent', 'declined');
+            document.getElementById('cookieBanner').classList.remove('show');
+            // Don't load analytics or Sentry
+        }
+        
+        // Show banner if user hasn't made a choice
+        window.addEventListener('load', function() {
+            const consent = localStorage.getItem('cookieConsent');
+            if (!consent) {
+                setTimeout(() => {
+                    document.getElementById('cookieBanner').classList.add('show');
+                }, 1000); // Show after 1 second
+            }
+        });
     </script>
 </body>
 </html>
