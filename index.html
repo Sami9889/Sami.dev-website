@@ -1,15 +1,17 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
+  <!-- Prevent Caching -->
+  <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
+  <meta http-equiv="Pragma" content="no-cache">
+  <meta http-equiv="Expires" content="0">
+  
   <script>
-    // ==================================
-    // MAINTENANCE MODE TOGGLE - RUNS FIRST!
-    // ==================================
-    const MAINTENANCE_MODE = false; // Change to true to enable maintenance
-    
+    // MAINTENANCE MODE
+    const MAINTENANCE_MODE = false;
     if (MAINTENANCE_MODE) {
       window.location.replace('/maintenance.html');
-      throw new Error('Maintenance mode active'); // Stop all other scripts
+      throw new Error('Maintenance mode active');
     }
   </script>
   
@@ -19,8 +21,7 @@
   ></script>
   
   <script>
-    // Sentry Session Replay Configuration
-    // Only initializes if user accepted cookies
+    // Sentry (only if cookies accepted)
     if (typeof Sentry !== 'undefined' && localStorage.getItem('cookieConsent') === 'accepted') {
       Sentry.onLoad(function() {
         Sentry.init({
@@ -30,9 +31,8 @@
               blockAllMedia: false,
             }),
           ],
-          // Session Replay
-          replaysSessionSampleRate: 0.1, // 10% of sessions
-          replaysOnErrorSampleRate: 1.0, // 100% when error occurs
+          replaysSessionSampleRate: 0.1,
+          replaysOnErrorSampleRate: 1.0,
         });
       });
     }
@@ -1484,12 +1484,6 @@
                     <p class="tagline">Full-Stack Developer & Software Engineer</p>
                     <em>// Building the web, one line of code at a time</em>
                     
-                    <div style="margin: 2rem 0; padding: 1.5rem; background: rgba(102, 126, 234, 0.1); border-left: 4px solid var(--accent); border-radius: 8px;">
-                        <p style="margin: 0; color: var(--gray-800); font-size: 1rem; line-height: 1.6;">
-                            <strong>🎯 Currently:</strong> Open to opportunities in Full-Stack Development, Software Engineering, and Web Development roles. Specializing in modern JavaScript frameworks and scalable backend systems.
-                        </p>
-                    </div>
-                    
                     <div class="social-links">
                         <a href="mailto:samisingh988@gmail.com" aria-label="Send email">Email</a>
                         <a href="https://github.com/Sami9889" target="_blank" rel="noopener noreferrer" aria-label="Visit GitHub profile">GitHub</a>
@@ -1534,36 +1528,36 @@
             
             <div class="about-content">
                 <div class="about-text">
-                    <p>I'm Sami, a full-stack developer passionate about creating powerful, modern, and elegant web solutions that merge performance with style. My journey in software development started with curiosity and has evolved into a deep commitment to building exceptional digital experiences.</p>
+                    <p>I'm Samrath "Sami" Singh, a motivated junior developer from Point Cook, VIC with hands-on experience in coding, system design, and client support. My journey started at age 14 when I registered my own ABN and launched my first business, and I've been building ICT solutions ever since.</p>
                     
-                    <p>I specialize in creating robust web applications using modern technologies and best practices. Whether it's crafting responsive user interfaces or building scalable backend systems, I approach every project with attention to detail and a focus on clean, maintainable code.</p>
+                    <p>I specialize in creating user-focused web applications and digital solutions. From designing 3D models for 3DPrintzAU to building custom Minecraft plugins and web apps through Procoders Coding Service, I approach every project with attention to detail and a commitment to quality.</p>
                     
-                    <p>My development philosophy centers around user-first design, performance optimization, and writing code that's not just functional but also elegant and maintainable. I believe in the power of technology to solve real-world problems and create meaningful connections.</p>
+                    <p>My development philosophy centers around gathering requirements, thorough testing, and clear documentation. I believe in building systems that are not just functional, but secure, well-documented, and truly solve problems for users.</p>
                     
-                    <p>When I'm not coding, you'll find me exploring new technologies, contributing to open-source projects, or sharing knowledge with the developer community. I believe in continuous learning and staying at the forefront of web development trends.</p>
+                    <p>Currently studying at Point Cook College, I balance education with running multiple businesses and freelance development work. I'm passionate about continuous learning and contributing to impactful projects.</p>
                 </div>
                 
                 <aside class="about-info">
                     <h3>Personal Info</h3>
                     <div class="info-item">
                         <span class="info-label">Location</span>
-                        <span class="info-value">Remote</span>
+                        <span class="info-value">Point Cook, VIC</span>
                     </div>
                     <div class="info-item">
                         <span class="info-label">Experience</span>
                         <span class="info-value">2+ Years</span>
                     </div>
                     <div class="info-item">
-                        <span class="info-label">Focus</span>
-                        <span class="info-value">Full-Stack</span>
+                        <span class="info-label">Education</span>
+                        <span class="info-value">Point Cook College</span>
+                    </div>
+                    <div class="info-item">
+                        <span class="info-label">ABN</span>
+                        <span class="info-value">72 925 087 373</span>
                     </div>
                     <div class="info-item">
                         <span class="info-label">Availability</span>
                         <span class="info-value">Open to Work</span>
-                    </div>
-                    <div class="info-item">
-                        <span class="info-label">Languages</span>
-                        <span class="info-value">English, Hindi</span>
                     </div>
                 </aside>
             </div>
@@ -1577,81 +1571,78 @@
             
             <div class="skills-grid">
                 <article class="skill-category">
-                    <h3>Frontend Development</h3>
+                    <h3>Programming Languages</h3>
                     <ul class="skill-list">
-                        <li>HTML5 & CSS3</li>
-                        <li>JavaScript (ES6+)</li>
-                        <li>React.js & Redux</li>
-                        <li>Responsive Design</li>
-                        <li>CSS Frameworks (Bootstrap, Tailwind)</li>
-                        <li>Modern Build Tools</li>
+                        <li>HTML & CSS</li>
+                        <li>JavaScript</li>
+                        <li>Python</li>
+                        <li>PHP</li>
+                        <li>JSON & YAML</li>
                     </ul>
-                    <div class="skill-level advanced">Advanced</div>
+                    <div class="skill-level advanced">Proficient</div>
                 </article>
                 
                 <article class="skill-category">
-                    <h3>Backend Development</h3>
+                    <h3>Web & APIs</h3>
                     <ul class="skill-list">
-                        <li>Python & Django</li>
-                        <li>Node.js & Express</li>
-                        <li>RESTful APIs</li>
-                        <li>Database Design</li>
-                        <li>Server Management</li>
-                        <li>Authentication & Security</li>
+                        <li>REST APIs</li>
+                        <li>WebSockets</li>
+                        <li>HTTP/HTTPS Protocols</li>
+                        <li>Bootstrap Framework</li>
+                        <li>Cloudflare Workers</li>
+                        <li>NGINX</li>
                     </ul>
-                    <div class="skill-level intermediate">Intermediate</div>
+                    <div class="skill-level advanced">Proficient</div>
                 </article>
                 
                 <article class="skill-category">
-                    <h3>Database & Storage</h3>
+                    <h3>Development Tools</h3>
                     <ul class="skill-list">
-                        <li>PostgreSQL & MySQL</li>
-                        <li>MongoDB</li>
-                        <li>Redis Caching</li>
-                        <li>Database Optimization</li>
-                        <li>Data Modeling</li>
-                        <li>Cloud Storage</li>
+                        <li>Visual Studio Code</li>
+                        <li>GitHub & Git</li>
+                        <li>Postman (API Testing)</li>
+                        <li>Replit Online IDE</li>
+                        <li>FTP & cPanel</li>
+                        <li>Markdown</li>
                     </ul>
-                    <div class="skill-level intermediate">Intermediate</div>
+                    <div class="skill-level">Experienced</div>
                 </article>
                 
                 <article class="skill-category">
-                    <h3>Tools & Technologies</h3>
+                    <h3>Infrastructure & Security</h3>
                     <ul class="skill-list">
-                        <li>Git & GitHub</li>
-                        <li>VS Code & JetBrains</li>
-                        <li>Linux/Unix Systems</li>
-                        <li>Package Managers</li>
-                        <li>Development Workflows</li>
-                        <li>API Testing Tools</li>
+                        <li>Cloudflare DNS & SSL</li>
+                        <li>Data Privacy Principles</li>
+                        <li>Access Controls</li>
+                        <li>Cybersecurity Basics</li>
+                        <li>Windows, macOS, iOS, Linux</li>
                     </ul>
-                    <div class="skill-level">Proficient</div>
+                    <div class="skill-level">Competent</div>
                 </article>
                 
                 <article class="skill-category">
-                    <h3>DevOps & Deployment</h3>
+                    <h3>Data & Databases</h3>
                     <ul class="skill-list">
-                        <li>Docker Containers</li>
-                        <li>Shell Scripting</li>
-                        <li>CI/CD Pipelines</li>
-                        <li>Cloud Services (AWS, Vercel)</li>
-                        <li>Monitoring & Logging</li>
-                        <li>Performance Optimization</li>
+                        <li>SQL Queries</li>
+                        <li>JSON & YAML Data</li>
+                        <li>CSV Handling</li>
+                        <li>Data Analysis</li>
+                        <li>Performance Metrics</li>
                     </ul>
-                    <div class="skill-level learning">Learning</div>
+                    <div class="skill-level">Competent</div>
                 </article>
                 
                 <article class="skill-category">
-                    <h3>Design & UX</h3>
+                    <h3>Professional Skills</h3>
                     <ul class="skill-list">
-                        <li>UI/UX Principles</li>
-                        <li>Figma & Design Tools</li>
-                        <li>User Research</li>
-                        <li>Accessibility (WCAG)</li>
-                        <li>Design Systems</li>
-                        <li>Prototyping</li>
+                        <li>Requirements Gathering</li>
+                        <li>System Testing</li>
+                        <li>Technical Documentation</li>
+                        <li>Client Support</li>
+                        <li>Agile Methodologies</li>
+                        <li>Problem Solving</li>
                     </ul>
-                    <div class="skill-level learning">Learning</div>
+                    <div class="skill-level">Experienced</div>
                 </article>
             </div>
         </section>
@@ -1668,43 +1659,28 @@
                         <div class="timeline-dot"></div>
                         <div class="timeline-content">
                             <div class="timeline-date">2022 - Present</div>
-                            <h3>Full-Stack Developer Journey</h3>
-                            <p>Started learning web development, focusing on modern technologies and best practices. Built multiple projects ranging from simple websites to complex web applications with databases and APIs.</p>
+                            <h3>Founder – 3DPrintzAU</h3>
+                            <p>Designed 3D models and managed digital manufacturing from concept to delivery. Maintained and troubleshot 3D printer systems (hardware/software), documented client requirements, and delivered tailored solutions with technical support.</p>
                             <div class="timeline-tags">
-                                <span class="tag">JavaScript</span>
+                                <span class="tag">3D Design</span>
+                                <span class="tag">Manufacturing</span>
+                                <span class="tag">Client Support</span>
+                                <span class="tag">Documentation</span>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="timeline-item">
+                        <div class="timeline-dot"></div>
+                        <div class="timeline-content">
+                            <div class="timeline-date">2023 - Present</div>
+                            <h3>Freelance Developer – Procoders Coding Service</h3>
+                            <p>Delivered client-specific Minecraft plugins, live camera/web apps, and backend services. Conducted requirements analysis, testing, debugging, and support. Implemented secure data handling and responsive interfaces.</p>
+                            <div class="timeline-tags">
                                 <span class="tag">Python</span>
-                                <span class="tag">React</span>
-                                <span class="tag">Node.js</span>
-                            </div>
-                        </div>
-                    </div>
-                    
-                    <div class="timeline-item">
-                        <div class="timeline-dot"></div>
-                        <div class="timeline-content">
-                            <div class="timeline-date">2023</div>
-                            <h3>Advanced Development & DevOps</h3>
-                            <p>Expanded skills into DevOps, cloud services, and modern deployment strategies. Implemented CI/CD pipelines, containerization, and monitoring solutions for production applications.</p>
-                            <div class="timeline-tags">
-                                <span class="tag">Docker</span>
-                                <span class="tag">AWS</span>
-                                <span class="tag">CI/CD</span>
-                                <span class="tag">Git</span>
-                            </div>
-                        </div>
-                    </div>
-                    
-                    <div class="timeline-item">
-                        <div class="timeline-dot"></div>
-                        <div class="timeline-content">
-                            <div class="timeline-date">2024</div>
-                            <h3>Professional Development & Open Source</h3>
-                            <p>Contributing to open-source projects, building production-ready applications, and continuously learning new technologies. Focus on clean code, performance optimization, and user experience.</p>
-                            <div class="timeline-tags">
-                                <span class="tag">Open Source</span>
-                                <span class="tag">TypeScript</span>
-                                <span class="tag">MongoDB</span>
-                                <span class="tag">Redis</span>
+                                <span class="tag">JavaScript</span>
+                                <span class="tag">APIs</span>
+                                <span class="tag">Testing</span>
                             </div>
                         </div>
                     </div>
@@ -1712,37 +1688,38 @@
                     <div class="timeline-item">
                         <div class="timeline-dot active"></div>
                         <div class="timeline-content">
-                            <div class="timeline-date">Current Focus</div>
-                            <h3>Building & Learning</h3>
-                            <p>Currently focused on mastering advanced architectural patterns, exploring AI/ML integration, and building scalable applications. Always open to new opportunities and collaborations.</p>
+                            <div class="timeline-date">2024 - Present</div>
+                            <h3>Founder – Bad to the Bone (Shopify)</h3>
+                            <p>Created and managed an eCommerce store with custom UI modifications. Handled product fulfilment, digital operations, and analytics. Coded front-end adjustments and integrated API-based tools focused on system usability and performance.</p>
                             <div class="timeline-tags">
-                                <span class="tag">System Design</span>
-                                <span class="tag">AI Integration</span>
-                                <span class="tag">Scalability</span>
+                                <span class="tag">Shopify</span>
+                                <span class="tag">eCommerce</span>
+                                <span class="tag">Front-End</span>
+                                <span class="tag">Analytics</span>
                             </div>
                         </div>
                     </div>
                 </div>
                 
                 <div class="certifications-section" style="margin-top: 4rem;">
-                    <h2 style="text-align: center; margin-bottom: 2rem; font-size: 2rem;">Achievements & Certifications</h2>
+                    <h2 style="text-align: center; margin-bottom: 2rem; font-size: 2rem;">Key Achievements</h2>
                     <div class="projects-grid">
                         <div class="project-card">
                             <div style="font-size: 3rem; margin-bottom: 1rem;">🏆</div>
-                            <h3 style="font-size: 1.2rem;">15+ Projects</h3>
-                            <p>Built and deployed multiple full-stack applications with real-world use cases</p>
+                            <h3 style="font-size: 1.2rem;">Age 14 Entrepreneur</h3>
+                            <p>Registered ABN and paid ASIC fees at age 14, launching multiple successful businesses</p>
                         </div>
                         
                         <div class="project-card">
-                            <div style="font-size: 3rem; margin-bottom: 1rem;">⭐</div>
-                            <h3 style="font-size: 1.2rem;">Open Source</h3>
-                            <p>Active contributor to various open-source projects on GitHub</p>
+                            <div style="font-size: 3rem; margin-bottom: 1rem;">💼</div>
+                            <h3 style="font-size: 1.2rem;">Multiple Businesses</h3>
+                            <p>Created and maintained 3DPrintzAU, Bad to the Bone, and Procoders Coding Service</p>
                         </div>
                         
                         <div class="project-card">
                             <div style="font-size: 3rem; margin-bottom: 1rem;">🚀</div>
-                            <h3 style="font-size: 1.2rem;">Production Apps</h3>
-                            <p>Deployed applications serving real users with monitoring and analytics</p>
+                            <h3 style="font-size: 1.2rem;">Live Systems</h3>
+                            <p>Built and maintained live web tools, plugins, and systems with real clients</p>
                         </div>
                     </div>
                 </div>
