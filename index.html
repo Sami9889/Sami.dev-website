@@ -17,6 +17,27 @@
   src="https://js-de.sentry-cdn.com/19f914da843ff91848281a5e4be175e8.min.js"
   crossorigin="anonymous"
   ></script>
+  
+  <script>
+    // Sentry Session Replay Configuration
+    // Only initializes if user accepted cookies
+    if (typeof Sentry !== 'undefined' && localStorage.getItem('cookieConsent') === 'accepted') {
+      Sentry.onLoad(function() {
+        Sentry.init({
+          integrations: [
+            Sentry.replayIntegration({
+              maskAllText: false,
+              blockAllMedia: false,
+            }),
+          ],
+          // Session Replay
+          replaysSessionSampleRate: 0.1, // 10% of sessions
+          replaysOnErrorSampleRate: 1.0, // 100% when error occurs
+        });
+      });
+    }
+  </script>
+  
   <script>
 /* index HEAD snippet — paste at top of <head> */
 (function(){
@@ -1219,6 +1240,92 @@
             }
         }
         
+        /* Timeline Styles */
+        .timeline {
+            position: relative;
+            padding: 2rem 0;
+        }
+        
+        .timeline::before {
+            content: '';
+            position: absolute;
+            left: 20px;
+            top: 0;
+            bottom: 0;
+            width: 3px;
+            background: linear-gradient(180deg, var(--accent), var(--success));
+        }
+        
+        .timeline-item {
+            position: relative;
+            padding-left: 60px;
+            margin-bottom: 3rem;
+        }
+        
+        .timeline-dot {
+            position: absolute;
+            left: 9px;
+            top: 0;
+            width: 25px;
+            height: 25px;
+            background: white;
+            border: 4px solid var(--accent);
+            border-radius: 50%;
+            z-index: 1;
+        }
+        
+        .timeline-dot.active {
+            background: var(--accent);
+            box-shadow: 0 0 0 4px rgba(0, 123, 255, 0.2);
+            animation: pulse 2s infinite;
+        }
+        
+        @keyframes pulse {
+            0%, 100% { box-shadow: 0 0 0 4px rgba(0, 123, 255, 0.2); }
+            50% { box-shadow: 0 0 0 8px rgba(0, 123, 255, 0.4); }
+        }
+        
+        .timeline-content {
+            background: var(--white);
+            border: 1px solid var(--gray-200);
+            border-radius: 8px;
+            padding: 2rem;
+            transition: var(--transition);
+        }
+        
+        .timeline-content:hover {
+            transform: translateX(10px);
+            box-shadow: var(--shadow);
+            border-color: var(--accent);
+        }
+        
+        .timeline-date {
+            font-size: 0.85rem;
+            color: var(--accent);
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            margin-bottom: 0.5rem;
+        }
+        
+        .timeline-content h3 {
+            font-size: 1.5rem;
+            color: var(--black);
+            margin-bottom: 1rem;
+        }
+        
+        .timeline-content p {
+            color: var(--gray-700);
+            line-height: 1.6;
+            margin-bottom: 1rem;
+        }
+        
+        .timeline-tags {
+            display: flex;
+            gap: 0.5rem;
+            flex-wrap: wrap;
+        }
+        
         /* Cookie Consent Banner */
         .cookie-banner {
             position: fixed;
@@ -1361,6 +1468,7 @@
                     <li><a href="#" onclick="showPage('home'); return false;" class="active" aria-label="Go to home page">Home</a></li>
                     <li><a href="#" onclick="showPage('about'); return false;" aria-label="Go to about page">About</a></li>
                     <li><a href="#" onclick="showPage('skills'); return false;" aria-label="Go to skills page">Skills</a></li>
+                    <li><a href="#" onclick="showPage('experience'); return false;" aria-label="Go to experience page">Experience</a></li>
                     <li><a href="#" onclick="showPage('projects'); return false;" aria-label="Go to projects page">Projects</a></li>
                     <li><a href="#" onclick="showPage('contact'); return false;" aria-label="Go to contact page">Contact</a></li>
                 </ul>
@@ -1375,6 +1483,13 @@
                     <h1>Samrath "Sami" Singh</h1>
                     <p class="tagline">Full-Stack Developer & Software Engineer</p>
                     <em>// Building the web, one line of code at a time</em>
+                    
+                    <div style="margin: 2rem 0; padding: 1.5rem; background: rgba(102, 126, 234, 0.1); border-left: 4px solid var(--accent); border-radius: 8px;">
+                        <p style="margin: 0; color: var(--gray-800); font-size: 1rem; line-height: 1.6;">
+                            <strong>🎯 Currently:</strong> Open to opportunities in Full-Stack Development, Software Engineering, and Web Development roles. Specializing in modern JavaScript frameworks and scalable backend systems.
+                        </p>
+                    </div>
+                    
                     <div class="social-links">
                         <a href="mailto:samisingh988@gmail.com" aria-label="Send email">Email</a>
                         <a href="https://github.com/Sami9889" target="_blank" rel="noopener noreferrer" aria-label="Visit GitHub profile">GitHub</a>
@@ -1393,12 +1508,19 @@
                         <span class="stat-label">Projects Built</span>
                     </div>
                     <div class="stat-item">
-                        <span class="stat-number">8+</span>
+                        <span class="stat-number">10+</span>
                         <span class="stat-label">Technologies</span>
                     </div>
                     <div class="stat-item">
-                        <span class="stat-number">24/7</span>
-                        <span class="stat-label">Problem Solving</span>
+                        <span class="stat-number">100%</span>
+                        <span class="stat-label">Dedication</span>
+                    </div>
+                    <div style="margin-top: 2rem; padding-top: 1.5rem; border-top: 2px solid var(--gray-200);">
+                        <p style="font-size: 0.85rem; color: var(--gray-600); margin: 0 0 0.5rem 0;">💼 Status</p>
+                        <p style="font-size: 0.95rem; color: var(--success); font-weight: 600; margin: 0;">
+                            <span style="display: inline-block; width: 8px; height: 8px; background: var(--success); border-radius: 50%; margin-right: 6px;"></span>
+                            Available for Work
+                        </p>
                     </div>
                 </aside>
             </div>
@@ -1534,6 +1656,99 @@
             </div>
         </section>
 
+        <section class="page" id="experience">
+            <div class="page-header">
+                <h1>Experience & Journey</h1>
+                <p class="page-subtitle">My path in software development and key milestones</p>
+            </div>
+            
+            <div style="max-width: 900px; margin: 0 auto;">
+                <div class="timeline">
+                    <div class="timeline-item">
+                        <div class="timeline-dot"></div>
+                        <div class="timeline-content">
+                            <div class="timeline-date">2022 - Present</div>
+                            <h3>Full-Stack Developer Journey</h3>
+                            <p>Started learning web development, focusing on modern technologies and best practices. Built multiple projects ranging from simple websites to complex web applications with databases and APIs.</p>
+                            <div class="timeline-tags">
+                                <span class="tag">JavaScript</span>
+                                <span class="tag">Python</span>
+                                <span class="tag">React</span>
+                                <span class="tag">Node.js</span>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="timeline-item">
+                        <div class="timeline-dot"></div>
+                        <div class="timeline-content">
+                            <div class="timeline-date">2023</div>
+                            <h3>Advanced Development & DevOps</h3>
+                            <p>Expanded skills into DevOps, cloud services, and modern deployment strategies. Implemented CI/CD pipelines, containerization, and monitoring solutions for production applications.</p>
+                            <div class="timeline-tags">
+                                <span class="tag">Docker</span>
+                                <span class="tag">AWS</span>
+                                <span class="tag">CI/CD</span>
+                                <span class="tag">Git</span>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="timeline-item">
+                        <div class="timeline-dot"></div>
+                        <div class="timeline-content">
+                            <div class="timeline-date">2024</div>
+                            <h3>Professional Development & Open Source</h3>
+                            <p>Contributing to open-source projects, building production-ready applications, and continuously learning new technologies. Focus on clean code, performance optimization, and user experience.</p>
+                            <div class="timeline-tags">
+                                <span class="tag">Open Source</span>
+                                <span class="tag">TypeScript</span>
+                                <span class="tag">MongoDB</span>
+                                <span class="tag">Redis</span>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="timeline-item">
+                        <div class="timeline-dot active"></div>
+                        <div class="timeline-content">
+                            <div class="timeline-date">Current Focus</div>
+                            <h3>Building & Learning</h3>
+                            <p>Currently focused on mastering advanced architectural patterns, exploring AI/ML integration, and building scalable applications. Always open to new opportunities and collaborations.</p>
+                            <div class="timeline-tags">
+                                <span class="tag">System Design</span>
+                                <span class="tag">AI Integration</span>
+                                <span class="tag">Scalability</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="certifications-section" style="margin-top: 4rem;">
+                    <h2 style="text-align: center; margin-bottom: 2rem; font-size: 2rem;">Achievements & Certifications</h2>
+                    <div class="projects-grid">
+                        <div class="project-card">
+                            <div style="font-size: 3rem; margin-bottom: 1rem;">🏆</div>
+                            <h3 style="font-size: 1.2rem;">15+ Projects</h3>
+                            <p>Built and deployed multiple full-stack applications with real-world use cases</p>
+                        </div>
+                        
+                        <div class="project-card">
+                            <div style="font-size: 3rem; margin-bottom: 1rem;">⭐</div>
+                            <h3 style="font-size: 1.2rem;">Open Source</h3>
+                            <p>Active contributor to various open-source projects on GitHub</p>
+                        </div>
+                        
+                        <div class="project-card">
+                            <div style="font-size: 3rem; margin-bottom: 1rem;">🚀</div>
+                            <h3 style="font-size: 1.2rem;">Production Apps</h3>
+                            <p>Deployed applications serving real users with monitoring and analytics</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
         <section class="page" id="projects">
             <div class="page-header">
                 <h1>Featured Projects</h1>
@@ -1636,6 +1851,7 @@
                 'home': 'Samrath "Sami" Singh - Full-Stack Developer',
                 'about': 'About - Samrath Singh',
                 'skills': 'Skills - Samrath Singh',
+                'experience': 'Experience - Samrath Singh',
                 'projects': 'Projects - Samrath Singh',
                 'contact': 'Contact - Samrath Singh'
             };
@@ -1923,12 +2139,26 @@
             localStorage.setItem('cookieConsent', 'accepted');
             document.getElementById('cookieBanner').classList.remove('show');
             loadAnalytics(); // Load analytics after consent
+            
+            // Initialize Sentry Session Replay after consent
+            if (typeof Sentry !== 'undefined') {
+                Sentry.init({
+                    integrations: [
+                        Sentry.replayIntegration({
+                            maskAllText: false,
+                            blockAllMedia: false,
+                        }),
+                    ],
+                    replaysSessionSampleRate: 0.1, // 10% of sessions
+                    replaysOnErrorSampleRate: 1.0, // 100% when error occurs
+                });
+            }
         }
         
         function declineCookies() {
             localStorage.setItem('cookieConsent', 'declined');
             document.getElementById('cookieBanner').classList.remove('show');
-            // Don't load analytics
+            // Don't load analytics or Sentry
         }
         
         // Show banner if user hasn't made a choice
