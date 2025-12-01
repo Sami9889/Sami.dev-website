@@ -90,3 +90,30 @@ This maintenance page has:
 - ✅ No third-party scripts (StatusPage, etc.)
 - ✅ Everything is self-contained
 - ✅ Works offline and in all browsers including Safari
+## About the Advanced Maintenance System (Not Currently Used)
+
+**Note:** There are two additional files in the repository (`maintenance.js` and `maintenance-config.js`) that provide an advanced maintenance system using the StatusPage.io widget API. These files are **NOT currently in use** and have been disabled/commented out.
+
+### Why are they not used?
+
+1. **External Dependency**: They rely on the StatusPage.io embed script loading successfully
+2. **Potential Issues**: The external script may fail to load, be blocked, or cause errors
+3. **Complexity**: The current simple maintenance.html is more reliable and self-contained
+4. **Error Prevention**: The disabled system was causing `sp.scheduledMaintenances is not a function` errors when the StatusPage widget didn't load properly
+
+### If you want to use the advanced system:
+
+The advanced system provides:
+- Real-time maintenance status from StatusPage.io
+- Component status monitoring
+- Dynamic countdown timers based on scheduled maintenance
+- Automatic redirect when maintenance completes
+
+To enable it, you would need to:
+1. Create a custom maintenance page HTML that includes the necessary script tags
+2. Include `maintenance-config.js`
+3. Include the StatusPage embed script with error handling
+4. Include `maintenance.js` (which is currently disabled/commented)
+5. Ensure the StatusPage widget loads before the maintenance script runs
+
+**Recommendation:** Stick with the current simple `maintenance.html` approach unless you specifically need real-time StatusPage integration.
