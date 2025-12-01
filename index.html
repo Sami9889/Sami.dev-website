@@ -38,14 +38,8 @@
       if (typeof Sentry !== 'undefined') {
         Sentry.onLoad(function() {
           Sentry.init({
-            integrations: [
-              Sentry.replayIntegration({
-                maskAllText: false,
-                blockAllMedia: false,
-              }),
-            ],
-            replaysSessionSampleRate: 0.1,
-            replaysOnErrorSampleRate: 1.0,
+            // Basic error tracking only - no replay integration
+            integrations: [],
           });
         });
       }
