@@ -52,6 +52,11 @@
         initializeSentry();
       }
     }
+    
+    // Initialize Sentry immediately if cookies already accepted
+    if (localStorage.getItem('cookieConsent') === 'accepted') {
+      initializeSentry();
+    }
   </script>
   
   <script>
