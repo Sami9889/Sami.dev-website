@@ -22,20 +22,35 @@
   
   <script>
     // Sentry initialization function
-    var sentryInitialized = false;
-    
     function initializeSentry() {
-      if (sentryInitialized || typeof Sentry === 'undefined') {
-        return;
-      }
-      
-      Sentry.onLoad(function() {
-        // Initialize Sentry without replay integration (replay not available in this bundle)
+      if (typeof Sentry !== 'undefined') {
+        // Check if replay integration is available before using it
+        const integrations = [];
+        if (typeof Sentry.replayIntegration === 'function') {
+          integrations.push(
+            Sentry.replayIntegration({
+              maskAllText: false,
+              blockAllMedia: false,
+            })
+          );
+        }
+        
         Sentry.init({
-          // Basic error tracking only - no replay integration available
+          integrations: integrations,
+          replaysSessionSampleRate: 0.1,
+          replaysOnErrorSampleRate: 1.0,
         });
-        sentryInitialized = true;
-      });
+      }
+    }
+    
+    // Initialize Sentry only if cookies accepted
+    if (localStorage.getItem('cookieConsent') === 'accepted') {
+      if (typeof Sentry !== 'undefined' && Sentry.onLoad) {
+        Sentry.onLoad(initializeSentry);
+      } else {
+        // Fallback if onLoad is not available
+        initializeSentry();
+      }
     }
     
     // Initialize Sentry immediately if cookies already accepted
@@ -2165,7 +2180,7 @@
 
         <footer class="footer">
             <div style="max-width: 1200px; margin: 0 auto;">
-                <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: 3rem; margin-bottom: 3rem; text-align: left;">
+                <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: 3rem; margin-bottom: 3rem; text-align: center;">
                     <div>
                         <h3 style="margin-bottom: 1rem; font-size: 1.2rem;">Samrath Singh</h3>
                         <p style="color: var(--gray-600); margin-bottom: 1rem;">Junior Developer | Point Cook, VIC</p>
@@ -2189,15 +2204,6 @@
                             <a href="https://discord.gg/fhvGABfw" target="_blank" style="color: var(--gray-600); text-decoration: none;">Discord</a>
                         </div>
                     </div>
-                    
-                    <div>
-                        <h3 style="margin-bottom: 1rem; font-size: 1.2rem;">Businesses</h3>
-                        <div style="display: flex; flex-direction: column; gap: 0.5rem;">
-                            <p style="color: var(--gray-600); margin: 0;">  3DPrintzAU</p>
-                            <p style="color: var(--gray-600); margin: 0;">  Procoders Coding</p>
-                            <p style="color: var(--gray-600); margin: 0;">  Bad to the Bone</p>
-                        </div>
-                    </div>
                 </div>
                 
                 <div style="border-top: 1px solid var(--gray-300); padding-top: 2rem; text-align: center;">
@@ -2206,7 +2212,7 @@
                         <a href="#" onclick="showPage('privacy'); return false;" style="color: var(--gray-600); text-decoration: underline;">Privacy Policy</a> | 
                         <a href="#" onclick="showPage('terms'); return false;" style="color: var(--gray-600); text-decoration: underline;">Terms of Service</a>
                     </p>
-                    <p style="margin-top: 0.5rem; color: var(--gray-600); font-size: 0.9rem;">Built with ❤️ using HTML, CSS and JavaScript.</p>
+                    <p style="margin-top: 0.5rem; color: var(--gray-600); font-size: 0.9rem;">Built with HTML, CSS & JavaScript.</p>
                 </div>
             </div>
         </footer>
