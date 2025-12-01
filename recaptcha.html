@@ -3,8 +3,22 @@
 <head>
   <script>
     // MAINTENANCE MODE TOGGLE
-    const MAINTENANCE_MODE = false; // Change to true to enable maintenance
-    if (MAINTENANCE_MODE) { window.location.replace('/maintenance.html'); }
+    const MAINTENANCE_MODE = true; // Change to true to enable maintenance
+    
+    // Check if maintenance has completed (bypass flag)
+    const maintenanceComplete = localStorage.getItem('maintenanceComplete');
+    const completedAt = localStorage.getItem('maintenanceCompletedAt');
+    
+    // Clear bypass flag if it's older than 1 hour
+    if (completedAt && (Date.now() - parseInt(completedAt)) > 3600000) {
+      localStorage.removeItem('maintenanceComplete');
+      localStorage.removeItem('maintenanceCompletedAt');
+    }
+    
+    // Redirect to maintenance only if mode is enabled AND no valid bypass
+    if (MAINTENANCE_MODE && maintenanceComplete !== 'true') {
+      window.location.replace('/maintenance.html');
+    }
   </script>
   
   <script>
