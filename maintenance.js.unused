@@ -4,16 +4,8 @@
 // This advanced maintenance system relies on the StatusPage.io widget library.
 // The current maintenance.html uses a simpler, self-contained approach.
 // This file is preserved for reference but is not loaded by any HTML page.
-// 
-// If you want to use this system, you need to:
-// 1. Include maintenance-config.js in your HTML
-// 2. Include the StatusPage embed script: <script src="https://samidev.statuspage.io/embed/script.js"></script>
-// 3. Include this file
-// 4. Ensure the StatusPage widget library loads successfully before this code runs
 // ============================================================================
 
-// Keeping the original code commented out for reference:
-/*
 document.addEventListener('DOMContentLoaded', async function() {
   const config = MAINTENANCE_CONFIG;
   const BYPASS_KEY = config.storageKeys.bypass;
@@ -184,4 +176,3 @@ document.addEventListener('DOMContentLoaded', async function() {
   // Periodic check
   setInterval(checkMaintenanceStatus, config.checkInterval * 1000);
 });
-*/
