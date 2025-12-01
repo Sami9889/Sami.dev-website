@@ -8,7 +8,7 @@
   
   <script>
     // MAINTENANCE MODE
-    const MAINTENANCE_MODE = true;
+    const MAINTENANCE_MODE = false;
     
     // Check if maintenance has completed (bypass flag)
     const maintenanceComplete = localStorage.getItem('maintenanceComplete');
@@ -38,14 +38,8 @@
       if (typeof Sentry !== 'undefined') {
         Sentry.onLoad(function() {
           Sentry.init({
-            integrations: [
-              Sentry.replayIntegration({
-                maskAllText: false,
-                blockAllMedia: false,
-              }),
-            ],
-            replaysSessionSampleRate: 0.1,
-            replaysOnErrorSampleRate: 1.0,
+            // Basic error tracking only - no replay integration
+            integrations: [],
           });
         });
       }
@@ -180,11 +174,35 @@
             --danger: #dc3545;
             --shadow: 0 4px 20px rgba(0,0,0,0.1);
             --transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            --bg-gradient-1: #f8f9fa;
+            --bg-gradient-2: #e3f2fd;
+            --bg-gradient-3: #f3e5f5;
+        }
+
+        [data-theme="dark"] {
+            --black: #ffffff;
+            --white: #1a1a1a;
+            --gray-100: #2a2a2a;
+            --gray-200: #3a3a3a;
+            --gray-300: #4a4a4a;
+            --gray-400: #5a5a5a;
+            --gray-600: #b0b0b0;
+            --gray-700: #d0d0d0;
+            --gray-800: #e0e0e0;
+            --gray-900: #f0f0f0;
+            --accent: #4da3ff;
+            --success: #5fdb7f;
+            --warning: #ffd54f;
+            --danger: #ff6b6b;
+            --shadow: 0 4px 20px rgba(0,0,0,0.5);
+            --bg-gradient-1: #1a1a2e;
+            --bg-gradient-2: #16213e;
+            --bg-gradient-3: #0f3460;
         }
 
         body {
             font-family: var(--primary-font);
-            background: linear-gradient(135deg, #f8f9fa 0%, #e3f2fd 50%, #f3e5f5 100%);
+            background: linear-gradient(135deg, var(--bg-gradient-1) 0%, var(--bg-gradient-2) 50%, var(--bg-gradient-3) 100%);
             background-size: 400% 400%;
             animation: gradientShift 15s ease infinite;
             color: var(--black);
@@ -194,6 +212,7 @@
             font-weight: 400;
             scroll-behavior: smooth;
             position: relative;
+            transition: background 0.3s ease, color 0.3s ease;
         }
 
         @keyframes gradientShift {
@@ -444,6 +463,17 @@
                 opacity: 1;
                 transform: translateY(0);
             }
+        }
+        
+        .scroll-reveal {
+            opacity: 0;
+            transform: translateY(30px);
+            transition: opacity 0.8s ease, transform 0.8s ease;
+        }
+        
+        .scroll-reveal.revealed {
+            opacity: 1;
+            transform: translateY(0);
         }
 
         .hero {
@@ -760,6 +790,7 @@
             background: var(--gray-200);
             border-radius: 4px;
             display: inline-block;
+            margin-top: 1rem;
         }
 
         .skill-level.advanced {
@@ -770,6 +801,35 @@
         .skill-level.intermediate {
             background: var(--warning);
             color: white;
+        }
+        
+        .skill-progress {
+            margin-top: 1rem;
+        }
+        
+        .skill-progress-bar {
+            width: 100%;
+            height: 8px;
+            background: var(--gray-200);
+            border-radius: 10px;
+            overflow: hidden;
+            margin-bottom: 0.5rem;
+        }
+        
+        .skill-progress-fill {
+            height: 100%;
+            background: linear-gradient(90deg, var(--accent), var(--success));
+            border-radius: 10px;
+            transition: width 1s ease;
+            width: 0%;
+        }
+        
+        .skill-progress-fill.advanced {
+            background: linear-gradient(90deg, var(--success), #5fdb7f);
+        }
+        
+        .skill-progress-fill.intermediate {
+            background: linear-gradient(90deg, var(--warning), #ffd54f);
         }
 
         .skill-level.learning {
@@ -1469,6 +1529,9 @@
     <noscript><iframe src="https://www.googletagmanager.com/ns.html?id=GTM-W3LFMLDQ"
     height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
     
+    <!-- Scroll Progress Bar -->
+    <div id="scroll-progress" style="position: fixed; top: 0; left: 0; width: 0%; height: 4px; background: linear-gradient(90deg, var(--accent), var(--success)); z-index: 9999; transition: width 0.1s ease;"></div>
+    
     <div class="floating-shapes">
         <div class="shape"></div>
         <div class="shape"></div>
@@ -1482,16 +1545,22 @@
         <div class="container">
             <div class="nav-container">
                 <div class="logo" onclick="showPage('home')">sami.dev</div>
-                <button class="mobile-menu-toggle" onclick="toggleMobileMenu()" aria-label="Toggle navigation menu">☰</button>
-                <ul class="nav-links" id="nav-links">
-                    <li><a href="#" onclick="showPage('home'); return false;" class="active" aria-label="Go to home page">Home</a></li>
-                    <li><a href="#" onclick="showPage('about'); return false;" aria-label="Go to about page">About</a></li>
-                    <li><a href="#" onclick="showPage('services'); return false;" aria-label="Go to services page">Services</a></li>
-                    <li><a href="#" onclick="showPage('skills'); return false;" aria-label="Go to skills page">Skills</a></li>
-                    <li><a href="#" onclick="showPage('experience'); return false;" aria-label="Go to experience page">Experience</a></li>
-                    <li><a href="#" onclick="showPage('projects'); return false;" aria-label="Go to projects page">Projects</a></li>
-                    <li><a href="#" onclick="showPage('contact'); return false;" aria-label="Go to contact page">Contact</a></li>
-                </ul>
+                <div style="display: flex; align-items: center; gap: 1rem;">
+                    <button id="theme-toggle" onclick="toggleTheme()" aria-label="Toggle dark mode" style="background: none; border: none; font-size: 1.5rem; cursor: pointer; padding: 0.5rem; transition: transform 0.3s;">
+                        <span id="theme-icon">🌙</span>
+                    </button>
+                    <button class="mobile-menu-toggle" onclick="toggleMobileMenu()" aria-label="Toggle navigation menu">☰</button>
+                    <ul class="nav-links" id="nav-links">
+                        <li><a href="#" onclick="showPage('home'); return false;" class="active" aria-label="Go to home page">Home</a></li>
+                        <li><a href="#" onclick="showPage('about'); return false;" aria-label="Go to about page">About</a></li>
+                        <li><a href="#" onclick="showPage('services'); return false;" aria-label="Go to services page">Services</a></li>
+                        <li><a href="#" onclick="showPage('skills'); return false;" aria-label="Go to skills page">Skills</a></li>
+                        <li><a href="#" onclick="showPage('experience'); return false;" aria-label="Go to experience page">Experience</a></li>
+                        <li><a href="#" onclick="showPage('projects'); return false;" aria-label="Go to projects page">Projects</a></li>
+                        <li><a href="#" onclick="showPage('faq'); return false;" aria-label="Go to FAQ page">FAQ</a></li>
+                        <li><a href="#" onclick="showPage('contact'); return false;" aria-label="Go to contact page">Contact</a></li>
+                    </ul>
+                </div>
             </div>
         </div>
     </nav>
@@ -1502,7 +1571,7 @@
                 <div class="hero-content">
                     <h1>Samrath "Sami" Singh</h1>
                     <p class="tagline">Full-Stack Developer & Software Engineer</p>
-                    <em>// Building the web, one line of code at a time</em>
+                    <em id="typing-text">// Building the web, one line of code at a time</em>
                     
                     <div class="social-links">
                         <a href="mailto:samisingh988@gmail.com" aria-label="Send email">Email</a>
@@ -1522,19 +1591,19 @@
                 <aside class="hero-stats">
                     <h3>Quick Stats</h3>
                     <div class="stat-item">
-                        <span class="stat-number">2+</span>
+                        <span class="stat-number" data-count="2">0</span><span>+</span>
                         <span class="stat-label">Years Coding</span>
                     </div>
                     <div class="stat-item">
-                        <span class="stat-number">15+</span>
+                        <span class="stat-number" data-count="15">0</span><span>+</span>
                         <span class="stat-label">Projects Built</span>
                     </div>
                     <div class="stat-item">
-                        <span class="stat-number">10+</span>
+                        <span class="stat-number" data-count="10">0</span><span>+</span>
                         <span class="stat-label">Technologies</span>
                     </div>
                     <div class="stat-item">
-                        <span class="stat-number">100%</span>
+                        <span class="stat-number" data-count="100">0</span><span>%</span>
                         <span class="stat-label">Dedication</span>
                     </div>
                     <div style="margin-top: 2rem; padding-top: 1.5rem; border-top: 2px solid var(--gray-200);">
@@ -1617,78 +1686,108 @@
             
             <div class="skills-grid">
                 <article class="skill-category">
-                    <h3>Programming Languages</h3>
+                    <h3>💻 Programming Languages</h3>
                     <ul class="skill-list">
-                        <li>HTML & CSS</li>
-                        <li>JavaScript</li>
-                        <li>Python</li>
-                        <li>PHP</li>
-                        <li>JSON & YAML</li>
+                        <li>🌐 HTML & CSS</li>
+                        <li>⚡ JavaScript</li>
+                        <li>🐍 Python</li>
+                        <li>🐘 PHP</li>
+                        <li>📋 JSON & YAML</li>
                     </ul>
-                    <div class="skill-level advanced">Proficient</div>
+                    <div class="skill-progress">
+                        <div class="skill-progress-bar">
+                            <div class="skill-progress-fill advanced" data-progress="90"></div>
+                        </div>
+                        <div class="skill-level advanced">Proficient - 90%</div>
+                    </div>
                 </article>
                 
                 <article class="skill-category">
-                    <h3>Web & APIs</h3>
+                    <h3>🌐 Web & APIs</h3>
                     <ul class="skill-list">
-                        <li>REST APIs</li>
-                        <li>WebSockets</li>
-                        <li>HTTP/HTTPS Protocols</li>
-                        <li>Bootstrap Framework</li>
-                        <li>Cloudflare Workers</li>
-                        <li>NGINX</li>
+                        <li>🔌 REST APIs</li>
+                        <li>📡 WebSockets</li>
+                        <li>🔐 HTTP/HTTPS Protocols</li>
+                        <li>🎨 Bootstrap Framework</li>
+                        <li>☁️ Cloudflare Workers</li>
+                        <li>⚙️ NGINX</li>
                     </ul>
-                    <div class="skill-level advanced">Proficient</div>
+                    <div class="skill-progress">
+                        <div class="skill-progress-bar">
+                            <div class="skill-progress-fill advanced" data-progress="85"></div>
+                        </div>
+                        <div class="skill-level advanced">Proficient - 85%</div>
+                    </div>
                 </article>
                 
                 <article class="skill-category">
-                    <h3>Development Tools</h3>
+                    <h3>🛠️ Development Tools</h3>
                     <ul class="skill-list">
-                        <li>Visual Studio Code</li>
-                        <li>GitHub & Git</li>
-                        <li>Postman (API Testing)</li>
-                        <li>Replit Online IDE</li>
-                        <li>FTP & cPanel</li>
-                        <li>Markdown</li>
+                        <li>📝 Visual Studio Code</li>
+                        <li>🔗 GitHub & Git</li>
+                        <li>📮 Postman (API Testing)</li>
+                        <li>💡 Replit Online IDE</li>
+                        <li>📁 FTP & cPanel</li>
+                        <li>📄 Markdown</li>
                     </ul>
-                    <div class="skill-level">Experienced</div>
+                    <div class="skill-progress">
+                        <div class="skill-progress-bar">
+                            <div class="skill-progress-fill intermediate" data-progress="80"></div>
+                        </div>
+                        <div class="skill-level">Experienced - 80%</div>
+                    </div>
                 </article>
                 
                 <article class="skill-category">
-                    <h3>Infrastructure & Security</h3>
+                    <h3>🔒 Infrastructure & Security</h3>
                     <ul class="skill-list">
-                        <li>Cloudflare DNS & SSL</li>
-                        <li>Data Privacy Principles</li>
-                        <li>Access Controls</li>
-                        <li>Cybersecurity Basics</li>
-                        <li>Windows, macOS, iOS, Linux</li>
+                        <li>☁️ Cloudflare DNS & SSL</li>
+                        <li>🛡️ Data Privacy Principles</li>
+                        <li>🔑 Access Controls</li>
+                        <li>🔐 Cybersecurity Basics</li>
+                        <li>💻 Windows, macOS, iOS, Linux</li>
                     </ul>
-                    <div class="skill-level">Competent</div>
+                    <div class="skill-progress">
+                        <div class="skill-progress-bar">
+                            <div class="skill-progress-fill" data-progress="70"></div>
+                        </div>
+                        <div class="skill-level">Competent - 70%</div>
+                    </div>
                 </article>
                 
                 <article class="skill-category">
-                    <h3>Data & Databases</h3>
+                    <h3>💾 Data & Databases</h3>
                     <ul class="skill-list">
-                        <li>SQL Queries</li>
-                        <li>JSON & YAML Data</li>
-                        <li>CSV Handling</li>
-                        <li>Data Analysis</li>
-                        <li>Performance Metrics</li>
+                        <li>📊 SQL Queries</li>
+                        <li>📋 JSON & YAML Data</li>
+                        <li>📈 CSV Handling</li>
+                        <li>📉 Data Analysis</li>
+                        <li>⚡ Performance Metrics</li>
                     </ul>
-                    <div class="skill-level">Competent</div>
+                    <div class="skill-progress">
+                        <div class="skill-progress-bar">
+                            <div class="skill-progress-fill" data-progress="75"></div>
+                        </div>
+                        <div class="skill-level">Competent - 75%</div>
+                    </div>
                 </article>
                 
                 <article class="skill-category">
-                    <h3>Professional Skills</h3>
+                    <h3>🎯 Professional Skills</h3>
                     <ul class="skill-list">
-                        <li>Requirements Gathering</li>
-                        <li>System Testing</li>
-                        <li>Technical Documentation</li>
-                        <li>Client Support</li>
-                        <li>Agile Methodologies</li>
-                        <li>Problem Solving</li>
+                        <li>📝 Requirements Gathering</li>
+                        <li>🧪 System Testing</li>
+                        <li>📚 Technical Documentation</li>
+                        <li>💬 Client Support</li>
+                        <li>🔄 Agile Methodologies</li>
+                        <li>🧩 Problem Solving</li>
                     </ul>
-                    <div class="skill-level">Experienced</div>
+                    <div class="skill-progress">
+                        <div class="skill-progress-bar">
+                            <div class="skill-progress-fill intermediate" data-progress="85"></div>
+                        </div>
+                        <div class="skill-level">Experienced - 85%</div>
+                    </div>
                 </article>
             </div>
         </section>
@@ -1875,6 +1974,18 @@
             </div>
             
             <div class="projects-grid" id="projects-container"></div>
+            
+            <!-- GitHub Contribution Graph -->
+            <div style="margin-top: 4rem; text-align: center;">
+                <h2 style="margin-bottom: 2rem; font-size: 2rem;">GitHub Activity</h2>
+                <div style="background: var(--white); padding: 2rem; border-radius: 12px; box-shadow: var(--shadow); display: inline-block; max-width: 100%;">
+                    <img src="https://ghchart.rshah.org/007bff/Sami9889" alt="GitHub Contribution Graph" style="max-width: 100%; height: auto; border-radius: 8px;" />
+                    <p style="margin-top: 1rem; color: var(--gray-600); font-size: 0.9rem;">My GitHub contribution activity over the past year</p>
+                    <a href="https://github.com/Sami9889" target="_blank" rel="noopener noreferrer" style="display: inline-block; margin-top: 1rem; padding: 0.75rem 1.5rem; background: var(--accent); color: white; text-decoration: none; border-radius: 4px; font-weight: 600; transition: var(--transition);">
+                        View Full Profile →
+                    </a>
+                </div>
+            </div>
         </section>
 
         <section class="page" id="privacy">
@@ -1994,6 +2105,55 @@
             </div>
         </section>
 
+        <section class="page" id="faq">
+            <div class="page-header">
+                <h1>Frequently Asked Questions</h1>
+                <p class="page-subtitle">Common questions about my services and process</p>
+            </div>
+            
+            <div style="max-width: 900px; margin: 0 auto;">
+                <div class="faq-item" style="background: var(--white); padding: 2rem; border-radius: 8px; margin-bottom: 1.5rem; border: 1px solid var(--gray-200);">
+                    <h3 style="font-size: 1.3rem; margin-bottom: 1rem; color: var(--black);">💼 What services do you offer?</h3>
+                    <p style="color: var(--gray-700); line-height: 1.8;">I specialize in custom web development, Minecraft plugin development, eCommerce solutions (especially Shopify), API integration, and automation. I also provide technical support and troubleshooting services.</p>
+                </div>
+                
+                <div class="faq-item" style="background: var(--white); padding: 2rem; border-radius: 8px; margin-bottom: 1.5rem; border: 1px solid var(--gray-200);">
+                    <h3 style="font-size: 1.3rem; margin-bottom: 1rem; color: var(--black);">⏱️ How long does a typical project take?</h3>
+                    <p style="color: var(--gray-700); line-height: 1.8;">Project timelines vary based on complexity and scope. Simple websites can take 1-2 weeks, while custom applications may take 4-8 weeks. I provide detailed timelines during the initial consultation and keep you updated throughout the project.</p>
+                </div>
+                
+                <div class="faq-item" style="background: var(--white); padding: 2rem; border-radius: 8px; margin-bottom: 1.5rem; border: 1px solid var(--gray-200);">
+                    <h3 style="font-size: 1.3rem; margin-bottom: 1rem; color: var(--black);">💰 How much do you charge?</h3>
+                    <p style="color: var(--gray-700); line-height: 1.8;">Pricing depends on project scope, complexity, and requirements. I offer both hourly rates and project-based pricing. After understanding your needs, I'll provide a detailed quote with no hidden fees. Contact me for a free consultation and estimate.</p>
+                </div>
+                
+                <div class="faq-item" style="background: var(--white); padding: 2rem; border-radius: 8px; margin-bottom: 1.5rem; border: 1px solid var(--gray-200);">
+                    <h3 style="font-size: 1.3rem; margin-bottom: 1rem; color: var(--black);">🔄 Do you provide ongoing support?</h3>
+                    <p style="color: var(--gray-700); line-height: 1.8;">Yes! I offer post-launch support and maintenance packages. This includes bug fixes, updates, and technical assistance. We can discuss ongoing support options that fit your needs and budget.</p>
+                </div>
+                
+                <div class="faq-item" style="background: var(--white); padding: 2rem; border-radius: 8px; margin-bottom: 1.5rem; border: 1px solid var(--gray-200);">
+                    <h3 style="font-size: 1.3rem; margin-bottom: 1rem; color: var(--black);">📍 Do you work with clients outside Australia?</h3>
+                    <p style="color: var(--gray-700); line-height: 1.8;">Absolutely! While I'm based in Point Cook, VIC, Australia, I work with clients globally. I'm comfortable with remote collaboration and have experience coordinating across different time zones.</p>
+                </div>
+                
+                <div class="faq-item" style="background: var(--white); padding: 2rem; border-radius: 8px; margin-bottom: 1.5rem; border: 1px solid var(--gray-200);">
+                    <h3 style="font-size: 1.3rem; margin-bottom: 1rem; color: var(--black);">🛠️ What technologies do you work with?</h3>
+                    <p style="color: var(--gray-700); line-height: 1.8;">I work with HTML, CSS, JavaScript, Python, PHP, REST APIs, Cloudflare Workers, and various frameworks. For a complete list, check out my Skills page. I'm always learning new technologies to better serve my clients.</p>
+                </div>
+                
+                <div class="faq-item" style="background: var(--white); padding: 2rem; border-radius: 8px; margin-bottom: 1.5rem; border: 1px solid var(--gray-200);">
+                    <h3 style="font-size: 1.3rem; margin-bottom: 1rem; color: var(--black);">📝 How do we get started?</h3>
+                    <p style="color: var(--gray-700); line-height: 1.8;">Simply reach out via the Contact page or email me at samisingh988@gmail.com. We'll schedule a consultation to discuss your project requirements, timeline, and budget. From there, I'll provide a detailed proposal and we can begin!</p>
+                </div>
+                
+                <div class="faq-item" style="background: var(--white); padding: 2rem; border-radius: 8px; margin-bottom: 1.5rem; border: 1px solid var(--gray-200);">
+                    <h3 style="font-size: 1.3rem; margin-bottom: 1rem; color: var(--black);">🎓 Are you still a student?</h3>
+                    <p style="color: var(--gray-700); line-height: 1.8;">Yes, I'm currently studying at Point Cook College while running multiple businesses and freelance development work. This doesn't affect my commitment to quality—I've successfully delivered numerous projects and maintain professional standards in all my work.</p>
+                </div>
+            </div>
+        </section>
+
         <section class="page" id="contact">
             <div class="page-header">
                 <h1>Get In Touch</h1>
@@ -2044,40 +2204,37 @@
         </section>
 
         <footer class="footer">
-            <div style="max-width: 1200px; margin: 0 auto;">
-                <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: 3rem; margin-bottom: 3rem; text-align: center;">
-                    <div style="background: white; padding: 2.5rem; border-radius: 12px; box-shadow: 0 4px 20px rgba(0,0,0,0.08);">
-                        <h3 style="margin-bottom: 1rem; font-size: 1.3rem; color: var(--black); font-weight: 600;">Samrath Singh</h3>
-                        <p style="color: var(--gray-700); margin-bottom: 1rem; font-weight: 500; font-size: 1rem;">Junior Developer | Point Cook, VIC</p>
-                        <p style="color: var(--gray-600); font-size: 0.95rem; line-height: 1.6;">Building user-focused web solutions with clean code and attention to detail.</p>
+            <div style="max-width: 1200px; margin: 0 auto; padding: 0 2rem;">
+                <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: 3rem; margin-bottom: 3rem; text-align: left;">
+                    <div>
+                        <h3 style="margin-bottom: 1rem; font-size: 1.2rem; color: var(--black); font-weight: 600;">Samrath Singh</h3>
+                        <p style="color: var(--gray-700); margin-bottom: 0.5rem; font-size: 0.95rem;">Junior Developer</p>
+                        <p style="color: var(--gray-600); font-size: 0.9rem;">Point Cook, VIC</p>
+                        <p style="color: var(--gray-600); font-size: 0.9rem; line-height: 1.8; margin-top: 1rem;">Building user-focused web solutions with clean code and attention to detail.</p>
                     </div>
                     
-                    <div style="background: white; padding: 2.5rem; border-radius: 12px; box-shadow: 0 4px 20px rgba(0,0,0,0.08);">
-                        <h3 style="margin-bottom: 1rem; font-size: 1.3rem; color: var(--black); font-weight: 600;">Legal</h3>
-                        <div style="display: flex; flex-direction: column; gap: 0.75rem;">
-                            <a href="#" onclick="showPage('privacy'); return false;" style="color: var(--gray-600); text-decoration: none; transition: color 0.3s; font-size: 0.95rem;">Privacy Policy</a>
-                            <a href="#" onclick="showPage('terms'); return false;" style="color: var(--gray-600); text-decoration: none; transition: color 0.3s; font-size: 0.95rem;">Terms of Service</a>
+                    <div>
+                        <h3 style="margin-bottom: 1rem; font-size: 1.2rem; color: var(--black); font-weight: 600;">Legal</h3>
+                        <div style="display: flex; flex-direction: column; gap: 0.5rem;">
+                            <a href="#" onclick="showPage('privacy'); return false;" style="color: var(--gray-600); text-decoration: none; transition: color 0.3s; font-size: 0.9rem;">Privacy Policy</a>
+                            <a href="#" onclick="showPage('terms'); return false;" style="color: var(--gray-600); text-decoration: none; transition: color 0.3s; font-size: 0.9rem;">Terms of Service</a>
                         </div>
                     </div>
                     
-                    <div style="background: white; padding: 2.5rem; border-radius: 12px; box-shadow: 0 4px 20px rgba(0,0,0,0.08);">
-                        <h3 style="margin-bottom: 1rem; font-size: 1.3rem; color: var(--black); font-weight: 600;">Connect</h3>
-                        <div style="display: flex; flex-direction: column; gap: 0.75rem;">
-                            <a href="mailto:samisingh988@gmail.com" style="color: var(--gray-600); text-decoration: none; transition: color 0.3s; font-size: 0.95rem;">samisingh988@gmail.com</a>
-                            <a href="https://github.com/Sami9889" target="_blank" style="color: var(--gray-600); text-decoration: none; transition: color 0.3s; font-size: 0.95rem;">GitHub</a>
-                            <a href="https://www.linkedin.com/in/samrath-singh-400705297" target="_blank" style="color: var(--gray-600); text-decoration: none; transition: color 0.3s; font-size: 0.95rem;">LinkedIn</a>
-                            <a href="https://discord.gg/fhvGABfw" target="_blank" style="color: var(--gray-600); text-decoration: none; transition: color 0.3s; font-size: 0.95rem;">Discord</a>
+                    <div>
+                        <h3 style="margin-bottom: 1rem; font-size: 1.2rem; color: var(--black); font-weight: 600;">Connect</h3>
+                        <div style="display: flex; flex-direction: column; gap: 0.5rem;">
+                            <a href="mailto:samisingh988@gmail.com" style="color: var(--gray-600); text-decoration: none; transition: color 0.3s; font-size: 0.9rem;">samisingh988@gmail.com</a>
+                            <a href="https://github.com/Sami9889" target="_blank" style="color: var(--gray-600); text-decoration: none; transition: color 0.3s; font-size: 0.9rem;">GitHub</a>
+                            <a href="https://www.linkedin.com/in/samrath-singh-400705297" target="_blank" style="color: var(--gray-600); text-decoration: none; transition: color 0.3s; font-size: 0.9rem;">LinkedIn</a>
+                            <a href="https://discord.gg/fhvGABfw" target="_blank" style="color: var(--gray-600); text-decoration: none; transition: color 0.3s; font-size: 0.9rem;">Discord</a>
                         </div>
                     </div>
                 </div>
                 
-                <div style="border-top: 1px solid var(--gray-300); padding-top: 2rem; text-align: center;">
-                    <p style="color: var(--gray-700); margin-bottom: 0.5rem;">&copy; 2024 Samrath Singh. ABN: 72 925 087 373</p>
-                    <p style="margin-top: 0.5rem; color: var(--gray-600); font-size: 0.9rem;">
-                        <a href="#" onclick="showPage('privacy'); return false;" style="color: var(--gray-600); text-decoration: underline;">Privacy Policy</a> | 
-                        <a href="#" onclick="showPage('terms'); return false;" style="color: var(--gray-600); text-decoration: underline;">Terms of Service</a>
-                    </p>
-                    <p style="margin-top: 0.5rem; color: var(--gray-600); font-size: 0.9rem;">Built with care using pure HTML, CSS & JavaScript.</p>
+                <div style="border-top: 1px solid var(--gray-300); padding: 2rem 0; margin-top: 3rem; text-align: center;">
+                    <p style="color: var(--gray-700); margin-bottom: 0.5rem; font-size: 0.95rem; line-height: 1.6;">&copy; 2024 Samrath Singh. ABN: 72 925 087 373</p>
+                    <p style="margin-top: 1rem; color: var(--gray-600); font-size: 0.9rem; line-height: 1.6;">Built with care using pure HTML, CSS & JavaScript.</p>
                 </div>
             </div>
         </footer>
@@ -2115,6 +2272,7 @@
                 'services': 'Services - Samrath Singh',
                 'experience': 'Experience - Samrath Singh',
                 'projects': 'Projects - Samrath Singh',
+                'faq': 'FAQ - Samrath Singh',
                 'contact': 'Contact - Samrath Singh',
                 'privacy': 'Privacy Policy - Samrath Singh',
                 'terms': 'Terms of Service - Samrath Singh'
@@ -2395,6 +2553,174 @@
         });
 
         createParticles();
+        
+        // ============================================
+        // DARK MODE TOGGLE
+        // ============================================
+        function toggleTheme() {
+            const html = document.documentElement;
+            const currentTheme = html.getAttribute('data-theme');
+            const newTheme = currentTheme === 'dark' ? 'light' : 'dark';
+            
+            html.setAttribute('data-theme', newTheme);
+            localStorage.setItem('theme', newTheme);
+            
+            // Update icon
+            const icon = document.getElementById('theme-icon');
+            icon.textContent = newTheme === 'dark' ? '☀️' : '🌙';
+            
+            // Add smooth transition animation
+            document.getElementById('theme-toggle').style.transform = 'rotate(360deg)';
+            setTimeout(() => {
+                document.getElementById('theme-toggle').style.transform = 'rotate(0deg)';
+            }, 300);
+        }
+        
+        // Load saved theme on page load
+        window.addEventListener('load', function() {
+            const savedTheme = localStorage.getItem('theme') || 'light';
+            document.documentElement.setAttribute('data-theme', savedTheme);
+            const icon = document.getElementById('theme-icon');
+            icon.textContent = savedTheme === 'dark' ? '☀️' : '🌙';
+            
+            // Animate stats on load
+            animateStats();
+        });
+        
+        // ============================================
+        // ANIMATED STATISTICS
+        // ============================================
+        function animateStats() {
+            const stats = document.querySelectorAll('.stat-number[data-count]');
+            
+            stats.forEach(stat => {
+                const target = parseInt(stat.getAttribute('data-count'));
+                const duration = 2000; // 2 seconds
+                const increment = target / (duration / 16); // 60fps
+                let current = 0;
+                
+                const timer = setInterval(() => {
+                    current += increment;
+                    if (current >= target) {
+                        stat.textContent = target;
+                        clearInterval(timer);
+                    } else {
+                        stat.textContent = Math.floor(current);
+                    }
+                }, 16);
+            });
+        }
+        
+        // ============================================
+        // ANIMATE SKILL PROGRESS BARS
+        // ============================================
+        function animateSkillBars() {
+            const progressBars = document.querySelectorAll('.skill-progress-fill');
+            
+            progressBars.forEach(bar => {
+                const targetProgress = bar.getAttribute('data-progress');
+                setTimeout(() => {
+                    bar.style.width = targetProgress + '%';
+                }, 200);
+            });
+        }
+        
+        // Trigger skill bar animation when Skills page is shown
+        const originalShowPage = showPage;
+        showPage = function(pageId) {
+            originalShowPage(pageId);
+            if (pageId === 'skills') {
+                setTimeout(animateSkillBars, 100);
+            }
+        };
+        
+        // ============================================
+        // SCROLL PROGRESS BAR
+        // ============================================
+        function updateScrollProgress() {
+            const winScroll = document.body.scrollTop || document.documentElement.scrollTop;
+            const height = document.documentElement.scrollHeight - document.documentElement.clientHeight;
+            const scrolled = (winScroll / height) * 100;
+            document.getElementById('scroll-progress').style.width = scrolled + '%';
+        }
+        
+        window.addEventListener('scroll', updateScrollProgress);
+        
+        // ============================================
+        // TYPING ANIMATION
+        // ============================================
+        function typeWriter() {
+            const text = '// Building the web, one line of code at a time';
+            const element = document.getElementById('typing-text');
+            if (!element) return;
+            
+            element.textContent = '';
+            let i = 0;
+            
+            function type() {
+                if (i < text.length) {
+                    element.textContent += text.charAt(i);
+                    i++;
+                    setTimeout(type, 50);
+                } else {
+                    // Add blinking cursor
+                    element.style.borderRight = '2px solid var(--black)';
+                    element.style.paddingRight = '5px';
+                    setInterval(() => {
+                        element.style.borderRight = element.style.borderRight === '2px solid transparent' 
+                            ? '2px solid var(--black)' 
+                            : '2px solid transparent';
+                    }, 500);
+                }
+            }
+            
+            setTimeout(type, 500);
+        }
+        
+        // Start typing animation on load
+        window.addEventListener('load', typeWriter);
+        
+        // ============================================
+        // SCROLL REVEAL ANIMATIONS
+        // ============================================
+        function revealOnScroll() {
+            const reveals = document.querySelectorAll('.scroll-reveal');
+            
+            reveals.forEach(element => {
+                const windowHeight = window.innerHeight;
+                const elementTop = element.getBoundingClientRect().top;
+                const elementVisible = 150;
+                
+                if (elementTop < windowHeight - elementVisible) {
+                    element.classList.add('revealed');
+                }
+            });
+        }
+        
+        window.addEventListener('scroll', revealOnScroll);
+        revealOnScroll(); // Initial check
+        
+        // Add scroll-reveal class to sections when pages change
+        const originalShowPageFunc = showPage;
+        showPage = function(pageId) {
+            if (typeof originalShowPageFunc === 'function') {
+                originalShowPageFunc(pageId);
+            }
+            
+            setTimeout(() => {
+                // Add scroll-reveal class to main content sections
+                const sections = document.querySelectorAll('.skill-category, .project-card, .timeline-item, .faq-item');
+                sections.forEach((section, index) => {
+                    section.classList.add('scroll-reveal');
+                    section.style.transitionDelay = `${index * 0.1}s`;
+                });
+                revealOnScroll();
+            }, 100);
+            
+            if (pageId === 'skills') {
+                setTimeout(animateSkillBars, 100);
+            }
+        };
         
         // ============================================
         // COOKIE CONSENT BANNER

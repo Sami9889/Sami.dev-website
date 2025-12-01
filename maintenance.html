@@ -212,7 +212,17 @@
     
     // Handle auto-redirect
     if (MAINTENANCE_SETTINGS.enabled && MAINTENANCE_SETTINGS.endTime) {
-      const endTime = new Date(MAINTENANCE_SETTINGS.endTime);
+      // Get or set persistent end time from localStorage
+      let endTime = localStorage.getItem('maintenanceEndTime');
+      
+      if (!endTime) {
+        // First calculation - store as numeric timestamp
+        endTime = new Date(MAINTENANCE_SETTINGS.endTime).getTime();
+        localStorage.setItem('maintenanceEndTime', endTime);
+      } else {
+        // Use existing timestamp (numeric value)
+        endTime = parseInt(endTime);
+      }
       
       // Show countdown
       const countdownDiv = document.createElement('div');
@@ -236,7 +246,8 @@
           
           // Set bypass flag so user won't be redirected back to maintenance
           localStorage.setItem('maintenanceComplete', 'true');
-          localStorage.setItem('maintenanceCompletedAt', Date.now());
+          localStorage.setItem('maintenanceCompletedAt', Date.now().toString());
+          localStorage.removeItem('maintenanceEndTime');
           
           setTimeout(() => {
             window.location.href = MAINTENANCE_SETTINGS.redirectUrl;
@@ -268,13 +279,14 @@
       
       // Check for completion
       const checkInterval = setInterval(() => {
-        if (new Date() > endTime) {
+        if (Date.now() > endTime) {
           clearInterval(checkInterval);
           clearInterval(countdownTimer);
           
-          // Set bypass flag
+          // Set bypass flag and clean up maintenance end time
           localStorage.setItem('maintenanceComplete', 'true');
-          localStorage.setItem('maintenanceCompletedAt', Date.now());
+          localStorage.setItem('maintenanceCompletedAt', Date.now().toString());
+          localStorage.removeItem('maintenanceEndTime');
           
           window.location.href = MAINTENANCE_SETTINGS.redirectUrl;
         }
