@@ -21,8 +21,14 @@
   ></script>
   
   <script>
-    // Sentry (only if cookies accepted)
-    if (typeof Sentry !== 'undefined' && localStorage.getItem('cookieConsent') === 'accepted') {
+    // Sentry initialization function
+    var sentryInitialized = false;
+    
+    function initializeSentry() {
+      if (sentryInitialized || typeof Sentry === 'undefined') {
+        return;
+      }
+      
       Sentry.onLoad(function() {
         Sentry.init({
           integrations: [
@@ -34,7 +40,13 @@
           replaysSessionSampleRate: 0.1,
           replaysOnErrorSampleRate: 1.0,
         });
+        sentryInitialized = true;
       });
+    }
+    
+    // Initialize Sentry immediately if cookies already accepted
+    if (localStorage.getItem('cookieConsent') === 'accepted') {
+      initializeSentry();
     }
   </script>
   
@@ -2528,17 +2540,8 @@
             loadAnalytics(); // Load analytics after consent
             
             // Initialize Sentry Session Replay after consent
-            if (typeof Sentry !== 'undefined') {
-                Sentry.init({
-                    integrations: [
-                        Sentry.replayIntegration({
-                            maskAllText: false,
-                            blockAllMedia: false,
-                        }),
-                    ],
-                    replaysSessionSampleRate: 0.1, // 10% of sessions
-                    replaysOnErrorSampleRate: 1.0, // 100% when error occurs
-                });
+            if (typeof initializeSentry === 'function') {
+                initializeSentry();
             }
         }
         
