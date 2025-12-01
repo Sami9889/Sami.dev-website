@@ -21,14 +21,26 @@
   ></script>
   
   <script>
-    // Sentry initialization (only if cookies accepted)
-    if (typeof Sentry !== 'undefined' && localStorage.getItem('cookieConsent') === 'accepted') {
+    // Sentry initialization function
+    var sentryInitialized = false;
+    
+    function initializeSentry() {
+      if (sentryInitialized || typeof Sentry === 'undefined') {
+        return;
+      }
+      
       Sentry.onLoad(function() {
         // Initialize Sentry without replay integration (replay not available in this bundle)
         Sentry.init({
           // Basic error tracking only - no replay integration available
         });
+        sentryInitialized = true;
       });
+    }
+    
+    // Initialize Sentry immediately if cookies already accepted
+    if (localStorage.getItem('cookieConsent') === 'accepted') {
+      initializeSentry();
     }
   </script>
   
@@ -2521,13 +2533,9 @@
             document.getElementById('cookieBanner').classList.remove('show');
             loadAnalytics(); // Load analytics after consent
             
-            // Initialize Sentry after consent (without replay - not available in current bundle)
-            if (typeof Sentry !== 'undefined' && !Sentry.isInitialized) {
-                Sentry.onLoad(function() {
-                    Sentry.init({
-                        // Basic error tracking only - replay integration not available in this bundle
-                    });
-                });
+            // Initialize Sentry Session Replay after consent
+            if (typeof initializeSentry === 'function') {
+                initializeSentry();
             }
         }
         
