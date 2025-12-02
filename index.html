@@ -207,7 +207,7 @@
             animation: gradientShift 15s ease infinite;
             color: var(--black);
             overflow-x: hidden;
-            cursor: none;
+            cursor: auto;
             line-height: 1.6;
             font-weight: 400;
             scroll-behavior: smooth;
@@ -1254,8 +1254,6 @@
                 background-position: -200% 0;
             }
         }
-            box-shadow: 0 0 30px rgba(255, 0, 128, 0.6);
-        }
 
         .particles {
             position: fixed;
@@ -1375,12 +1373,8 @@
         }
 
         @media print {
-            .cursor-dot, .cursor-outline, .scroll-to-top {
+            .scroll-to-top {
                 display: none !important;
-            }
-            
-            body {
-                cursor: auto !important;
             }
             
             .page {
@@ -2361,8 +2355,6 @@
         </footer>
     </div>
 
-    <div class="cursor-dot" id="cursor-dot" aria-hidden="true"></div>
-    <div class="cursor-outline" id="cursor-outline" aria-hidden="true"></div>
     <button class="scroll-to-top" id="scroll-to-top" onclick="scrollToTop()" aria-label="Scroll to top">↑</button>
     
     <!-- Quick Contact Button -->
@@ -2415,8 +2407,7 @@
             document.getElementById('nav-links').classList.toggle('open');
         }
 
-        const dot = document.getElementById('cursor-dot');
-        const outline = document.getElementById('cursor-outline');
+        // Custom cursor removed for better performance
         const prefersReducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
         const isTouchDevice = 'ontouchstart' in window || navigator.maxTouchPoints > 0;
 
