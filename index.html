@@ -207,7 +207,7 @@
             animation: gradientShift 15s ease infinite;
             color: var(--black);
             overflow-x: hidden;
-            cursor: none;
+            cursor: auto;
             line-height: 1.6;
             font-weight: 400;
             scroll-behavior: smooth;
@@ -297,66 +297,7 @@
             }
         }
 
-        .cursor-dot {
-            width: 20px;
-            height: 20px;
-            background: radial-gradient(circle, #ff0080, #7928ca, #0070f3);
-            border-radius: 50%;
-            position: fixed;
-            pointer-events: none;
-            transform: translate(-50%, -50%);
-            transition: all 0.15s cubic-bezier(0.4, 0, 0.2, 1);
-            z-index: 10000;
-            box-shadow: 0 0 40px rgba(255, 0, 128, 0.8), 0 0 80px rgba(0, 112, 243, 0.5);
-            animation: cursorPulse 2s ease-in-out infinite;
-        }
-
-        @keyframes cursorPulse {
-            0%, 100% {
-                box-shadow: 0 0 40px rgba(255, 0, 128, 0.8), 0 0 80px rgba(0, 112, 243, 0.5);
-            }
-            50% {
-                box-shadow: 0 0 60px rgba(255, 0, 128, 1), 0 0 100px rgba(0, 112, 243, 0.8);
-            }
-        }
-
-        .cursor-outline {
-            width: 60px;
-            height: 60px;
-            border: 3px solid #ff0080;
-            border-radius: 50%;
-            position: fixed;
-            pointer-events: none;
-            transform: translate(-50%, -50%);
-            transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
-            z-index: 9999;
-            opacity: 0.9;
-            box-shadow: 0 0 50px rgba(255, 0, 128, 0.6);
-        }
-
-        .cursor-dot.hover {
-            transform: translate(-50%, -50%) scale(3);
-            background: radial-gradient(circle, #00ff88, #00d4ff);
-            box-shadow: 0 0 60px rgba(0, 255, 136, 1), 0 0 120px rgba(0, 212, 255, 0.8);
-        }
-
-        .cursor-outline.hover {
-            transform: translate(-50%, -50%) scale(2);
-            opacity: 1;
-            border-color: #00ff88;
-            border-width: 4px;
-            box-shadow: 0 0 70px rgba(0, 255, 136, 0.8);
-        }
-
-        .cursor-dot.click {
-            transform: translate(-50%, -50%) scale(0.5);
-            background: radial-gradient(circle, #ffff00, #ff6600);
-        }
-
-        .cursor-outline.click {
-            transform: translate(-50%, -50%) scale(2.5);
-            border-color: #ffff00;
-        }
+        /* Custom cursor styles removed for better performance */
 
         .container {
             max-width: 1200px;
@@ -1273,8 +1214,6 @@
                 background-position: -200% 0;
             }
         }
-            box-shadow: 0 0 30px rgba(255, 0, 128, 0.6);
-        }
 
         .particles {
             position: fixed;
@@ -1394,12 +1333,8 @@
         }
 
         @media print {
-            .cursor-dot, .cursor-outline, .scroll-to-top {
+            .scroll-to-top {
                 display: none !important;
-            }
-            
-            body {
-                cursor: auto !important;
             }
             
             .page {
@@ -2367,8 +2302,6 @@
         </footer>
     </div>
 
-    <div class="cursor-dot" id="cursor-dot" aria-hidden="true"></div>
-    <div class="cursor-outline" id="cursor-outline" aria-hidden="true"></div>
     <button class="scroll-to-top" id="scroll-to-top" onclick="scrollToTop()" aria-label="Scroll to top">↑</button>
     
     <!-- Quick Contact Button -->
@@ -2421,67 +2354,8 @@
             document.getElementById('nav-links').classList.toggle('open');
         }
 
-        const dot = document.getElementById('cursor-dot');
-        const outline = document.getElementById('cursor-outline');
+        // Custom cursor removed for better performance
         const prefersReducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
-        const isTouchDevice = 'ontouchstart' in window || navigator.maxTouchPoints > 0;
-
-        if (!isTouchDevice) {
-            document.body.style.cursor = 'none';
-            dot.style.display = 'block';
-            outline.style.display = 'block';
-            
-            let mouseX = 0, mouseY = 0, dotX = 0, dotY = 0, outlineX = 0, outlineY = 0;
-
-            window.addEventListener('mousemove', (e) => {
-                mouseX = e.clientX;
-                mouseY = e.clientY;
-            });
-
-            function animateCursor() {
-                const speed = prefersReducedMotion ? 1 : 0.8;
-                const outlineSpeed = prefersReducedMotion ? 1 : 0.15;
-                
-                dotX += (mouseX - dotX) * speed;
-                dotY += (mouseY - dotY) * speed;
-                outlineX += (mouseX - outlineX) * outlineSpeed;
-                outlineY += (mouseY - outlineY) * outlineSpeed;
-
-                dot.style.left = `${dotX}px`;
-                dot.style.top = `${dotY}px`;
-                outline.style.left = `${outlineX}px`;
-                outline.style.top = `${outlineY}px`;
-
-                requestAnimationFrame(animateCursor);
-            }
-            animateCursor();
-
-            document.addEventListener('mousedown', () => {
-                dot.classList.add('click');
-                outline.classList.add('click');
-            });
-
-            document.addEventListener('mouseup', () => {
-                dot.classList.remove('click');
-                outline.classList.remove('click');
-            });
-
-            const hoverElements = document.querySelectorAll('a, .skill-category, .project-card, .hero-stats, .stat-item, button, .logo');
-            hoverElements.forEach(element => {
-                element.addEventListener('mouseenter', () => {
-                    dot.classList.add('hover');
-                    outline.classList.add('hover');
-                });
-                element.addEventListener('mouseleave', () => {
-                    dot.classList.remove('hover');
-                    outline.classList.remove('hover');
-                });
-            });
-        } else {
-            dot.style.display = 'none';
-            outline.style.display = 'none';
-            document.body.style.cursor = 'auto';
-        }
 
         const navbar = document.getElementById('navbar');
         const scrollToTopBtn = document.getElementById('scroll-to-top');
@@ -2640,12 +2514,7 @@
         }
 
         function attachProjectEventListeners() {
-            if (!prefersReducedMotion) {
-                document.querySelectorAll('.project-card').forEach(card => {
-                    card.addEventListener('mouseenter', () => { dot.classList.add('hover'); outline.classList.add('hover'); });
-                    card.addEventListener('mouseleave', () => { dot.classList.remove('hover'); outline.classList.remove('hover'); });
-                });
-            }
+            // Project event listeners (custom cursor removed for performance)
         }
 
         function createParticles() {
