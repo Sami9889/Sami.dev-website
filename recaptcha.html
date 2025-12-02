@@ -3,7 +3,7 @@
 <head>
   <script>
     // MAINTENANCE MODE TOGGLE
-    const MAINTENANCE_MODE = true; // Change to true to enable maintenance
+    const MAINTENANCE_MODE = false; // Change to true to enable maintenance
     
     // Check if maintenance has completed (bypass flag)
     const maintenanceComplete = localStorage.getItem('maintenanceComplete');
@@ -30,10 +30,36 @@
         script.crossOrigin = 'anonymous';
         script.onerror = function() {
           console.warn('StatusPage widget failed to load. This is non-critical.');
+          // Create a dummy StatusPage object to prevent errors if code tries to use it
+          window.StatusPage = window.StatusPage || {
+            page: function() {
+              return {
+                scheduledMaintenances: function() {
+                  console.warn('StatusPage widget not loaded - using fallback');
+                },
+                components: function() {
+                  console.warn('StatusPage widget not loaded - using fallback');
+                }
+              };
+            }
+          };
         };
         document.head.appendChild(script);
       } catch (e) {
         console.warn('Error loading StatusPage widget:', e);
+        // Create a dummy StatusPage object to prevent errors
+        window.StatusPage = window.StatusPage || {
+          page: function() {
+            return {
+              scheduledMaintenances: function() {
+                console.warn('StatusPage widget not loaded - using fallback');
+              },
+              components: function() {
+                console.warn('StatusPage widget not loaded - using fallback');
+              }
+            };
+          }
+        };
       }
     })();
   </script>
