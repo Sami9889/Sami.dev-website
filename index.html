@@ -297,7 +297,47 @@
             }
         }
 
-        /* Custom cursor styles removed for better performance */
+        /* Optimized Custom Cursor - Ultra Fast & Smooth */
+        .cursor-dot {
+            width: 10px;
+            height: 10px;
+            background: linear-gradient(135deg, #00d4ff, #0070f3);
+            border-radius: 50%;
+            position: fixed;
+            pointer-events: none;
+            z-index: 10000;
+            will-change: transform;
+            transform: translate(-50%, -50%);
+            transition: width 0.15s ease, height 0.15s ease, background 0.15s ease;
+            box-shadow: 0 0 20px rgba(0, 112, 243, 0.5);
+        }
+
+        .cursor-outline {
+            width: 35px;
+            height: 35px;
+            border: 2px solid rgba(0, 212, 255, 0.4);
+            border-radius: 50%;
+            position: fixed;
+            pointer-events: none;
+            z-index: 9999;
+            will-change: transform;
+            transform: translate(-50%, -50%);
+            transition: width 0.2s ease, height 0.2s ease, border-color 0.2s ease;
+        }
+
+        .cursor-dot.hover {
+            width: 6px;
+            height: 6px;
+            background: linear-gradient(135deg, #00ff88, #00d4ff);
+            box-shadow: 0 0 25px rgba(0, 255, 136, 0.7);
+        }
+
+        .cursor-outline.hover {
+            width: 45px;
+            height: 45px;
+            border-color: rgba(0, 255, 136, 0.5);
+            border-width: 2.5px;
+        }
 
         .container {
             max-width: 1200px;
@@ -2058,14 +2098,14 @@
             
             <div style="max-width: 800px; margin: 0 auto;">
                 <div style="background: var(--gray-100); padding: 2rem; border-radius: 8px; margin-bottom: 2rem;">
-                    <p><strong>Effective Date:</strong> December 2024</p>
-                    <p><strong>Contact:</strong> samisingh988@gmail.com</p>
-                    <p><strong>ABN:</strong> 72 925 087 373</p>
+                    <p style="color: var(--black); margin-bottom: 0.5rem;"><strong>Effective Date:</strong> December 2024</p>
+                    <p style="color: var(--black); margin-bottom: 0.5rem;"><strong>Contact:</strong> samisingh988@gmail.com</p>
+                    <p style="color: var(--black); margin-bottom: 0;"><strong>ABN:</strong> 72 925 087 373</p>
                 </div>
                 
-                <div style="background: white; border: 1px solid var(--gray-200); padding: 3rem; border-radius: 8px; margin-bottom: 2rem; min-height: 200px;">
-                    <h3>Information We Collect</h3>
-                    <ul style="line-height: 1.8; font-size: 1.05rem;">
+                <div style="background: var(--white); border: 1px solid var(--gray-200); padding: 3rem; border-radius: 8px; margin-bottom: 2rem; box-shadow: var(--shadow);">
+                    <h3 style="color: var(--black); margin-bottom: 1.5rem; font-size: 1.4rem;">📋 Information We Collect</h3>
+                    <ul style="line-height: 1.8; font-size: 1.05rem; color: var(--gray-800);">
                         <li>Contact information when you reach out via forms or email including name, email address, and message content</li>
                         <li>Technical information through cookies and analytics (with your consent) such as IP address, browser type, device information, and page views</li>
                         <li>Project requirements and specifications for service delivery including scope, timeline, and technical details</li>
@@ -2074,9 +2114,9 @@
                     </ul>
                 </div>
                 
-                <div style="background: white; border: 1px solid var(--gray-200); padding: 3rem; border-radius: 8px; margin-bottom: 2rem; min-height: 200px;">
-                    <h3>How We Use Your Information</h3>
-                    <ul style="line-height: 1.8; font-size: 1.05rem;">
+                <div style="background: var(--white); border: 1px solid var(--gray-200); padding: 3rem; border-radius: 8px; margin-bottom: 2rem; box-shadow: var(--shadow);">
+                    <h3 style="color: var(--black); margin-bottom: 1.5rem; font-size: 1.4rem;">🎯 How We Use Your Information</h3>
+                    <ul style="line-height: 1.8; font-size: 1.05rem; color: var(--gray-800);">
                         <li>To respond to your inquiries and provide requested services in a timely and professional manner</li>
                         <li>To deliver custom development and technical solutions according to agreed specifications</li>
                         <li>To improve our website and services through analytics (with consent) to enhance user experience</li>
@@ -2086,26 +2126,30 @@
                     </ul>
                 </div>
                 
-                <div style="background: white; border: 1px solid var(--gray-200); padding: 3rem; border-radius: 8px; margin-bottom: 2rem; min-height: 200px;">
-                    <h3>Data Protection</h3>
-                    <p style="line-height: 1.8; font-size: 1.05rem; margin-bottom: 1rem;">We implement appropriate technical and organizational security measures to protect your information against unauthorized access, alteration, disclosure, or destruction. Personal data is stored securely using industry-standard encryption and security protocols, and is only accessed by authorized personnel for legitimate business purposes.</p>
-                    <p style="line-height: 1.8; font-size: 1.05rem; margin-bottom: 1rem;">We regularly review our security practices and update them as necessary to maintain the highest level of protection. All data transfers are conducted over secure connections (HTTPS/TLS) and we employ best practices in data handling and storage.</p>
-                    <p style="line-height: 1.8; font-size: 1.05rem;">While we strive to protect your personal information, no method of transmission over the internet is 100% secure. We cannot guarantee absolute security but are committed to protecting your data to the best of our ability.</p>
+                <div style="background: var(--white); border: 1px solid var(--gray-200); padding: 3rem; border-radius: 8px; margin-bottom: 2rem; box-shadow: var(--shadow);">
+                    <h3 style="color: var(--black); margin-bottom: 1.5rem; font-size: 1.4rem;">🔒 Data Protection & Security</h3>
+                    <p style="line-height: 1.8; font-size: 1.05rem; margin-bottom: 1rem; color: var(--gray-800);">We implement appropriate technical and organizational security measures to protect your information against unauthorized access, alteration, disclosure, or destruction. Personal data is stored securely using industry-standard encryption and security protocols, and is only accessed by authorized personnel for legitimate business purposes.</p>
+                    <p style="line-height: 1.8; font-size: 1.05rem; margin-bottom: 1rem; color: var(--gray-800);">We regularly review our security practices and update them as necessary to maintain the highest level of protection. All data transfers are conducted over secure connections (HTTPS/TLS) and we employ best practices in data handling and storage.</p>
+                    <p style="line-height: 1.8; font-size: 1.05rem; color: var(--gray-800);">While we strive to protect your personal information, no method of transmission over the internet is 100% secure. We cannot guarantee absolute security but are committed to protecting your data to the best of our ability.</p>
                 </div>
                 
-                <div style="background: white; border: 1px solid var(--gray-200); padding: 3rem; border-radius: 8px; margin-bottom: 2rem; min-height: 200px;">
-                    <h3>Cookies & Analytics</h3>
-                    <p style="line-height: 1.8; font-size: 1.05rem; margin-bottom: 1rem;">We use cookies and Google Analytics only with your explicit consent via our cookie banner displayed on your first visit. These tools help us understand how visitors interact with our website and enable us to improve your experience.</p>
-                    <p style="line-height: 1.8; font-size: 1.05rem; margin-bottom: 1rem;">Cookies we may use include essential cookies for site functionality, analytics cookies to track usage patterns, and preference cookies to remember your settings. All analytics tracking is configured to respect user privacy with IP anonymization enabled.</p>
-                    <p style="line-height: 1.8; font-size: 1.05rem;">You can withdraw consent at any time by clearing your browser storage or adjusting your cookie preferences. You may also use browser settings or third-party tools to block cookies, though this may affect site functionality.</p>
+                <div style="background: var(--white); border: 1px solid var(--gray-200); padding: 3rem; border-radius: 8px; margin-bottom: 2rem; box-shadow: var(--shadow);">
+                    <h3 style="color: var(--black); margin-bottom: 1.5rem; font-size: 1.4rem;">🍪 Cookies & Analytics</h3>
+                    <p style="line-height: 1.8; font-size: 1.05rem; margin-bottom: 1rem; color: var(--gray-800);">We use cookies and Google Analytics only with your explicit consent via our cookie banner displayed on your first visit. These tools help us understand how visitors interact with our website and enable us to improve your experience.</p>
+                    <p style="line-height: 1.8; font-size: 1.05rem; margin-bottom: 1rem; color: var(--gray-800);">Cookies we may use include essential cookies for site functionality, analytics cookies to track usage patterns, and preference cookies to remember your settings. All analytics tracking is configured to respect user privacy with IP anonymization enabled.</p>
+                    <p style="line-height: 1.8; font-size: 1.05rem; color: var(--gray-800);">You can withdraw consent at any time by clearing your browser storage or adjusting your cookie preferences. You may also use browser settings or third-party tools to block cookies, though this may affect site functionality.</p>
                 </div>
                 
-                <div style="background: white; border: 1px solid var(--gray-200); padding: 3rem; border-radius: 8px; margin-bottom: 2rem; min-height: 200px;">
-                    <h3>Your Rights</h3>
-                    <p style="line-height: 1.8; font-size: 1.05rem; margin-bottom: 1rem;">Under Australian Privacy Principles (APPs) and applicable privacy laws, you have the right to access, correct, or delete your personal information that we hold. You may also request a copy of your data or ask us to restrict its processing.</p>
-                    <p style="line-height: 1.8; font-size: 1.05rem; margin-bottom: 1rem;">To exercise any of these rights, please contact us at samisingh988@gmail.com with a clear description of your request. We will respond to your request within a reasonable timeframe and may need to verify your identity before processing certain requests.</p>
-                    <p style="line-height: 1.8; font-size: 1.05rem; margin-bottom: 1rem;">You also have the right to lodge a complaint with the Office of the Australian Information Commissioner (OAIC) if you believe we have not handled your personal information appropriately.</p>
-                    <p style="line-height: 1.8; font-size: 1.05rem;">For more information about privacy in Australia, visit: <a href="https://www.oaic.gov.au" target="_blank" style="color: var(--accent); text-decoration: underline;">www.oaic.gov.au</a></p>
+                <div style="background: var(--white); border: 1px solid var(--gray-200); padding: 3rem; border-radius: 8px; margin-bottom: 2rem; box-shadow: var(--shadow);">
+                    <h3 style="color: var(--black); margin-bottom: 1.5rem; font-size: 1.4rem;">⚖️ Your Rights</h3>
+                    <p style="line-height: 1.8; font-size: 1.05rem; margin-bottom: 1rem; color: var(--gray-800);">Under Australian Privacy Principles (APPs) and applicable privacy laws, you have the right to access, correct, or delete your personal information that we hold. You may also request a copy of your data or ask us to restrict its processing.</p>
+                    <p style="line-height: 1.8; font-size: 1.05rem; margin-bottom: 1rem; color: var(--gray-800);">To exercise any of these rights, please contact us at samisingh988@gmail.com with a clear description of your request. We will respond to your request within a reasonable timeframe and may need to verify your identity before processing certain requests.</p>
+                    <p style="line-height: 1.8; font-size: 1.05rem; margin-bottom: 1rem; color: var(--gray-800);">You also have the right to lodge a complaint with the Office of the Australian Information Commissioner (OAIC) if you believe we have not handled your personal information appropriately.</p>
+                    <p style="line-height: 1.8; font-size: 1.05rem; color: var(--gray-800);">For more information about privacy in Australia, visit: <a href="https://www.oaic.gov.au" target="_blank" style="color: var(--accent); text-decoration: underline;">www.oaic.gov.au</a></p>
+                </div>
+                
+                <div style="background: var(--gray-100); border: 1px solid var(--gray-300); padding: 2rem; border-radius: 8px; margin-top: 3rem;">
+                    <p style="color: var(--gray-700); font-size: 0.95rem; line-height: 1.7; margin: 0;"><strong>Last Updated:</strong> December 2024 • This privacy policy may be updated from time to time. We will notify users of any material changes by posting the new policy on this page.</p>
                 </div>
             </div>
         </section>
@@ -2118,15 +2162,15 @@
             
             <div style="max-width: 800px; margin: 0 auto;">
                 <div style="background: var(--gray-100); padding: 2rem; border-radius: 8px; margin-bottom: 2rem;">
-                    <p><strong>Service Provider:</strong> Samrath Singh</p>
-                    <p><strong>ABN:</strong> 72 925 087 373</p>
-                    <p><strong>Location:</strong> Point Cook, VIC, Australia</p>
-                    <p><strong>Contact:</strong> samisingh988@gmail.com</p>
+                    <p style="color: var(--black); margin-bottom: 0.5rem;"><strong>Service Provider:</strong> Samrath Singh</p>
+                    <p style="color: var(--black); margin-bottom: 0.5rem;"><strong>ABN:</strong> 72 925 087 373</p>
+                    <p style="color: var(--black); margin-bottom: 0.5rem;"><strong>Location:</strong> Point Cook, VIC, Australia</p>
+                    <p style="color: var(--black); margin-bottom: 0;"><strong>Contact:</strong> samisingh988@gmail.com</p>
                 </div>
                 
-                <div style="background: white; border: 1px solid var(--gray-200); padding: 2rem; border-radius: 8px; margin-bottom: 2rem;">
-                    <h3>Services Offered</h3>
-                    <ul>
+                <div style="background: var(--white); border: 1px solid var(--gray-200); padding: 2.5rem; border-radius: 8px; margin-bottom: 2rem; box-shadow: var(--shadow);">
+                    <h3 style="color: var(--black); margin-bottom: 1.5rem; font-size: 1.4rem;">📦 Services Offered</h3>
+                    <ul style="line-height: 1.8; font-size: 1.05rem; color: var(--gray-800);">
                         <li>Custom web development and programming</li>
                         <li>Minecraft plugin development</li>
                         <li>eCommerce solutions and Shopify customization</li>
@@ -2136,33 +2180,40 @@
                     </ul>
                 </div>
                 
-                <div style="background: white; border: 1px solid var(--gray-200); padding: 3rem; border-radius: 8px; margin-bottom: 2rem; min-height: 200px;">
-                    <h3>Service Agreement</h3>
-                    <p style="line-height: 1.8; font-size: 1.05rem; margin-bottom: 1rem;">Services are provided based on mutually agreed specifications and requirements documented before project commencement. Project scope, deliverables, timeline, and pricing are confirmed in writing before work begins.</p>
-                    <p style="line-height: 1.8; font-size: 1.05rem; margin-bottom: 1rem;">Changes to the agreed scope may affect project timeline and costs. Any scope changes will be communicated and agreed upon before implementation. We strive to deliver projects on time and within budget while maintaining high quality standards.</p>
-                    <p style="line-height: 1.8; font-size: 1.05rem;">All services are subject to Australian Consumer Law. We reserve the right to refuse service at our discretion and may terminate agreements with appropriate notice if circumstances require.</p>
+                <div style="background: var(--white); border: 1px solid var(--gray-200); padding: 3rem; border-radius: 8px; margin-bottom: 2rem; box-shadow: var(--shadow);">
+                    <h3 style="color: var(--black); margin-bottom: 1.5rem; font-size: 1.4rem;">📝 Service Agreement</h3>
+                    <p style="line-height: 1.8; font-size: 1.05rem; margin-bottom: 1rem; color: var(--gray-800);">Services are provided based on mutually agreed specifications and requirements documented before project commencement. Project scope, deliverables, timeline, and pricing are confirmed in writing before work begins.</p>
+                    <p style="line-height: 1.8; font-size: 1.05rem; margin-bottom: 1rem; color: var(--gray-800);">Changes to the agreed scope may affect project timeline and costs. Any scope changes will be communicated and agreed upon before implementation. We strive to deliver projects on time and within budget while maintaining high quality standards.</p>
+                    <p style="line-height: 1.8; font-size: 1.05rem; color: var(--gray-800);">All services are subject to Australian Consumer Law. We reserve the right to refuse service at our discretion and may terminate agreements with appropriate notice if circumstances require.</p>
                 </div>
                 
-                <div style="background: white; border: 1px solid var(--gray-200); padding: 3rem; border-radius: 8px; margin-bottom: 2rem; min-height: 200px;">
-                    <h3>Payment Terms</h3>
-                    <p style="line-height: 1.8; font-size: 1.05rem; margin-bottom: 1rem;">Payment terms are agreed upon per project and documented in the service agreement. We typically require a deposit before commencing work, with the remainder due upon completion or according to agreed milestones.</p>
-                    <p style="line-height: 1.8; font-size: 1.05rem; margin-bottom: 1rem;">Accepted payment methods will be specified in the project agreement. All prices are quoted in Australian Dollars (AUD) unless otherwise stated. Australian Consumer Law applies to all transactions and protects your rights as a consumer.</p>
-                    <p style="line-height: 1.8; font-size: 1.05rem;">Late payments may incur additional fees as specified in the agreement. ABN: 72 925 087 373. Tax invoices will be provided for all transactions.</p>
+                <div style="background: var(--white); border: 1px solid var(--gray-200); padding: 3rem; border-radius: 8px; margin-bottom: 2rem; box-shadow: var(--shadow);">
+                    <h3 style="color: var(--black); margin-bottom: 1.5rem; font-size: 1.4rem;">💰 Payment Terms</h3>
+                    <p style="line-height: 1.8; font-size: 1.05rem; margin-bottom: 1rem; color: var(--gray-800);">Payment terms are agreed upon per project and documented in the service agreement. We typically require a deposit before commencing work, with the remainder due upon completion or according to agreed milestones.</p>
+                    <p style="line-height: 1.8; font-size: 1.05rem; margin-bottom: 1rem; color: var(--gray-800);">Accepted payment methods will be specified in the project agreement. All prices are quoted in Australian Dollars (AUD) unless otherwise stated. Australian Consumer Law applies to all transactions and protects your rights as a consumer.</p>
+                    <p style="line-height: 1.8; font-size: 1.05rem; color: var(--gray-800);">Late payments may incur additional fees as specified in the agreement. ABN: 72 925 087 373. Tax invoices will be provided for all transactions.</p>
                 </div>
                 
-                <div style="background: white; border: 1px solid var(--gray-200); padding: 3rem; border-radius: 8px; margin-bottom: 2rem; min-height: 200px;">
-                    <h3>Intellectual Property</h3>
-                    <p style="line-height: 1.8; font-size: 1.05rem; margin-bottom: 1rem;">Custom work created specifically for clients becomes the property of the client upon full payment, unless otherwise agreed in writing. This includes source code, designs, and deliverables created as part of the project scope.</p>
-                    <p style="line-height: 1.8; font-size: 1.05rem; margin-bottom: 1rem;">We retain rights to general methodologies, frameworks, tools, and non-specific technical knowledge developed or used in the course of providing services. We may showcase completed work in our portfolio unless confidentiality is specifically requested.</p>
-                    <p style="line-height: 1.8; font-size: 1.05rem;">Third-party components, libraries, and open-source software used in projects remain under their respective licenses. Clients are responsible for obtaining necessary licenses for any third-party software or services they request.</p>
+                <div style="background: var(--white); border: 1px solid var(--gray-200); padding: 3rem; border-radius: 8px; margin-bottom: 2rem; box-shadow: var(--shadow);">
+                    <h3 style="color: var(--black); margin-bottom: 1.5rem; font-size: 1.4rem;">©️ Intellectual Property & Copyright</h3>
+                    <p style="line-height: 1.8; font-size: 1.05rem; margin-bottom: 1rem; color: var(--gray-800);">Custom work created specifically for clients becomes the property of the client upon full payment, unless otherwise agreed in writing. This includes source code, designs, and deliverables created as part of the project scope.</p>
+                    <p style="line-height: 1.8; font-size: 1.05rem; margin-bottom: 1rem; color: var(--gray-800);">We retain rights to general methodologies, frameworks, tools, and non-specific technical knowledge developed or used in the course of providing services. We may showcase completed work in our portfolio unless confidentiality is specifically requested.</p>
+                    <p style="line-height: 1.8; font-size: 1.05rem; color: var(--gray-800);">Third-party components, libraries, and open-source software used in projects remain under their respective licenses. Clients are responsible for obtaining necessary licenses for any third-party software or services they request.</p>
+                    <div style="margin-top: 1.5rem; padding: 1.5rem; background: var(--gray-100); border-radius: 6px; border-left: 4px solid var(--accent);">
+                        <p style="font-size: 0.95rem; color: var(--gray-700); margin: 0;"><strong>Copyright Notice:</strong> All website content, design, code, and materials © 2024 Samrath Singh. All rights reserved. Unauthorized reproduction or distribution of copyrighted material is prohibited.</p>
+                    </div>
                 </div>
                 
-                <div style="background: white; border: 1px solid var(--gray-200); padding: 3rem; border-radius: 8px; margin-bottom: 2rem; min-height: 200px;">
-                    <h3>Limitation of Liability</h3>
-                    <p style="line-height: 1.8; font-size: 1.05rem; margin-bottom: 1rem;">Services are provided to the best of our ability with professional care and skill. While we strive for excellence, we cannot guarantee that services will meet all specific requirements or be error-free, uninterrupted, or completely secure.</p>
-                    <p style="line-height: 1.8; font-size: 1.05rem; margin-bottom: 1rem;">To the maximum extent permitted by Australian Consumer Law, we are not liable for indirect, incidental, special, or consequential damages including but not limited to loss of profits, data, or business opportunities arising from use of our services.</p>
-                    <p style="line-height: 1.8; font-size: 1.05rem; margin-bottom: 1rem;">Our maximum liability is limited to the total amount paid for the specific project or service giving rise to the claim. Nothing in these terms excludes or limits consumer guarantees provided under Australian Consumer Law where such exclusion or limitation would be prohibited.</p>
-                    <p style="line-height: 1.8; font-size: 1.05rem;">Clients are responsible for maintaining backups of their data and testing deliverables in their own environment before deployment to production systems.</p>
+                <div style="background: var(--white); border: 1px solid var(--gray-200); padding: 3rem; border-radius: 8px; margin-bottom: 2rem; box-shadow: var(--shadow);">
+                    <h3 style="color: var(--black); margin-bottom: 1.5rem; font-size: 1.4rem;">⚠️ Limitation of Liability</h3>
+                    <p style="line-height: 1.8; font-size: 1.05rem; margin-bottom: 1rem; color: var(--gray-800);">Services are provided to the best of our ability with professional care and skill. While we strive for excellence, we cannot guarantee that services will meet all specific requirements or be error-free, uninterrupted, or completely secure.</p>
+                    <p style="line-height: 1.8; font-size: 1.05rem; margin-bottom: 1rem; color: var(--gray-800);">To the maximum extent permitted by Australian Consumer Law, we are not liable for indirect, incidental, special, or consequential damages including but not limited to loss of profits, data, or business opportunities arising from use of our services.</p>
+                    <p style="line-height: 1.8; font-size: 1.05rem; margin-bottom: 1rem; color: var(--gray-800);">Our maximum liability is limited to the total amount paid for the specific project or service giving rise to the claim. Nothing in these terms excludes or limits consumer guarantees provided under Australian Consumer Law where such exclusion or limitation would be prohibited.</p>
+                    <p style="line-height: 1.8; font-size: 1.05rem; color: var(--gray-800);">Clients are responsible for maintaining backups of their data and testing deliverables in their own environment before deployment to production systems.</p>
+                </div>
+                
+                <div style="background: var(--gray-100); border: 1px solid var(--gray-300); padding: 2rem; border-radius: 8px; margin-top: 3rem;">
+                    <p style="color: var(--gray-700); font-size: 0.95rem; line-height: 1.7; margin: 0;"><strong>Effective Date:</strong> December 2024 • <strong>Governing Law:</strong> These terms are governed by the laws of Victoria, Australia. Any disputes arising from these terms will be subject to the exclusive jurisdiction of the courts of Victoria, Australia.</p>
                 </div>
             </div>
         </section>
@@ -2295,8 +2346,10 @@
                 </div>
                 
                 <div style="border-top: 1px solid var(--gray-300); padding-top: 2rem; margin-top: 3rem; text-align: center;">
-                    <p style="color: var(--gray-700); margin-bottom: 0.5rem; font-size: 0.95rem;">&copy; 2024 Samrath Singh. ABN: 72 925 087 373</p>
-                    <p style="margin-top: 1rem; color: var(--gray-600); font-size: 0.9rem;">Built with care using pure HTML, CSS & JavaScript.</p>
+                    <p style="color: var(--gray-700); margin-bottom: 0.5rem; font-size: 0.95rem;">&copy; 2024 Samrath Singh. All Rights Reserved.</p>
+                    <p style="color: var(--gray-600); margin-bottom: 0.5rem; font-size: 0.9rem;">ABN: 72 925 087 373 | Point Cook, VIC, Australia</p>
+                    <p style="margin-top: 1rem; color: var(--gray-600); font-size: 0.85rem;">Built with care using pure HTML, CSS & JavaScript. No frameworks, just clean code.</p>
+                    <p style="margin-top: 0.5rem; color: var(--gray-500); font-size: 0.8rem;">This website and its contents are protected by copyright law. Unauthorized reproduction is prohibited.</p>
                 </div>
             </div>
         </footer>
@@ -2356,6 +2409,42 @@
 
         // Custom cursor removed for better performance
         const prefersReducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+        const isTouchDevice = 'ontouchstart' in window || navigator.maxTouchPoints > 0;
+
+        // Optimized cursor with better performance
+        if (!isTouchDevice && !prefersReducedMotion) {
+            let mouseX = 0, mouseY = 0;
+
+            // Use direct transform for instant cursor movement (no lag)
+            window.addEventListener('mousemove', (e) => {
+                mouseX = e.clientX;
+                mouseY = e.clientY;
+                
+                // Update cursor position immediately using transform (GPU accelerated)
+                dot.style.transform = `translate(${mouseX}px, ${mouseY}px) translate(-50%, -50%)`;
+                outline.style.transform = `translate(${mouseX}px, ${mouseY}px) translate(-50%, -50%)`;
+            }, { passive: true });
+
+            // Add hover effects
+            const interactiveElements = document.querySelectorAll('a, button, .nav-links a, .project-card, .skill-category, .logo, .hero-stats, .stat-item');
+            interactiveElements.forEach(el => {
+                el.addEventListener('mouseenter', () => {
+                    dot.classList.add('hover');
+                    outline.classList.add('hover');
+                }, { passive: true });
+                el.addEventListener('mouseleave', () => {
+                    dot.classList.remove('hover');
+                    outline.classList.remove('hover');
+                }, { passive: true });
+            });
+        } else {
+            // Hide cursor on touch devices or if reduced motion preferred
+            if (dot && outline) {
+                dot.style.display = 'none';
+                outline.style.display = 'none';
+            }
+            document.body.style.cursor = 'auto';
+        }
 
         const navbar = document.getElementById('navbar');
         const scrollToTopBtn = document.getElementById('scroll-to-top');
@@ -2514,7 +2603,18 @@
         }
 
         function attachProjectEventListeners() {
-            // Project event listeners (custom cursor removed for performance)
+            if (!prefersReducedMotion && !isTouchDevice) {
+                document.querySelectorAll('.project-card').forEach(card => {
+                    card.addEventListener('mouseenter', () => { 
+                        dot.classList.add('hover'); 
+                        outline.classList.add('hover'); 
+                    }, { passive: true });
+                    card.addEventListener('mouseleave', () => { 
+                        dot.classList.remove('hover'); 
+                        outline.classList.remove('hover'); 
+                    }, { passive: true });
+                });
+            }
         }
 
         function createParticles() {
