@@ -101,6 +101,48 @@
     const MAIN = SITE + '/';
     const COOKIE_NAME = 'sami_verified';
     const COOKIE_DAYS = 7;
+    const STATUS_PAGE_ID = 't8rwzx70wvzt'; // StatusPage.io page ID
+    
+    // Function to safely check for maintenance using StatusPage widget
+    function checkMaintenanceStatus() {
+      // Only check if StatusPage widget is available
+      if (!window.statusPageAvailable || typeof StatusPage === 'undefined' || typeof StatusPage.page !== 'function') {
+        console.log('StatusPage widget not available, skipping maintenance check');
+        return;
+      }
+      
+      try {
+        const sp = new StatusPage.page({ page: STATUS_PAGE_ID });
+        
+        // Check if scheduledMaintenances method exists
+        if (typeof sp.scheduledMaintenances !== 'function') {
+          console.warn('StatusPage scheduledMaintenances method not available');
+          return;
+        }
+        
+        // Check for active maintenance
+        sp.scheduledMaintenances({
+          filter: 'active',
+          success: function(data) {
+            if (data.scheduled_maintenances && data.scheduled_maintenances.length > 0) {
+              // Active maintenance found, redirect
+              console.log('Active maintenance detected, redirecting...');
+              window.location.replace('/maintenance.html');
+            }
+          },
+          error: function(err) {
+            console.warn('Error checking maintenance status:', err);
+            // On error, continue normally
+          }
+        });
+      } catch (e) {
+        console.warn('Error initializing StatusPage maintenance check:', e);
+        // Continue normally if check fails
+      }
+    }
+    
+    // Run maintenance check after a short delay to ensure widget loads
+    setTimeout(checkMaintenanceStatus, 1000);
 
     function setCookie(name,value,days){
       const d=new Date(); 

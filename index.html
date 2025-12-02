@@ -297,65 +297,46 @@
             }
         }
 
+        /* Optimized Custom Cursor - Ultra Fast & Smooth */
         .cursor-dot {
-            width: 20px;
-            height: 20px;
-            background: radial-gradient(circle, #ff0080, #7928ca, #0070f3);
+            width: 10px;
+            height: 10px;
+            background: linear-gradient(135deg, #00d4ff, #0070f3);
             border-radius: 50%;
             position: fixed;
             pointer-events: none;
-            transform: translate(-50%, -50%);
-            transition: all 0.15s cubic-bezier(0.4, 0, 0.2, 1);
             z-index: 10000;
-            box-shadow: 0 0 40px rgba(255, 0, 128, 0.8), 0 0 80px rgba(0, 112, 243, 0.5);
-            animation: cursorPulse 2s ease-in-out infinite;
-        }
-
-        @keyframes cursorPulse {
-            0%, 100% {
-                box-shadow: 0 0 40px rgba(255, 0, 128, 0.8), 0 0 80px rgba(0, 112, 243, 0.5);
-            }
-            50% {
-                box-shadow: 0 0 60px rgba(255, 0, 128, 1), 0 0 100px rgba(0, 112, 243, 0.8);
-            }
+            will-change: transform;
+            transform: translate(-50%, -50%);
+            transition: width 0.15s ease, height 0.15s ease, background 0.15s ease;
+            box-shadow: 0 0 20px rgba(0, 112, 243, 0.5);
         }
 
         .cursor-outline {
-            width: 60px;
-            height: 60px;
-            border: 3px solid #ff0080;
+            width: 35px;
+            height: 35px;
+            border: 2px solid rgba(0, 212, 255, 0.4);
             border-radius: 50%;
             position: fixed;
             pointer-events: none;
-            transform: translate(-50%, -50%);
-            transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
             z-index: 9999;
-            opacity: 0.9;
-            box-shadow: 0 0 50px rgba(255, 0, 128, 0.6);
+            will-change: transform;
+            transform: translate(-50%, -50%);
+            transition: width 0.2s ease, height 0.2s ease, border-color 0.2s ease;
         }
 
         .cursor-dot.hover {
-            transform: translate(-50%, -50%) scale(3);
-            background: radial-gradient(circle, #00ff88, #00d4ff);
-            box-shadow: 0 0 60px rgba(0, 255, 136, 1), 0 0 120px rgba(0, 212, 255, 0.8);
+            width: 6px;
+            height: 6px;
+            background: linear-gradient(135deg, #00ff88, #00d4ff);
+            box-shadow: 0 0 25px rgba(0, 255, 136, 0.7);
         }
 
         .cursor-outline.hover {
-            transform: translate(-50%, -50%) scale(2);
-            opacity: 1;
-            border-color: #00ff88;
-            border-width: 4px;
-            box-shadow: 0 0 70px rgba(0, 255, 136, 0.8);
-        }
-
-        .cursor-dot.click {
-            transform: translate(-50%, -50%) scale(0.5);
-            background: radial-gradient(circle, #ffff00, #ff6600);
-        }
-
-        .cursor-outline.click {
-            transform: translate(-50%, -50%) scale(2.5);
-            border-color: #ffff00;
+            width: 45px;
+            height: 45px;
+            border-color: rgba(0, 255, 136, 0.5);
+            border-width: 2.5px;
         }
 
         .container {
@@ -2426,60 +2407,38 @@
         const prefersReducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
         const isTouchDevice = 'ontouchstart' in window || navigator.maxTouchPoints > 0;
 
-        if (!isTouchDevice) {
-            document.body.style.cursor = 'none';
-            dot.style.display = 'block';
-            outline.style.display = 'block';
-            
-            let mouseX = 0, mouseY = 0, dotX = 0, dotY = 0, outlineX = 0, outlineY = 0;
+        // Optimized cursor with better performance
+        if (!isTouchDevice && !prefersReducedMotion) {
+            let mouseX = 0, mouseY = 0;
 
+            // Use direct transform for instant cursor movement (no lag)
             window.addEventListener('mousemove', (e) => {
                 mouseX = e.clientX;
                 mouseY = e.clientY;
-            });
-
-            function animateCursor() {
-                const speed = prefersReducedMotion ? 1 : 0.8;
-                const outlineSpeed = prefersReducedMotion ? 1 : 0.15;
                 
-                dotX += (mouseX - dotX) * speed;
-                dotY += (mouseY - dotY) * speed;
-                outlineX += (mouseX - outlineX) * outlineSpeed;
-                outlineY += (mouseY - outlineY) * outlineSpeed;
+                // Update cursor position immediately using transform (GPU accelerated)
+                dot.style.transform = `translate(${mouseX}px, ${mouseY}px) translate(-50%, -50%)`;
+                outline.style.transform = `translate(${mouseX}px, ${mouseY}px) translate(-50%, -50%)`;
+            }, { passive: true });
 
-                dot.style.left = `${dotX}px`;
-                dot.style.top = `${dotY}px`;
-                outline.style.left = `${outlineX}px`;
-                outline.style.top = `${outlineY}px`;
-
-                requestAnimationFrame(animateCursor);
-            }
-            animateCursor();
-
-            document.addEventListener('mousedown', () => {
-                dot.classList.add('click');
-                outline.classList.add('click');
-            });
-
-            document.addEventListener('mouseup', () => {
-                dot.classList.remove('click');
-                outline.classList.remove('click');
-            });
-
-            const hoverElements = document.querySelectorAll('a, .skill-category, .project-card, .hero-stats, .stat-item, button, .logo');
-            hoverElements.forEach(element => {
-                element.addEventListener('mouseenter', () => {
+            // Add hover effects
+            const interactiveElements = document.querySelectorAll('a, button, .nav-links a, .project-card, .skill-category, .logo, .hero-stats, .stat-item');
+            interactiveElements.forEach(el => {
+                el.addEventListener('mouseenter', () => {
                     dot.classList.add('hover');
                     outline.classList.add('hover');
-                });
-                element.addEventListener('mouseleave', () => {
+                }, { passive: true });
+                el.addEventListener('mouseleave', () => {
                     dot.classList.remove('hover');
                     outline.classList.remove('hover');
-                });
+                }, { passive: true });
             });
         } else {
-            dot.style.display = 'none';
-            outline.style.display = 'none';
+            // Hide cursor on touch devices or if reduced motion preferred
+            if (dot && outline) {
+                dot.style.display = 'none';
+                outline.style.display = 'none';
+            }
             document.body.style.cursor = 'auto';
         }
 
@@ -2640,10 +2599,16 @@
         }
 
         function attachProjectEventListeners() {
-            if (!prefersReducedMotion) {
+            if (!prefersReducedMotion && !isTouchDevice) {
                 document.querySelectorAll('.project-card').forEach(card => {
-                    card.addEventListener('mouseenter', () => { dot.classList.add('hover'); outline.classList.add('hover'); });
-                    card.addEventListener('mouseleave', () => { dot.classList.remove('hover'); outline.classList.remove('hover'); });
+                    card.addEventListener('mouseenter', () => { 
+                        dot.classList.add('hover'); 
+                        outline.classList.add('hover'); 
+                    }, { passive: true });
+                    card.addEventListener('mouseleave', () => { 
+                        dot.classList.remove('hover'); 
+                        outline.classList.remove('hover'); 
+                    }, { passive: true });
                 });
             }
         }
