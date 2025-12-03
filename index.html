@@ -40,6 +40,60 @@
           Sentry.init({
             // Basic error tracking only - no replay integration
             integrations: [],
+            
+            // Filter out browser extension errors
+            ignoreErrors: [
+              // Chrome/Safari extension errors
+              'Invalid call to runtime.sendMessage()',
+              /runtime\.sendMessage/i,
+              /chrome-extension:/i,
+              /safari-extension:/i,
+              /moz-extension:/i,
+              // Common extension-related errors
+              'Extension context invalidated',
+              'Extension manifest must request permission',
+              /extensions\//i,
+              // Other common extension errors
+              'ResizeObserver loop limit exceeded',
+              'Non-Error promise rejection captured',
+            ],
+            
+            // Additional filtering via beforeSend hook
+            beforeSend(event, hint) {
+              // Filter errors from browser extensions
+              const error = hint.originalException;
+              const errorMessage = event.exception?.values?.[0]?.value || '';
+              
+              // Check if error message contains extension-related keywords
+              const extensionKeywords = [
+                'runtime.sendMessage',
+                'chrome-extension',
+                'safari-extension',
+                'moz-extension',
+                'Extension context',
+                'Tab not found'
+              ];
+              
+              for (const keyword of extensionKeywords) {
+                if (errorMessage.includes(keyword)) {
+                  return null; // Drop the event
+                }
+              }
+              
+              // Check stack trace for extension origins
+              const frames = event.exception?.values?.[0]?.stacktrace?.frames || [];
+              for (const frame of frames) {
+                const filename = frame.filename || '';
+                if (filename.includes('chrome-extension://') || 
+                    filename.includes('safari-extension://') ||
+                    filename.includes('moz-extension://') ||
+                    filename.includes('extensions/')) {
+                  return null; // Drop the event
+                }
+              }
+              
+              return event;
+            }
           });
         });
       }
