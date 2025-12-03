@@ -40,6 +40,60 @@
           Sentry.init({
             // Basic error tracking only - no replay integration
             integrations: [],
+            
+            // Filter out browser extension errors
+            ignoreErrors: [
+              // Chrome/Safari extension errors
+              'Invalid call to runtime.sendMessage()',
+              /runtime\.sendMessage/i,
+              /chrome-extension:/i,
+              /safari-extension:/i,
+              /moz-extension:/i,
+              // Common extension-related errors
+              'Extension context invalidated',
+              'Extension manifest must request permission',
+              /extensions\//i,
+              // Other common extension errors
+              'ResizeObserver loop limit exceeded',
+              'Non-Error promise rejection captured',
+            ],
+            
+            // Additional filtering via beforeSend hook
+            beforeSend(event, hint) {
+              // Filter errors from browser extensions
+              const error = hint.originalException;
+              const errorMessage = event.exception?.values?.[0]?.value || '';
+              
+              // Check if error message contains extension-related keywords
+              const extensionKeywords = [
+                'runtime.sendMessage',
+                'chrome-extension',
+                'safari-extension',
+                'moz-extension',
+                'Extension context',
+                'Tab not found'
+              ];
+              
+              for (const keyword of extensionKeywords) {
+                if (errorMessage.includes(keyword)) {
+                  return null; // Drop the event
+                }
+              }
+              
+              // Check stack trace for extension origins
+              const frames = event.exception?.values?.[0]?.stacktrace?.frames || [];
+              for (const frame of frames) {
+                const filename = frame.filename || '';
+                if (filename.includes('chrome-extension://') || 
+                    filename.includes('safari-extension://') ||
+                    filename.includes('moz-extension://') ||
+                    filename.includes('extensions/')) {
+                  return null; // Drop the event
+                }
+              }
+              
+              return event;
+            }
           });
         });
       }
@@ -2411,17 +2465,20 @@
         const prefersReducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
         const isTouchDevice = 'ontouchstart' in window || navigator.maxTouchPoints > 0;
 
-        // Create custom cursor elements
-        const dot = document.createElement('div');
-        dot.className = 'cursor-dot';
-        document.body.appendChild(dot);
-
-        const outline = document.createElement('div');
-        outline.className = 'cursor-outline';
-        document.body.appendChild(outline);
+        // Declare cursor element variables in broader scope
+        let dot, outline;
 
         // Optimized cursor with better performance
         if (!isTouchDevice && !prefersReducedMotion) {
+            // Create cursor elements
+            dot = document.createElement('div');
+            dot.className = 'cursor-dot';
+            document.body.appendChild(dot);
+            
+            outline = document.createElement('div');
+            outline.className = 'cursor-outline';
+            document.body.appendChild(outline);
+            
             let mouseX = 0, mouseY = 0;
 
             // Use direct transform for instant cursor movement (no lag)
@@ -2430,28 +2487,37 @@
                 mouseY = e.clientY;
                 
                 // Update cursor position immediately using transform (GPU accelerated)
-                dot.style.transform = `translate(${mouseX}px, ${mouseY}px) translate(-50%, -50%)`;
-                outline.style.transform = `translate(${mouseX}px, ${mouseY}px) translate(-50%, -50%)`;
+                // Add null checks to prevent ReferenceError
+                if (dot && dot.style) {
+                    dot.style.transform = `translate(${mouseX}px, ${mouseY}px) translate(-50%, -50%)`;
+                }
+                if (outline && outline.style) {
+                    outline.style.transform = `translate(${mouseX}px, ${mouseY}px) translate(-50%, -50%)`;
+                }
             }, { passive: true });
 
             // Add hover effects
             const interactiveElements = document.querySelectorAll('a, button, .nav-links a, .project-card, .skill-category, .logo, .hero-stats, .stat-item');
             interactiveElements.forEach(el => {
                 el.addEventListener('mouseenter', () => {
-                    dot.classList.add('hover');
-                    outline.classList.add('hover');
+                    if (dot && dot.classList) {
+                        dot.classList.add('hover');
+                    }
+                    if (outline && outline.classList) {
+                        outline.classList.add('hover');
+                    }
                 }, { passive: true });
                 el.addEventListener('mouseleave', () => {
-                    dot.classList.remove('hover');
-                    outline.classList.remove('hover');
+                    if (dot && dot.classList) {
+                        dot.classList.remove('hover');
+                    }
+                    if (outline && outline.classList) {
+                        outline.classList.remove('hover');
+                    }
                 }, { passive: true });
             });
         } else {
             // Hide cursor on touch devices or if reduced motion preferred
-            if (dot && outline) {
-                dot.style.display = 'none';
-                outline.style.display = 'none';
-            }
             document.body.style.cursor = 'auto';
         }
 
@@ -2612,15 +2678,23 @@
         }
 
         function attachProjectEventListeners() {
-            if (!prefersReducedMotion && !isTouchDevice) {
+            if (!prefersReducedMotion && !isTouchDevice && dot && outline) {
                 document.querySelectorAll('.project-card').forEach(card => {
                     card.addEventListener('mouseenter', () => { 
-                        dot.classList.add('hover'); 
-                        outline.classList.add('hover'); 
+                        if (dot && dot.classList) {
+                            dot.classList.add('hover');
+                        }
+                        if (outline && outline.classList) {
+                            outline.classList.add('hover');
+                        }
                     }, { passive: true });
                     card.addEventListener('mouseleave', () => { 
-                        dot.classList.remove('hover'); 
-                        outline.classList.remove('hover'); 
+                        if (dot && dot.classList) {
+                            dot.classList.remove('hover');
+                        }
+                        if (outline && outline.classList) {
+                            outline.classList.remove('hover');
+                        }
                     }, { passive: true });
                 });
             }
@@ -2695,10 +2769,12 @@
             const savedTheme = localStorage.getItem('theme') || 'light';
             document.documentElement.setAttribute('data-theme', savedTheme);
             const icon = document.getElementById('theme-icon');
-            icon.textContent = savedTheme === 'dark' ? '☀️' : '🌙';
+            if (icon) {
+                icon.textContent = savedTheme === 'dark' ? '☀️' : '🌙';
+            }
             
-            // Animate stats on load
-            animateStats();
+            // Animate stats on load with a small delay to ensure DOM is ready
+            setTimeout(animateStats, 100);
         });
         
         // ============================================
