@@ -2465,8 +2465,20 @@
         const prefersReducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
         const isTouchDevice = 'ontouchstart' in window || navigator.maxTouchPoints > 0;
 
+        // Declare cursor element variables in broader scope
+        let dot, outline;
+
         // Optimized cursor with better performance
         if (!isTouchDevice && !prefersReducedMotion) {
+            // Create cursor elements
+            dot = document.createElement('div');
+            dot.className = 'cursor-dot';
+            document.body.appendChild(dot);
+            
+            outline = document.createElement('div');
+            outline.className = 'cursor-outline';
+            document.body.appendChild(outline);
+            
             let mouseX = 0, mouseY = 0;
 
             // Use direct transform for instant cursor movement (no lag)
@@ -2493,10 +2505,6 @@
             });
         } else {
             // Hide cursor on touch devices or if reduced motion preferred
-            if (dot && outline) {
-                dot.style.display = 'none';
-                outline.style.display = 'none';
-            }
             document.body.style.cursor = 'auto';
         }
 
@@ -2657,7 +2665,7 @@
         }
 
         function attachProjectEventListeners() {
-            if (!prefersReducedMotion && !isTouchDevice) {
+            if (!prefersReducedMotion && !isTouchDevice && dot && outline) {
                 document.querySelectorAll('.project-card').forEach(card => {
                     card.addEventListener('mouseenter', () => { 
                         dot.classList.add('hover'); 
@@ -2740,10 +2748,12 @@
             const savedTheme = localStorage.getItem('theme') || 'light';
             document.documentElement.setAttribute('data-theme', savedTheme);
             const icon = document.getElementById('theme-icon');
-            icon.textContent = savedTheme === 'dark' ? '☀️' : '🌙';
+            if (icon) {
+                icon.textContent = savedTheme === 'dark' ? '☀️' : '🌙';
+            }
             
-            // Animate stats on load
-            animateStats();
+            // Animate stats on load with a small delay to ensure DOM is ready
+            setTimeout(animateStats, 100);
         });
         
         // ============================================
