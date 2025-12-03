@@ -42,6 +42,12 @@ on:
       - main
       - master
 
+# NOTE: This workflow requires a GitHub token with admin permissions.
+# The GITHUB_TOKEN has limitations - for branch protection, you need either:
+# 1. Repository admin permissions on the token
+# 2. A Personal Access Token (PAT) with 'repo' scope stored as a secret
+# 3. A GitHub App with repository administration permissions
+
 permissions:
   contents: write
   issues: write
@@ -50,9 +56,7 @@ permissions:
   checks: write
   statuses: write
   security-events: write
-  administration: write
   id-token: write
-  metadata: read
 
 env:
   MAX_BRANCH_AGE_DAYS: 30
