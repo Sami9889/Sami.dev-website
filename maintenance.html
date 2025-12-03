@@ -134,6 +134,8 @@
     
     <div class="status-badge">🔄 Maintenance in Progress</div>
     
+    <!-- Live countdown timer will be inserted here by JavaScript -->
+    
     <div class="info-box">
       <h3>What's happening?</h3>
       <p>We're performing updates and improvements to make the site better for you. This should only take a short while.</p>
@@ -157,7 +159,8 @@
       
       // Set end time (null = no auto-redirect, or use ISO date string)
       // Example: '2024-12-31T23:59:59Z' or null
-      endTime: null,
+      // Current setting: 2 hours from page load for testing
+      endTime: new Date(Date.now() + (2 * 60 * 60 * 1000)).toISOString(), // 2 hours from now
       
       // Estimated duration in hours (for display only)
       estimatedDuration: 2,
@@ -209,24 +212,43 @@
     
     // Handle auto-redirect
     if (MAINTENANCE_SETTINGS.enabled && MAINTENANCE_SETTINGS.endTime) {
-      const endTime = new Date(MAINTENANCE_SETTINGS.endTime);
+      // Get or set persistent end time from localStorage
+      let endTime = localStorage.getItem('maintenanceEndTime');
+      
+      if (!endTime) {
+        // First calculation - store as numeric timestamp
+        endTime = new Date(MAINTENANCE_SETTINGS.endTime).getTime();
+        localStorage.setItem('maintenanceEndTime', endTime);
+      } else {
+        // Use existing timestamp (numeric value)
+        endTime = parseInt(endTime);
+      }
       
       // Show countdown
       const countdownDiv = document.createElement('div');
       countdownDiv.className = 'info-box';
       countdownDiv.id = 'countdown-box';
       countdownDiv.innerHTML = `
-        <h3>Time Remaining</h3>
-        <p id="countdown-text" style="font-size: 1.2rem; font-weight: 600; color: #667eea;">Calculating...</p>
+        <h3>⏰ Live Countdown Timer</h3>
+        <p id="countdown-text" style="font-size: 1.8rem; font-weight: 700; color: #667eea; font-family: 'Courier New', monospace; letter-spacing: 0.05em;">Calculating...</p>
+        <p style="font-size: 0.85rem; color: #999; margin-top: 0.5rem;">🔄 Auto-synced every 5 minutes • Real-time updates</p>
       `;
       document.querySelector('.status-badge').insertAdjacentElement('afterend', countdownDiv);
       
       function updateCountdown() {
-        const now = new Date();
+        // Use Date.now() for better precision and sync
+        const now = Date.now();
         const remaining = endTime - now;
         
         if (remaining <= 0) {
-          document.getElementById('countdown-text').textContent = '✅ Maintenance complete! Redirecting...';
+          document.getElementById('countdown-text').innerHTML = '✅ <strong>Maintenance complete!</strong> Redirecting...';
+          clearInterval(countdownTimer);
+          
+          // Set bypass flag so user won't be redirected back to maintenance
+          localStorage.setItem('maintenanceComplete', 'true');
+          localStorage.setItem('maintenanceCompletedAt', Date.now().toString());
+          localStorage.removeItem('maintenanceEndTime');
+          
           setTimeout(() => {
             window.location.href = MAINTENANCE_SETTINGS.redirectUrl;
           }, 2000);
@@ -237,20 +259,64 @@
         const minutes = Math.floor((remaining % 3600000) / 60000);
         const seconds = Math.floor((remaining % 60000) / 1000);
         
-        document.getElementById('countdown-text').textContent = 
-          `${hours}h ${minutes}m ${seconds}s`;
+        // Format with leading zeros for better display
+        const hoursStr = String(hours).padStart(2, '0');
+        const minutesStr = String(minutes).padStart(2, '0');
+        const secondsStr = String(seconds).padStart(2, '0');
+        
+        document.getElementById('countdown-text').innerHTML = 
+          `⏱️ <strong>${hoursStr}h ${minutesStr}m ${secondsStr}s</strong>`;
+        
+        // Update page title with countdown
+        document.title = `Maintenance - ${hoursStr}:${minutesStr}:${secondsStr} remaining`;
       }
       
+      // Initial update
       updateCountdown();
-      setInterval(updateCountdown, 1000);
+      
+      // Update every second with precise timing
+      const countdownTimer = setInterval(updateCountdown, 1000);
       
       // Check for completion
       const checkInterval = setInterval(() => {
-        if (new Date() > endTime) {
+        if (Date.now() > endTime) {
           clearInterval(checkInterval);
+          clearInterval(countdownTimer);
+          
+          // Set bypass flag and clean up maintenance end time
+          localStorage.setItem('maintenanceComplete', 'true');
+          localStorage.setItem('maintenanceCompletedAt', Date.now().toString());
+          localStorage.removeItem('maintenanceEndTime');
+          
           window.location.href = MAINTENANCE_SETTINGS.redirectUrl;
         }
       }, MAINTENANCE_SETTINGS.checkInterval * 1000);
+      
+      // Auto-refresh page every 5 minutes to stay synced and get updates
+      setTimeout(() => {
+        console.log('Auto-refreshing page to sync with server...');
+        location.reload();
+      }, 5 * 60 * 1000); // 5 minutes
+      
+      // Show last refresh time
+      const lastRefresh = new Date().toLocaleTimeString();
+      const refreshInfo = document.createElement('p');
+      refreshInfo.style.cssText = 'font-size: 0.75rem; color: #999; margin-top: 1rem; text-align: center;';
+      refreshInfo.innerHTML = `Last sync: ${lastRefresh} • Auto-refresh in 5 minutes`;
+      document.querySelector('.maintenance-container').appendChild(refreshInfo);
+      
+      // Update "next refresh" countdown
+      let refreshCountdown = 5 * 60; // 5 minutes in seconds
+      setInterval(() => {
+        refreshCountdown--;
+        const mins = Math.floor(refreshCountdown / 60);
+        const secs = refreshCountdown % 60;
+        refreshInfo.innerHTML = `Last sync: ${lastRefresh} • Auto-refresh in ${mins}m ${secs}s`;
+        
+        if (refreshCountdown <= 0) {
+          refreshInfo.innerHTML = `Refreshing now...`;
+        }
+      }, 1000);
     }
     
     // If maintenance is disabled, redirect immediately

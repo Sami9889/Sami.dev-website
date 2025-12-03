@@ -1,10 +1,110 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
+  <!-- Prevent Caching -->
+  <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
+  <meta http-equiv="Pragma" content="no-cache">
+  <meta http-equiv="Expires" content="0">
+  
+  <script>
+    // MAINTENANCE MODE
+    const MAINTENANCE_MODE = false;
+    
+    // Check if maintenance has completed (bypass flag)
+    const maintenanceComplete = localStorage.getItem('maintenanceComplete');
+    const completedAt = localStorage.getItem('maintenanceCompletedAt');
+    
+    // Clear bypass flag if it's older than 1 hour (prevents permanent bypass)
+    if (completedAt && (Date.now() - parseInt(completedAt)) > 3600000) {
+      localStorage.removeItem('maintenanceComplete');
+      localStorage.removeItem('maintenanceCompletedAt');
+    }
+    
+    // Redirect to maintenance only if mode is enabled AND no valid bypass
+    if (MAINTENANCE_MODE && maintenanceComplete !== 'true') {
+      window.location.replace('/maintenance.html');
+      throw new Error('Maintenance mode active');
+    }
+  </script>
+  
   <script
   src="https://js-de.sentry-cdn.com/19f914da843ff91848281a5e4be175e8.min.js"
   crossorigin="anonymous"
   ></script>
+  
+  <script>
+    // Sentry initialization - will be called after consent
+    function initSentry() {
+      if (typeof Sentry !== 'undefined') {
+        Sentry.onLoad(function() {
+          Sentry.init({
+            // Basic error tracking only - no replay integration
+            integrations: [],
+            
+            // Filter out browser extension errors
+            ignoreErrors: [
+              // Chrome/Safari extension errors
+              'Invalid call to runtime.sendMessage()',
+              /runtime\.sendMessage/i,
+              /chrome-extension:/i,
+              /safari-extension:/i,
+              /moz-extension:/i,
+              // Common extension-related errors
+              'Extension context invalidated',
+              'Extension manifest must request permission',
+              /extensions\//i,
+              // Other common extension errors
+              'ResizeObserver loop limit exceeded',
+              'Non-Error promise rejection captured',
+            ],
+            
+            // Additional filtering via beforeSend hook
+            beforeSend(event, hint) {
+              // Filter errors from browser extensions
+              const error = hint.originalException;
+              const errorMessage = event.exception?.values?.[0]?.value || '';
+              
+              // Check if error message contains extension-related keywords
+              const extensionKeywords = [
+                'runtime.sendMessage',
+                'chrome-extension',
+                'safari-extension',
+                'moz-extension',
+                'Extension context',
+                'Tab not found'
+              ];
+              
+              for (const keyword of extensionKeywords) {
+                if (errorMessage.includes(keyword)) {
+                  return null; // Drop the event
+                }
+              }
+              
+              // Check stack trace for extension origins
+              const frames = event.exception?.values?.[0]?.stacktrace?.frames || [];
+              for (const frame of frames) {
+                const filename = frame.filename || '';
+                if (filename.includes('chrome-extension://') || 
+                    filename.includes('safari-extension://') ||
+                    filename.includes('moz-extension://') ||
+                    filename.includes('extensions/')) {
+                  return null; // Drop the event
+                }
+              }
+              
+              return event;
+            }
+          });
+        });
+      }
+    }
+    
+    // Initialize Sentry if cookies already accepted
+    if (localStorage.getItem('cookieConsent') === 'accepted') {
+      initSentry();
+    }
+  </script>
+  
   <script>
 /* index HEAD snippet — paste at top of <head> */
 (function(){
@@ -50,23 +150,44 @@
   }
 })();
 </script>
-    <script id="Cookiebot" src="https://consent.cookiebot.com/uc.js" data-cbid="19711b51-4b0b-4bf8-a4e1-c47f78f27459" data-blockingmode="auto" type="text/javascript" crossorigin="anonymous"></script>
     
-    <!-- Google tag (gtag.js) -->
-    <script async src="https://www.googletagmanager.com/gtag/js?id=G-N56LK2Y7B9" crossorigin="anonymous"></script>
+    <!-- Custom Cookie Consent (loads Analytics only after consent) -->
     <script>
-      window.dataLayer = window.dataLayer || [];
-      function gtag(){dataLayer.push(arguments);}
-      gtag('js', new Date());
-      gtag('config', 'G-N56LK2Y7B9');
+      // Check if user already gave consent
+      const cookieConsent = localStorage.getItem('cookieConsent');
+      
+      // Function to load Google Analytics & Tag Manager
+      function loadAnalytics() {
+        // Google Analytics
+        const gaScript = document.createElement('script');
+        gaScript.src = 'https://www.googletagmanager.com/gtag/js?id=G-N56LK2Y7B9';
+        gaScript.async = true;
+        gaScript.crossOrigin = 'anonymous';
+        document.head.appendChild(gaScript);
+        
+        gaScript.onload = function() {
+          window.dataLayer = window.dataLayer || [];
+          function gtag(){dataLayer.push(arguments);}
+          gtag('js', new Date());
+          gtag('config', 'G-N56LK2Y7B9', {
+            'anonymize_ip': true,
+            'cookie_flags': 'SameSite=Lax;Secure'
+          });
+        };
+        
+        // Google Tag Manager
+        (function(w,d,s,l,i){w[l]=w[l]||[];w[l].push({'gtm.start':
+        new Date().getTime(),event:'gtm.js'});var f=d.getElementsByTagName(s)[0],
+        j=d.createElement(s),dl=l!='dataLayer'?'&l='+l:'';j.async=true;j.src=
+        'https://www.googletagmanager.com/gtm.js?id='+i+dl;j.crossOrigin='anonymous';f.parentNode.insertBefore(j,f);
+        })(window,document,'script','dataLayer','GTM-W3LFMLDQ');
+      }
+      
+      // If already accepted, load immediately
+      if (cookieConsent === 'accepted') {
+        loadAnalytics();
+      }
     </script>
-    
-    <!-- Google Tag Manager -->
-    <script>(function(w,d,s,l,i){w[l]=w[l]||[];w[l].push({'gtm.start':
-    new Date().getTime(),event:'gtm.js'});var f=d.getElementsByTagName(s)[0],
-    j=d.createElement(s),dl=l!='dataLayer'?'&l='+l:'';j.async=true;j.src=
-    'https://www.googletagmanager.com/gtm.js?id='+i+dl;j.crossOrigin='anonymous';f.parentNode.insertBefore(j,f);
-    })(window,document,'script','dataLayer','GTM-W3LFMLDQ');</script>
     
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -107,20 +228,45 @@
             --danger: #dc3545;
             --shadow: 0 4px 20px rgba(0,0,0,0.1);
             --transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            --bg-gradient-1: #f8f9fa;
+            --bg-gradient-2: #e3f2fd;
+            --bg-gradient-3: #f3e5f5;
+        }
+
+        [data-theme="dark"] {
+            --black: #ffffff;
+            --white: #1a1a1a;
+            --gray-100: #2a2a2a;
+            --gray-200: #3a3a3a;
+            --gray-300: #4a4a4a;
+            --gray-400: #5a5a5a;
+            --gray-600: #b0b0b0;
+            --gray-700: #d0d0d0;
+            --gray-800: #e0e0e0;
+            --gray-900: #f0f0f0;
+            --accent: #4da3ff;
+            --success: #5fdb7f;
+            --warning: #ffd54f;
+            --danger: #ff6b6b;
+            --shadow: 0 4px 20px rgba(0,0,0,0.5);
+            --bg-gradient-1: #1a1a2e;
+            --bg-gradient-2: #16213e;
+            --bg-gradient-3: #0f3460;
         }
 
         body {
             font-family: var(--primary-font);
-            background: linear-gradient(135deg, #f8f9fa 0%, #e3f2fd 50%, #f3e5f5 100%);
+            background: linear-gradient(135deg, var(--bg-gradient-1) 0%, var(--bg-gradient-2) 50%, var(--bg-gradient-3) 100%);
             background-size: 400% 400%;
             animation: gradientShift 15s ease infinite;
             color: var(--black);
             overflow-x: hidden;
-            cursor: none;
+            cursor: auto;
             line-height: 1.6;
             font-weight: 400;
             scroll-behavior: smooth;
             position: relative;
+            transition: background 0.3s ease, color 0.3s ease;
         }
 
         @keyframes gradientShift {
@@ -205,65 +351,46 @@
             }
         }
 
+        /* Optimized Custom Cursor - Ultra Fast & Smooth */
         .cursor-dot {
-            width: 20px;
-            height: 20px;
-            background: radial-gradient(circle, #ff0080, #7928ca, #0070f3);
+            width: 10px;
+            height: 10px;
+            background: linear-gradient(135deg, #00d4ff, #0070f3);
             border-radius: 50%;
             position: fixed;
             pointer-events: none;
-            transform: translate(-50%, -50%);
-            transition: all 0.15s cubic-bezier(0.4, 0, 0.2, 1);
             z-index: 10000;
-            box-shadow: 0 0 40px rgba(255, 0, 128, 0.8), 0 0 80px rgba(0, 112, 243, 0.5);
-            animation: cursorPulse 2s ease-in-out infinite;
-        }
-
-        @keyframes cursorPulse {
-            0%, 100% {
-                box-shadow: 0 0 40px rgba(255, 0, 128, 0.8), 0 0 80px rgba(0, 112, 243, 0.5);
-            }
-            50% {
-                box-shadow: 0 0 60px rgba(255, 0, 128, 1), 0 0 100px rgba(0, 112, 243, 0.8);
-            }
+            will-change: transform;
+            transform: translate(-50%, -50%);
+            transition: width 0.15s ease, height 0.15s ease, background 0.15s ease;
+            box-shadow: 0 0 20px rgba(0, 112, 243, 0.5);
         }
 
         .cursor-outline {
-            width: 60px;
-            height: 60px;
-            border: 3px solid #ff0080;
+            width: 35px;
+            height: 35px;
+            border: 2px solid rgba(0, 212, 255, 0.4);
             border-radius: 50%;
             position: fixed;
             pointer-events: none;
-            transform: translate(-50%, -50%);
-            transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
             z-index: 9999;
-            opacity: 0.9;
-            box-shadow: 0 0 50px rgba(255, 0, 128, 0.6);
+            will-change: transform;
+            transform: translate(-50%, -50%);
+            transition: width 0.2s ease, height 0.2s ease, border-color 0.2s ease;
         }
 
         .cursor-dot.hover {
-            transform: translate(-50%, -50%) scale(3);
-            background: radial-gradient(circle, #00ff88, #00d4ff);
-            box-shadow: 0 0 60px rgba(0, 255, 136, 1), 0 0 120px rgba(0, 212, 255, 0.8);
+            width: 6px;
+            height: 6px;
+            background: linear-gradient(135deg, #00ff88, #00d4ff);
+            box-shadow: 0 0 25px rgba(0, 255, 136, 0.7);
         }
 
         .cursor-outline.hover {
-            transform: translate(-50%, -50%) scale(2);
-            opacity: 1;
-            border-color: #00ff88;
-            border-width: 4px;
-            box-shadow: 0 0 70px rgba(0, 255, 136, 0.8);
-        }
-
-        .cursor-dot.click {
-            transform: translate(-50%, -50%) scale(0.5);
-            background: radial-gradient(circle, #ffff00, #ff6600);
-        }
-
-        .cursor-outline.click {
-            transform: translate(-50%, -50%) scale(2.5);
-            border-color: #ffff00;
+            width: 45px;
+            height: 45px;
+            border-color: rgba(0, 255, 136, 0.5);
+            border-width: 2.5px;
         }
 
         .container {
@@ -371,6 +498,17 @@
                 opacity: 1;
                 transform: translateY(0);
             }
+        }
+        
+        .scroll-reveal {
+            opacity: 0;
+            transform: translateY(30px);
+            transition: opacity 0.8s ease, transform 0.8s ease;
+        }
+        
+        .scroll-reveal.revealed {
+            opacity: 1;
+            transform: translateY(0);
         }
 
         .hero {
@@ -687,6 +825,7 @@
             background: var(--gray-200);
             border-radius: 4px;
             display: inline-block;
+            margin-top: 1rem;
         }
 
         .skill-level.advanced {
@@ -697,6 +836,35 @@
         .skill-level.intermediate {
             background: var(--warning);
             color: white;
+        }
+        
+        .skill-progress {
+            margin-top: 1rem;
+        }
+        
+        .skill-progress-bar {
+            width: 100%;
+            height: 8px;
+            background: var(--gray-200);
+            border-radius: 10px;
+            overflow: hidden;
+            margin-bottom: 0.5rem;
+        }
+        
+        .skill-progress-fill {
+            height: 100%;
+            background: linear-gradient(90deg, var(--accent), var(--success));
+            border-radius: 10px;
+            transition: width 1s ease;
+            width: 0%;
+        }
+        
+        .skill-progress-fill.advanced {
+            background: linear-gradient(90deg, var(--success), #5fdb7f);
+        }
+        
+        .skill-progress-fill.intermediate {
+            background: linear-gradient(90deg, var(--warning), #ffd54f);
         }
 
         .skill-level.learning {
@@ -985,15 +1153,20 @@
 
         .footer {
             margin-top: 8rem;
-            padding: 4rem 0 2rem 0;
+            padding: 4rem 0 0 0;
             border-top: 1px solid var(--gray-200);
-            text-align: center;
             background: var(--gray-100);
         }
 
         .footer p {
             color: var(--gray-600);
             font-size: 0.9rem;
+        }
+        
+        @media (max-width: 768px) {
+            .footer {
+                padding: 3rem 0 0 0;
+            }
         }
 
         .mobile-menu-toggle {
@@ -1009,29 +1182,131 @@
             position: fixed;
             bottom: 2rem;
             right: 2rem;
-            width: 50px;
-            height: 50px;
+            width: 60px;
+            height: 60px;
             background: var(--accent);
             color: white;
             border: none;
             border-radius: 50%;
-            font-size: 1.2rem;
+            font-size: 1.5rem;
             cursor: pointer;
             opacity: 0;
             visibility: hidden;
             transition: var(--transition);
             z-index: 1000;
+            box-shadow: 0 4px 15px rgba(0, 123, 255, 0.3);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        
+        .scroll-to-top::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            border-radius: 50%;
+            border: 3px solid var(--accent);
+            transform: scale(1);
+            opacity: 0;
         }
 
         .scroll-to-top.visible {
             opacity: 1;
             visibility: visible;
         }
+        
+        .scroll-to-top.visible::before {
+            animation: progressRing 2s linear infinite;
+        }
+        
+        @keyframes progressRing {
+            0% {
+                transform: scale(1);
+                opacity: 1;
+            }
+            100% {
+                transform: scale(1.3);
+                opacity: 0;
+            }
+        }
 
         .scroll-to-top:hover {
             background: linear-gradient(135deg, #ff0080, #7928ca);
-            transform: translateY(-2px) scale(1.1);
-            box-shadow: 0 0 30px rgba(255, 0, 128, 0.6);
+            transform: translateY(-5px) scale(1.1);
+        }
+        
+        .quick-contact-btn {
+            position: fixed;
+            bottom: 2rem;
+            left: 2rem;
+            width: 60px;
+            height: 60px;
+            background: linear-gradient(135deg, #28a745, #20c997);
+            color: white;
+            border: none;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            text-decoration: none;
+            cursor: pointer;
+            transition: var(--transition);
+            z-index: 1000;
+            box-shadow: 0 4px 15px rgba(40, 167, 69, 0.3);
+        }
+        
+        .quick-contact-btn:hover {
+            background: linear-gradient(135deg, #20c997, #17a2b8);
+            transform: translateY(-5px) scale(1.1);
+            box-shadow: 0 6px 20px rgba(40, 167, 69, 0.5);
+        }
+        
+        .quick-contact-btn svg {
+            width: 28px;
+            height: 28px;
+        }
+        
+        /* Loading Skeleton Styles */
+        .skeleton-card {
+            background: var(--white);
+            border: 1px solid var(--gray-200);
+            padding: 2rem;
+            border-radius: 8px;
+        }
+        
+        .skeleton {
+            background: linear-gradient(90deg, var(--gray-200) 25%, var(--gray-100) 50%, var(--gray-200) 75%);
+            background-size: 200% 100%;
+            animation: loading 1.5s ease-in-out infinite;
+            border-radius: 4px;
+            margin-bottom: 1rem;
+        }
+        
+        .skeleton-title {
+            height: 28px;
+            width: 70%;
+        }
+        
+        .skeleton-text {
+            height: 16px;
+            width: 100%;
+        }
+        
+        .skeleton-tags {
+            height: 24px;
+            width: 50%;
+        }
+        
+        @keyframes loading {
+            0% {
+                background-position: 200% 0;
+            }
+            100% {
+                background-position: -200% 0;
+            }
         }
 
         .particles {
@@ -1152,12 +1427,8 @@
         }
 
         @media print {
-            .cursor-dot, .cursor-outline, .scroll-to-top {
+            .scroll-to-top {
                 display: none !important;
-            }
-            
-            body {
-                cursor: auto !important;
             }
             
             .page {
@@ -1185,12 +1456,218 @@
                 --gray-700: #3a3a3a;
             }
         }
+        
+        /* Timeline Styles */
+        .timeline {
+            position: relative;
+            padding: 2rem 0;
+        }
+        
+        .timeline::before {
+            content: '';
+            position: absolute;
+            left: 20px;
+            top: 0;
+            bottom: 0;
+            width: 3px;
+            background: linear-gradient(180deg, var(--accent), var(--success));
+        }
+        
+        .timeline-item {
+            position: relative;
+            padding-left: 60px;
+            margin-bottom: 3rem;
+        }
+        
+        .timeline-dot {
+            position: absolute;
+            left: 9px;
+            top: 0;
+            width: 25px;
+            height: 25px;
+            background: white;
+            border: 4px solid var(--accent);
+            border-radius: 50%;
+            z-index: 1;
+        }
+        
+        .timeline-dot.active {
+            background: var(--accent);
+            box-shadow: 0 0 0 4px rgba(0, 123, 255, 0.2);
+            animation: pulse 2s infinite;
+        }
+        
+        @keyframes pulse {
+            0%, 100% { box-shadow: 0 0 0 4px rgba(0, 123, 255, 0.2); }
+            50% { box-shadow: 0 0 0 8px rgba(0, 123, 255, 0.4); }
+        }
+        
+        .timeline-content {
+            background: var(--white);
+            border: 1px solid var(--gray-200);
+            border-radius: 8px;
+            padding: 2rem;
+            transition: var(--transition);
+        }
+        
+        .timeline-content:hover {
+            transform: translateX(10px);
+            box-shadow: var(--shadow);
+            border-color: var(--accent);
+        }
+        
+        .timeline-date {
+            font-size: 0.85rem;
+            color: var(--accent);
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            margin-bottom: 0.5rem;
+        }
+        
+        .timeline-content h3 {
+            font-size: 1.5rem;
+            color: var(--black);
+            margin-bottom: 1rem;
+        }
+        
+        .timeline-content p {
+            color: var(--gray-700);
+            line-height: 1.6;
+            margin-bottom: 1rem;
+        }
+        
+        .timeline-tags {
+            display: flex;
+            gap: 0.5rem;
+            flex-wrap: wrap;
+        }
+        
+        /* Cookie Consent Banner */
+        .cookie-banner {
+            position: fixed;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            background: rgba(0, 0, 0, 0.95);
+            backdrop-filter: blur(10px);
+            color: white;
+            padding: 20px;
+            z-index: 10001;
+            opacity: 0;
+            visibility: hidden;
+            transform: translateY(100%);
+            transition: all 0.4s ease;
+        }
+        
+        .cookie-banner.show {
+            opacity: 1;
+            visibility: visible;
+            transform: translateY(0);
+        }
+        
+        .cookie-content {
+            max-width: 1200px;
+            margin: 0 auto;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 20px;
+            flex-wrap: wrap;
+        }
+        
+        .cookie-text {
+            flex: 1;
+            min-width: 300px;
+        }
+        
+        .cookie-text h3 {
+            margin: 0 0 8px 0;
+            font-size: 1.1rem;
+            font-weight: 600;
+        }
+        
+        .cookie-text p {
+            margin: 0;
+            font-size: 0.9rem;
+            opacity: 0.9;
+            line-height: 1.5;
+        }
+        
+        .cookie-buttons {
+            display: flex;
+            gap: 12px;
+            flex-wrap: wrap;
+        }
+        
+        .cookie-btn {
+            padding: 12px 24px;
+            border: none;
+            border-radius: 6px;
+            font-weight: 600;
+            font-size: 0.95rem;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            font-family: var(--primary-font);
+        }
+        
+        .cookie-btn.accept {
+            background: linear-gradient(135deg, #667eea, #764ba2);
+            color: white;
+        }
+        
+        .cookie-btn.accept:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(102, 126, 234, 0.4);
+        }
+        
+        .cookie-btn.decline {
+            background: transparent;
+            color: white;
+            border: 2px solid rgba(255, 255, 255, 0.3);
+        }
+        
+        .cookie-btn.decline:hover {
+            background: rgba(255, 255, 255, 0.1);
+            border-color: white;
+        }
+        
+        @media (max-width: 768px) {
+            .cookie-content {
+                flex-direction: column;
+                align-items: flex-start;
+            }
+            
+            .cookie-buttons {
+                width: 100%;
+            }
+            
+            .cookie-btn {
+                flex: 1;
+            }
+        }
     </style>
 </head>
 <body>
+    <!-- Cookie Consent Banner -->
+    <div class="cookie-banner" id="cookieBanner">
+        <div class="cookie-content">
+            <div class="cookie-text">
+                <h3>🍪 We value your privacy</h3>
+                <p>We use cookies and analytics to improve your experience. By clicking "Accept", you consent to our use of cookies and Google Analytics.</p>
+            </div>
+            <div class="cookie-buttons">
+                <button class="cookie-btn decline" onclick="declineCookies()">Decline</button>
+                <button class="cookie-btn accept" onclick="acceptCookies()">Accept All</button>
+            </div>
+        </div>
+    </div>
     <!-- Google Tag Manager (noscript) -->
     <noscript><iframe src="https://www.googletagmanager.com/ns.html?id=GTM-W3LFMLDQ"
     height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
+    
+    <!-- Scroll Progress Bar -->
+    <div id="scroll-progress" style="position: fixed; top: 0; left: 0; width: 0%; height: 4px; background: linear-gradient(90deg, var(--accent), var(--success)); z-index: 9999; transition: width 0.1s ease;"></div>
     
     <div class="floating-shapes">
         <div class="shape"></div>
@@ -1205,14 +1682,22 @@
         <div class="container">
             <div class="nav-container">
                 <div class="logo" onclick="showPage('home')">sami.dev</div>
-                <button class="mobile-menu-toggle" onclick="toggleMobileMenu()" aria-label="Toggle navigation menu">☰</button>
-                <ul class="nav-links" id="nav-links">
-                    <li><a href="#" onclick="showPage('home'); return false;" class="active" aria-label="Go to home page">Home</a></li>
-                    <li><a href="#" onclick="showPage('about'); return false;" aria-label="Go to about page">About</a></li>
-                    <li><a href="#" onclick="showPage('skills'); return false;" aria-label="Go to skills page">Skills</a></li>
-                    <li><a href="#" onclick="showPage('projects'); return false;" aria-label="Go to projects page">Projects</a></li>
-                    <li><a href="#" onclick="showPage('contact'); return false;" aria-label="Go to contact page">Contact</a></li>
-                </ul>
+                <div style="display: flex; align-items: center; gap: 1rem;">
+                    <button id="theme-toggle" onclick="toggleTheme()" aria-label="Toggle dark mode" style="background: none; border: none; font-size: 1.5rem; cursor: pointer; padding: 0.5rem; transition: transform 0.3s;">
+                        <span id="theme-icon">🌙</span>
+                    </button>
+                    <button class="mobile-menu-toggle" onclick="toggleMobileMenu()" aria-label="Toggle navigation menu">☰</button>
+                    <ul class="nav-links" id="nav-links">
+                        <li><a href="#" onclick="showPage('home'); return false;" class="active" aria-label="Go to home page">Home</a></li>
+                        <li><a href="#" onclick="showPage('about'); return false;" aria-label="Go to about page">About</a></li>
+                        <li><a href="#" onclick="showPage('services'); return false;" aria-label="Go to services page">Services</a></li>
+                        <li><a href="#" onclick="showPage('skills'); return false;" aria-label="Go to skills page">Skills</a></li>
+                        <li><a href="#" onclick="showPage('experience'); return false;" aria-label="Go to experience page">Experience</a></li>
+                        <li><a href="#" onclick="showPage('projects'); return false;" aria-label="Go to projects page">Projects</a></li>
+                        <li><a href="#" onclick="showPage('faq'); return false;" aria-label="Go to FAQ page">FAQ</a></li>
+                        <li><a href="#" onclick="showPage('contact'); return false;" aria-label="Go to contact page">Contact</a></li>
+                    </ul>
+                </div>
             </div>
         </div>
     </nav>
@@ -1223,31 +1708,47 @@
                 <div class="hero-content">
                     <h1>Samrath "Sami" Singh</h1>
                     <p class="tagline">Full-Stack Developer & Software Engineer</p>
-                    <em>// Building the web, one line of code at a time</em>
+                    <em id="typing-text">// Building the web, one line of code at a time</em>
+                    
                     <div class="social-links">
                         <a href="mailto:samisingh988@gmail.com" aria-label="Send email">Email</a>
                         <a href="https://github.com/Sami9889" target="_blank" rel="noopener noreferrer" aria-label="Visit GitHub profile">GitHub</a>
                         <a href="https://www.linkedin.com/in/samrath-singh-400705297" target="_blank" rel="noopener noreferrer" aria-label="Visit LinkedIn profile">LinkedIn</a>
                         <a href="https://discord.gg/fhvGABfw" target="_blank" rel="noopener noreferrer" aria-label="Join Discord server">Discord</a>
                     </div>
+                    
+                    <div style="margin-top: 2rem; padding: 1.5rem; background: rgba(0, 0, 0, 0.03); border-radius: 8px; display: inline-block;">
+                        <p style="margin: 0; font-size: 0.9rem; color: var(--gray-700);">
+                            <strong>Based in:</strong> Point Cook, VIC, Australia<br>
+                            <strong>ABN:</strong> 72 925 087 373<br>
+                            <strong>Education:</strong> Point Cook College
+                        </p>
+                    </div>
                 </div>
                 <aside class="hero-stats">
                     <h3>Quick Stats</h3>
                     <div class="stat-item">
-                        <span class="stat-number">2+</span>
+                        <span class="stat-number" data-count="2">0</span><span>+</span>
                         <span class="stat-label">Years Coding</span>
                     </div>
                     <div class="stat-item">
-                        <span class="stat-number">15+</span>
+                        <span class="stat-number" data-count="15">0</span><span>+</span>
                         <span class="stat-label">Projects Built</span>
                     </div>
                     <div class="stat-item">
-                        <span class="stat-number">8+</span>
+                        <span class="stat-number" data-count="10">0</span><span>+</span>
                         <span class="stat-label">Technologies</span>
                     </div>
                     <div class="stat-item">
-                        <span class="stat-number">24/7</span>
-                        <span class="stat-label">Problem Solving</span>
+                        <span class="stat-number" data-count="100">0</span><span>%</span>
+                        <span class="stat-label">Dedication</span>
+                    </div>
+                    <div style="margin-top: 2rem; padding-top: 1.5rem; border-top: 2px solid var(--gray-200);">
+                        <p style="font-size: 0.85rem; color: var(--gray-600); margin: 0 0 0.5rem 0;">Status</p>
+                        <p style="font-size: 0.95rem; color: var(--success); font-weight: 600; margin: 0;">
+                            <span style="display: inline-block; width: 8px; height: 8px; background: var(--success); border-radius: 50%; margin-right: 6px;"></span>
+                            Available for Work
+                        </p>
                     </div>
                 </aside>
             </div>
@@ -1261,36 +1762,54 @@
             
             <div class="about-content">
                 <div class="about-text">
-                    <p>I'm Sami, a full-stack developer passionate about creating powerful, modern, and elegant web solutions that merge performance with style. My journey in software development started with curiosity and has evolved into a deep commitment to building exceptional digital experiences.</p>
+                    <p>I'm Samrath "Sami" Singh, a motivated junior developer from Point Cook, VIC with hands-on experience in coding, system design, and client support. My journey started at age 14 when I registered my own ABN and launched my first business, and I've been building ICT solutions ever since.</p>
                     
-                    <p>I specialize in creating robust web applications using modern technologies and best practices. Whether it's crafting responsive user interfaces or building scalable backend systems, I approach every project with attention to detail and a focus on clean, maintainable code.</p>
+                    <p>I specialize in creating user-focused web applications and digital solutions. From designing 3D models for 3DPrintzAU to building custom Minecraft plugins and web apps through Procoders Coding Service, I approach every project with attention to detail and a commitment to quality.</p>
                     
-                    <p>My development philosophy centers around user-first design, performance optimization, and writing code that's not just functional but also elegant and maintainable. I believe in the power of technology to solve real-world problems and create meaningful connections.</p>
+                    <p>My development philosophy centers around gathering requirements, thorough testing, and clear documentation. I believe in building systems that are not just functional, but secure, well-documented, and truly solve problems for users.</p>
                     
-                    <p>When I'm not coding, you'll find me exploring new technologies, contributing to open-source projects, or sharing knowledge with the developer community. I believe in continuous learning and staying at the forefront of web development trends.</p>
+                    <p>Currently studying at Point Cook College, I balance education with running multiple businesses and freelance development work. I'm passionate about continuous learning and contributing to impactful projects.</p>
+                    
+                    <div style="margin-top: 2rem; padding: 1.5rem; background: var(--gray-100); border-radius: 8px;">
+                        <h3 style="margin-bottom: 1rem;">What I Bring to Projects</h3>
+                        <ul style="list-style: none; padding: 0;">
+                            <li style="padding: 0.5rem 0; border-bottom: 1px solid var(--gray-300);">
+                                <strong>Requirements Analysis:</strong> Gather and understand client needs through clear communication
+                            </li>
+                            <li style="padding: 0.5rem 0; border-bottom: 1px solid var(--gray-300);">
+                                <strong>System Testing:</strong> Thorough functional and integration testing for reliability
+                            </li>
+                            <li style="padding: 0.5rem 0; border-bottom: 1px solid var(--gray-300);">
+                                <strong>Documentation:</strong> Clear technical specs, user guides, and support materials
+                            </li>
+                            <li style="padding: 0.5rem 0;">
+                                <strong>Client Support:</strong> Ongoing technical assistance and troubleshooting
+                            </li>
+                        </ul>
+                    </div>
                 </div>
                 
                 <aside class="about-info">
                     <h3>Personal Info</h3>
                     <div class="info-item">
                         <span class="info-label">Location</span>
-                        <span class="info-value">Remote</span>
+                        <span class="info-value">Point Cook, VIC</span>
                     </div>
                     <div class="info-item">
                         <span class="info-label">Experience</span>
                         <span class="info-value">2+ Years</span>
                     </div>
                     <div class="info-item">
-                        <span class="info-label">Focus</span>
-                        <span class="info-value">Full-Stack</span>
+                        <span class="info-label">Education</span>
+                        <span class="info-value">Point Cook College</span>
+                    </div>
+                    <div class="info-item">
+                        <span class="info-label">ABN</span>
+                        <span class="info-value">72 925 087 373</span>
                     </div>
                     <div class="info-item">
                         <span class="info-label">Availability</span>
                         <span class="info-value">Open to Work</span>
-                    </div>
-                    <div class="info-item">
-                        <span class="info-label">Languages</span>
-                        <span class="info-value">English, Hindi</span>
                     </div>
                 </aside>
             </div>
@@ -1304,82 +1823,274 @@
             
             <div class="skills-grid">
                 <article class="skill-category">
-                    <h3>Frontend Development</h3>
+                    <h3>💻 Programming Languages</h3>
                     <ul class="skill-list">
-                        <li>HTML5 & CSS3</li>
-                        <li>JavaScript (ES6+)</li>
-                        <li>React.js & Redux</li>
-                        <li>Responsive Design</li>
-                        <li>CSS Frameworks (Bootstrap, Tailwind)</li>
-                        <li>Modern Build Tools</li>
+                        <li>🌐 HTML & CSS</li>
+                        <li>⚡ JavaScript</li>
+                        <li>🐍 Python</li>
+                        <li>🐘 PHP</li>
+                        <li>📋 JSON & YAML</li>
                     </ul>
-                    <div class="skill-level advanced">Advanced</div>
+                    <div class="skill-progress">
+                        <div class="skill-progress-bar">
+                            <div class="skill-progress-fill advanced" data-progress="90"></div>
+                        </div>
+                        <div class="skill-level advanced">Proficient - 90%</div>
+                    </div>
                 </article>
                 
                 <article class="skill-category">
-                    <h3>Backend Development</h3>
+                    <h3>🌐 Web & APIs</h3>
                     <ul class="skill-list">
-                        <li>Python & Django</li>
-                        <li>Node.js & Express</li>
-                        <li>RESTful APIs</li>
-                        <li>Database Design</li>
-                        <li>Server Management</li>
-                        <li>Authentication & Security</li>
+                        <li>🔌 REST APIs</li>
+                        <li>📡 WebSockets</li>
+                        <li>🔐 HTTP/HTTPS Protocols</li>
+                        <li>🎨 Bootstrap Framework</li>
+                        <li>☁️ Cloudflare Workers</li>
+                        <li>⚙️ NGINX</li>
                     </ul>
-                    <div class="skill-level intermediate">Intermediate</div>
+                    <div class="skill-progress">
+                        <div class="skill-progress-bar">
+                            <div class="skill-progress-fill advanced" data-progress="85"></div>
+                        </div>
+                        <div class="skill-level advanced">Proficient - 85%</div>
+                    </div>
                 </article>
                 
                 <article class="skill-category">
-                    <h3>Database & Storage</h3>
+                    <h3>🛠️ Development Tools</h3>
                     <ul class="skill-list">
-                        <li>PostgreSQL & MySQL</li>
-                        <li>MongoDB</li>
-                        <li>Redis Caching</li>
-                        <li>Database Optimization</li>
-                        <li>Data Modeling</li>
-                        <li>Cloud Storage</li>
+                        <li>📝 Visual Studio Code</li>
+                        <li>🔗 GitHub & Git</li>
+                        <li>📮 Postman (API Testing)</li>
+                        <li>💡 Replit Online IDE</li>
+                        <li>📁 FTP & cPanel</li>
+                        <li>📄 Markdown</li>
                     </ul>
-                    <div class="skill-level intermediate">Intermediate</div>
+                    <div class="skill-progress">
+                        <div class="skill-progress-bar">
+                            <div class="skill-progress-fill intermediate" data-progress="80"></div>
+                        </div>
+                        <div class="skill-level">Experienced - 80%</div>
+                    </div>
                 </article>
                 
                 <article class="skill-category">
-                    <h3>Tools & Technologies</h3>
+                    <h3>🔒 Infrastructure & Security</h3>
                     <ul class="skill-list">
-                        <li>Git & GitHub</li>
-                        <li>VS Code & JetBrains</li>
-                        <li>Linux/Unix Systems</li>
-                        <li>Package Managers</li>
-                        <li>Development Workflows</li>
-                        <li>API Testing Tools</li>
+                        <li>☁️ Cloudflare DNS & SSL</li>
+                        <li>🛡️ Data Privacy Principles</li>
+                        <li>🔑 Access Controls</li>
+                        <li>🔐 Cybersecurity Basics</li>
+                        <li>💻 Windows, macOS, iOS, Linux</li>
                     </ul>
-                    <div class="skill-level">Proficient</div>
+                    <div class="skill-progress">
+                        <div class="skill-progress-bar">
+                            <div class="skill-progress-fill" data-progress="70"></div>
+                        </div>
+                        <div class="skill-level">Competent - 70%</div>
+                    </div>
                 </article>
                 
                 <article class="skill-category">
-                    <h3>DevOps & Deployment</h3>
+                    <h3>💾 Data & Databases</h3>
                     <ul class="skill-list">
-                        <li>Docker Containers</li>
-                        <li>Shell Scripting</li>
-                        <li>CI/CD Pipelines</li>
-                        <li>Cloud Services (AWS, Vercel)</li>
-                        <li>Monitoring & Logging</li>
-                        <li>Performance Optimization</li>
+                        <li>📊 SQL Queries</li>
+                        <li>📋 JSON & YAML Data</li>
+                        <li>📈 CSV Handling</li>
+                        <li>📉 Data Analysis</li>
+                        <li>⚡ Performance Metrics</li>
                     </ul>
-                    <div class="skill-level learning">Learning</div>
+                    <div class="skill-progress">
+                        <div class="skill-progress-bar">
+                            <div class="skill-progress-fill" data-progress="75"></div>
+                        </div>
+                        <div class="skill-level">Competent - 75%</div>
+                    </div>
                 </article>
                 
                 <article class="skill-category">
-                    <h3>Design & UX</h3>
+                    <h3>🎯 Professional Skills</h3>
                     <ul class="skill-list">
-                        <li>UI/UX Principles</li>
-                        <li>Figma & Design Tools</li>
-                        <li>User Research</li>
-                        <li>Accessibility (WCAG)</li>
-                        <li>Design Systems</li>
-                        <li>Prototyping</li>
+                        <li>📝 Requirements Gathering</li>
+                        <li>🧪 System Testing</li>
+                        <li>📚 Technical Documentation</li>
+                        <li>💬 Client Support</li>
+                        <li>🔄 Agile Methodologies</li>
+                        <li>🧩 Problem Solving</li>
                     </ul>
-                    <div class="skill-level learning">Learning</div>
+                    <div class="skill-progress">
+                        <div class="skill-progress-bar">
+                            <div class="skill-progress-fill intermediate" data-progress="85"></div>
+                        </div>
+                        <div class="skill-level">Experienced - 85%</div>
+                    </div>
                 </article>
+            </div>
+        </section>
+
+        <section class="page" id="services">
+            <div class="page-header">
+                <h1>Services Offered</h1>
+                <p class="page-subtitle">Professional development and technical services</p>
+            </div>
+            
+            <div class="projects-grid">
+                <article class="project-card">
+                    <div style="font-size: 3rem; margin-bottom: 1rem;">💻</div>
+                    <h3>Custom Web Development</h3>
+                    <p>Build custom websites, web applications, and landing pages using modern technologies. Responsive design, clean code, and optimized performance.</p>
+                    <div class="project-tags">
+                        <span class="tag">HTML/CSS/JS</span>
+                        <span class="tag">Responsive</span>
+                        <span class="tag">APIs</span>
+                    </div>
+                </article>
+                
+                <article class="project-card">
+                    <div style="font-size: 3rem; margin-bottom: 1rem;">🎮</div>
+                    <h3>Minecraft Plugin Development</h3>
+                    <p>Custom Minecraft plugins tailored to your server needs. From gameplay mechanics to administrative tools, delivered with full documentation.</p>
+                    <div class="project-tags">
+                        <span class="tag">Python</span>
+                        <span class="tag">Custom Features</span>
+                        <span class="tag">Testing</span>
+                    </div>
+                </article>
+                
+                <article class="project-card">
+                    <div style="font-size: 3rem; margin-bottom: 1rem;">🛒</div>
+                    <h3>eCommerce Solutions</h3>
+                    <p>Shopify store setup, customization, and optimization. Front-end modifications, API integrations, and performance improvements.</p>
+                    <div class="project-tags">
+                        <span class="tag">Shopify</span>
+                        <span class="tag">UI/UX</span>
+                        <span class="tag">Analytics</span>
+                    </div>
+                </article>
+                
+                <article class="project-card">
+                    <div style="font-size: 3rem; margin-bottom: 1rem;">🔧</div>
+                    <h3>Technical Support & Troubleshooting</h3>
+                    <p>System debugging, issue resolution, and technical documentation. Help with web hosting, DNS, SSL, and deployment issues.</p>
+                    <div class="project-tags">
+                        <span class="tag">Debugging</span>
+                        <span class="tag">DNS/SSL</span>
+                        <span class="tag">Support</span>
+                    </div>
+                </article>
+                
+                <article class="project-card">
+                    <div style="font-size: 3rem; margin-bottom: 1rem;">🖨️</div>
+                    <h3>3D Design & Printing</h3>
+                    <p>Custom 3D model design and printing services. From concept to delivery, with technical consultation and prototyping support.</p>
+                    <div class="project-tags">
+                        <span class="tag">3D Modeling</span>
+                        <span class="tag">Prototyping</span>
+                        <span class="tag">Manufacturing</span>
+                    </div>
+                </article>
+                
+                <article class="project-card">
+                    <div style="font-size: 3rem; margin-bottom: 1rem;">📱</div>
+                    <h3>API Integration & Automation</h3>
+                    <p>Connect systems together with REST APIs, webhooks, and automation. Data synchronization, workflow automation, and custom integrations.</p>
+                    <div class="project-tags">
+                        <span class="tag">REST APIs</span>
+                        <span class="tag">Webhooks</span>
+                        <span class="tag">Automation</span>
+                    </div>
+                </article>
+            </div>
+            
+            <div style="text-align: center; margin-top: 4rem; padding: 3rem; background: var(--gray-100); border-radius: 12px;">
+                <h2 style="margin-bottom: 1rem;">Ready to work together?</h2>
+                <p style="color: var(--gray-600); margin-bottom: 2rem; max-width: 600px; margin-left: auto; margin-right: auto;">
+                    Whether you need a custom solution, technical support, or want to discuss a project idea, I'm here to help.
+                </p>
+                <div style="display: flex; gap: 1rem; justify-content: center; flex-wrap: wrap;">
+                    <a href="mailto:samisingh988@gmail.com" style="background: var(--accent); color: white; padding: 1rem 2rem; border-radius: 6px; text-decoration: none; font-weight: 600; transition: var(--transition);">Get in Touch</a>
+                    <a href="https://github.com/Sami9889" target="_blank" style="background: var(--black); color: white; padding: 1rem 2rem; border-radius: 6px; text-decoration: none; font-weight: 600; transition: var(--transition);">View GitHub</a>
+                </div>
+            </div>
+        </section>
+
+        <section class="page" id="experience">
+            <div class="page-header">
+                <h1>Experience & Journey</h1>
+                <p class="page-subtitle">My path in software development and key milestones</p>
+            </div>
+            
+            <div style="max-width: 900px; margin: 0 auto;">
+                <div class="timeline">
+                    <div class="timeline-item">
+                        <div class="timeline-dot"></div>
+                        <div class="timeline-content">
+                            <div class="timeline-date">2022 - Present</div>
+                            <h3>Founder – 3DPrintzAU</h3>
+                            <p>Designed 3D models and managed digital manufacturing from concept to delivery. Maintained and troubleshot 3D printer systems (hardware/software), documented client requirements, and delivered tailored solutions with technical support.</p>
+                            <div class="timeline-tags">
+                                <span class="tag">3D Design</span>
+                                <span class="tag">Manufacturing</span>
+                                <span class="tag">Client Support</span>
+                                <span class="tag">Documentation</span>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="timeline-item">
+                        <div class="timeline-dot"></div>
+                        <div class="timeline-content">
+                            <div class="timeline-date">2023 - Present</div>
+                            <h3>Freelance Developer – Procoders Coding Service</h3>
+                            <p>Delivered client-specific Minecraft plugins, live camera/web apps, and backend services. Conducted requirements analysis, testing, debugging, and support. Implemented secure data handling and responsive interfaces.</p>
+                            <div class="timeline-tags">
+                                <span class="tag">Python</span>
+                                <span class="tag">JavaScript</span>
+                                <span class="tag">APIs</span>
+                                <span class="tag">Testing</span>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="timeline-item">
+                        <div class="timeline-dot active"></div>
+                        <div class="timeline-content">
+                            <div class="timeline-date">2024 - Present</div>
+                            <h3>Founder – Bad to the Bone (Shopify)</h3>
+                            <p>Created and managed an eCommerce store with custom UI modifications. Handled product fulfilment, digital operations, and analytics. Coded front-end adjustments and integrated API-based tools focused on system usability and performance.</p>
+                            <div class="timeline-tags">
+                                <span class="tag">Shopify</span>
+                                <span class="tag">eCommerce</span>
+                                <span class="tag">Front-End</span>
+                                <span class="tag">Analytics</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="certifications-section" style="margin-top: 4rem;">
+                    <h2 style="text-align: center; margin-bottom: 2rem; font-size: 2rem;">Key Achievements</h2>
+                    <div class="projects-grid">
+                        <div class="project-card">
+                            <div style="font-size: 3rem; margin-bottom: 1rem;">🏆</div>
+                            <h3 style="font-size: 1.2rem;">Age 14 Entrepreneur</h3>
+                            <p>Registered ABN and paid ASIC fees at age 14, launching multiple successful businesses</p>
+                        </div>
+                        
+                        <div class="project-card">
+                            <div style="font-size: 3rem; margin-bottom: 1rem;">💼</div>
+                            <h3 style="font-size: 1.2rem;">Multiple Businesses</h3>
+                            <p>Created and maintained 3DPrintzAU, Bad to the Bone, and Procoders Coding Service</p>
+                        </div>
+                        
+                        <div class="project-card">
+                            <div style="font-size: 3rem; margin-bottom: 1rem;">🚀</div>
+                            <h3 style="font-size: 1.2rem;">Live Systems</h3>
+                            <p>Built and maintained live web tools, plugins, and systems with real clients</p>
+                        </div>
+                    </div>
+                </div>
             </div>
         </section>
 
@@ -1390,8 +2101,27 @@
             </div>
             
             <div id="loading" class="loading">
-                <div class="loading-spinner"></div>
-                <p>Loading projects from GitHub...</p>
+                <div class="projects-grid">
+                    <!-- Loading Skeleton -->
+                    <div class="skeleton-card">
+                        <div class="skeleton skeleton-title"></div>
+                        <div class="skeleton skeleton-text"></div>
+                        <div class="skeleton skeleton-text"></div>
+                        <div class="skeleton skeleton-tags"></div>
+                    </div>
+                    <div class="skeleton-card">
+                        <div class="skeleton skeleton-title"></div>
+                        <div class="skeleton skeleton-text"></div>
+                        <div class="skeleton skeleton-text"></div>
+                        <div class="skeleton skeleton-tags"></div>
+                    </div>
+                    <div class="skeleton-card">
+                        <div class="skeleton skeleton-title"></div>
+                        <div class="skeleton skeleton-text"></div>
+                        <div class="skeleton skeleton-text"></div>
+                        <div class="skeleton skeleton-tags"></div>
+                    </div>
+                </div>
             </div>
             
             <div id="error" class="error" style="display: none;">
@@ -1400,6 +2130,195 @@
             </div>
             
             <div class="projects-grid" id="projects-container"></div>
+            
+            <!-- GitHub Contribution Graph -->
+            <div style="margin-top: 4rem; text-align: center;">
+                <h2 style="margin-bottom: 2rem; font-size: 2rem;">GitHub Activity</h2>
+                <div style="background: var(--white); padding: 2rem; border-radius: 12px; box-shadow: var(--shadow); display: inline-block; max-width: 100%;">
+                    <img src="https://ghchart.rshah.org/007bff/Sami9889" alt="GitHub Contribution Graph" style="max-width: 100%; height: auto; border-radius: 8px;" />
+                    <p style="margin-top: 1rem; color: var(--gray-600); font-size: 0.9rem;">My GitHub contribution activity over the past year</p>
+                    <a href="https://github.com/Sami9889" target="_blank" rel="noopener noreferrer" style="display: inline-block; margin-top: 1rem; padding: 0.75rem 1.5rem; background: var(--accent); color: white; text-decoration: none; border-radius: 4px; font-weight: 600; transition: var(--transition);">
+                        View Full Profile →
+                    </a>
+                </div>
+            </div>
+        </section>
+
+        <section class="page" id="privacy">
+            <div class="page-header">
+                <h1>Privacy Policy</h1>
+                <p class="page-subtitle">How we collect, use, and protect your information</p>
+            </div>
+            
+            <div style="max-width: 800px; margin: 0 auto;">
+                <div style="background: var(--gray-100); padding: 2rem; border-radius: 8px; margin-bottom: 2rem;">
+                    <p style="color: var(--black); margin-bottom: 0.5rem;"><strong>Effective Date:</strong> December 2024</p>
+                    <p style="color: var(--black); margin-bottom: 0.5rem;"><strong>Contact:</strong> samisingh988@gmail.com</p>
+                    <p style="color: var(--black); margin-bottom: 0;"><strong>ABN:</strong> 72 925 087 373</p>
+                </div>
+                
+                <div style="background: var(--white); border: 1px solid var(--gray-200); padding: 3rem; border-radius: 8px; margin-bottom: 2rem; box-shadow: var(--shadow);">
+                    <h3 style="color: var(--black); margin-bottom: 1.5rem; font-size: 1.4rem;">📋 Information We Collect</h3>
+                    <ul style="line-height: 1.8; font-size: 1.05rem; color: var(--gray-800);">
+                        <li>Contact information when you reach out via forms or email including name, email address, and message content</li>
+                        <li>Technical information through cookies and analytics (with your consent) such as IP address, browser type, device information, and page views</li>
+                        <li>Project requirements and specifications for service delivery including scope, timeline, and technical details</li>
+                        <li>Communication records for project management and support purposes</li>
+                        <li>Payment and billing information when engaging our services</li>
+                    </ul>
+                </div>
+                
+                <div style="background: var(--white); border: 1px solid var(--gray-200); padding: 3rem; border-radius: 8px; margin-bottom: 2rem; box-shadow: var(--shadow);">
+                    <h3 style="color: var(--black); margin-bottom: 1.5rem; font-size: 1.4rem;">🎯 How We Use Your Information</h3>
+                    <ul style="line-height: 1.8; font-size: 1.05rem; color: var(--gray-800);">
+                        <li>To respond to your inquiries and provide requested services in a timely and professional manner</li>
+                        <li>To deliver custom development and technical solutions according to agreed specifications</li>
+                        <li>To improve our website and services through analytics (with consent) to enhance user experience</li>
+                        <li>To maintain security and prevent misuse of our platform and services</li>
+                        <li>To communicate project updates, delivery timelines, and technical support</li>
+                        <li>To comply with legal obligations and protect our legitimate business interests</li>
+                    </ul>
+                </div>
+                
+                <div style="background: var(--white); border: 1px solid var(--gray-200); padding: 3rem; border-radius: 8px; margin-bottom: 2rem; box-shadow: var(--shadow);">
+                    <h3 style="color: var(--black); margin-bottom: 1.5rem; font-size: 1.4rem;">🔒 Data Protection & Security</h3>
+                    <p style="line-height: 1.8; font-size: 1.05rem; margin-bottom: 1rem; color: var(--gray-800);">We implement appropriate technical and organizational security measures to protect your information against unauthorized access, alteration, disclosure, or destruction. Personal data is stored securely using industry-standard encryption and security protocols, and is only accessed by authorized personnel for legitimate business purposes.</p>
+                    <p style="line-height: 1.8; font-size: 1.05rem; margin-bottom: 1rem; color: var(--gray-800);">We regularly review our security practices and update them as necessary to maintain the highest level of protection. All data transfers are conducted over secure connections (HTTPS/TLS) and we employ best practices in data handling and storage.</p>
+                    <p style="line-height: 1.8; font-size: 1.05rem; color: var(--gray-800);">While we strive to protect your personal information, no method of transmission over the internet is 100% secure. We cannot guarantee absolute security but are committed to protecting your data to the best of our ability.</p>
+                </div>
+                
+                <div style="background: var(--white); border: 1px solid var(--gray-200); padding: 3rem; border-radius: 8px; margin-bottom: 2rem; box-shadow: var(--shadow);">
+                    <h3 style="color: var(--black); margin-bottom: 1.5rem; font-size: 1.4rem;">🍪 Cookies & Analytics</h3>
+                    <p style="line-height: 1.8; font-size: 1.05rem; margin-bottom: 1rem; color: var(--gray-800);">We use cookies and Google Analytics only with your explicit consent via our cookie banner displayed on your first visit. These tools help us understand how visitors interact with our website and enable us to improve your experience.</p>
+                    <p style="line-height: 1.8; font-size: 1.05rem; margin-bottom: 1rem; color: var(--gray-800);">Cookies we may use include essential cookies for site functionality, analytics cookies to track usage patterns, and preference cookies to remember your settings. All analytics tracking is configured to respect user privacy with IP anonymization enabled.</p>
+                    <p style="line-height: 1.8; font-size: 1.05rem; color: var(--gray-800);">You can withdraw consent at any time by clearing your browser storage or adjusting your cookie preferences. You may also use browser settings or third-party tools to block cookies, though this may affect site functionality.</p>
+                </div>
+                
+                <div style="background: var(--white); border: 1px solid var(--gray-200); padding: 3rem; border-radius: 8px; margin-bottom: 2rem; box-shadow: var(--shadow);">
+                    <h3 style="color: var(--black); margin-bottom: 1.5rem; font-size: 1.4rem;">⚖️ Your Rights</h3>
+                    <p style="line-height: 1.8; font-size: 1.05rem; margin-bottom: 1rem; color: var(--gray-800);">Under Australian Privacy Principles (APPs) and applicable privacy laws, you have the right to access, correct, or delete your personal information that we hold. You may also request a copy of your data or ask us to restrict its processing.</p>
+                    <p style="line-height: 1.8; font-size: 1.05rem; margin-bottom: 1rem; color: var(--gray-800);">To exercise any of these rights, please contact us at samisingh988@gmail.com with a clear description of your request. We will respond to your request within a reasonable timeframe and may need to verify your identity before processing certain requests.</p>
+                    <p style="line-height: 1.8; font-size: 1.05rem; margin-bottom: 1rem; color: var(--gray-800);">You also have the right to lodge a complaint with the Office of the Australian Information Commissioner (OAIC) if you believe we have not handled your personal information appropriately.</p>
+                    <p style="line-height: 1.8; font-size: 1.05rem; color: var(--gray-800);">For more information about privacy in Australia, visit: <a href="https://www.oaic.gov.au" target="_blank" style="color: var(--accent); text-decoration: underline;">www.oaic.gov.au</a></p>
+                </div>
+                
+                <div style="background: var(--gray-100); border: 1px solid var(--gray-300); padding: 2rem; border-radius: 8px; margin-top: 3rem;">
+                    <p style="color: var(--gray-700); font-size: 0.95rem; line-height: 1.7; margin: 0;"><strong>Last Updated:</strong> December 2024 • This privacy policy may be updated from time to time. We will notify users of any material changes by posting the new policy on this page.</p>
+                </div>
+            </div>
+        </section>
+
+        <section class="page" id="terms">
+            <div class="page-header">
+                <h1>Terms of Service</h1>
+                <p class="page-subtitle">Terms and conditions for our services</p>
+            </div>
+            
+            <div style="max-width: 800px; margin: 0 auto;">
+                <div style="background: var(--gray-100); padding: 2rem; border-radius: 8px; margin-bottom: 2rem;">
+                    <p style="color: var(--black); margin-bottom: 0.5rem;"><strong>Service Provider:</strong> Samrath Singh</p>
+                    <p style="color: var(--black); margin-bottom: 0.5rem;"><strong>ABN:</strong> 72 925 087 373</p>
+                    <p style="color: var(--black); margin-bottom: 0.5rem;"><strong>Location:</strong> Point Cook, VIC, Australia</p>
+                    <p style="color: var(--black); margin-bottom: 0;"><strong>Contact:</strong> samisingh988@gmail.com</p>
+                </div>
+                
+                <div style="background: var(--white); border: 1px solid var(--gray-200); padding: 2.5rem; border-radius: 8px; margin-bottom: 2rem; box-shadow: var(--shadow);">
+                    <h3 style="color: var(--black); margin-bottom: 1.5rem; font-size: 1.4rem;">📦 Services Offered</h3>
+                    <ul style="line-height: 1.8; font-size: 1.05rem; color: var(--gray-800);">
+                        <li>Custom web development and programming</li>
+                        <li>Minecraft plugin development</li>
+                        <li>eCommerce solutions and Shopify customization</li>
+                        <li>Technical support and troubleshooting</li>
+                        <li>3D design and printing services</li>
+                        <li>API integration and automation</li>
+                    </ul>
+                </div>
+                
+                <div style="background: var(--white); border: 1px solid var(--gray-200); padding: 3rem; border-radius: 8px; margin-bottom: 2rem; box-shadow: var(--shadow);">
+                    <h3 style="color: var(--black); margin-bottom: 1.5rem; font-size: 1.4rem;">📝 Service Agreement</h3>
+                    <p style="line-height: 1.8; font-size: 1.05rem; margin-bottom: 1rem; color: var(--gray-800);">Services are provided based on mutually agreed specifications and requirements documented before project commencement. Project scope, deliverables, timeline, and pricing are confirmed in writing before work begins.</p>
+                    <p style="line-height: 1.8; font-size: 1.05rem; margin-bottom: 1rem; color: var(--gray-800);">Changes to the agreed scope may affect project timeline and costs. Any scope changes will be communicated and agreed upon before implementation. We strive to deliver projects on time and within budget while maintaining high quality standards.</p>
+                    <p style="line-height: 1.8; font-size: 1.05rem; color: var(--gray-800);">All services are subject to Australian Consumer Law. We reserve the right to refuse service at our discretion and may terminate agreements with appropriate notice if circumstances require.</p>
+                </div>
+                
+                <div style="background: var(--white); border: 1px solid var(--gray-200); padding: 3rem; border-radius: 8px; margin-bottom: 2rem; box-shadow: var(--shadow);">
+                    <h3 style="color: var(--black); margin-bottom: 1.5rem; font-size: 1.4rem;">💰 Payment Terms</h3>
+                    <p style="line-height: 1.8; font-size: 1.05rem; margin-bottom: 1rem; color: var(--gray-800);">Payment terms are agreed upon per project and documented in the service agreement. We typically require a deposit before commencing work, with the remainder due upon completion or according to agreed milestones.</p>
+                    <p style="line-height: 1.8; font-size: 1.05rem; margin-bottom: 1rem; color: var(--gray-800);">Accepted payment methods will be specified in the project agreement. All prices are quoted in Australian Dollars (AUD) unless otherwise stated. Australian Consumer Law applies to all transactions and protects your rights as a consumer.</p>
+                    <p style="line-height: 1.8; font-size: 1.05rem; color: var(--gray-800);">Late payments may incur additional fees as specified in the agreement. ABN: 72 925 087 373. Tax invoices will be provided for all transactions.</p>
+                </div>
+                
+                <div style="background: var(--white); border: 1px solid var(--gray-200); padding: 3rem; border-radius: 8px; margin-bottom: 2rem; box-shadow: var(--shadow);">
+                    <h3 style="color: var(--black); margin-bottom: 1.5rem; font-size: 1.4rem;">©️ Intellectual Property & Copyright</h3>
+                    <p style="line-height: 1.8; font-size: 1.05rem; margin-bottom: 1rem; color: var(--gray-800);">Custom work created specifically for clients becomes the property of the client upon full payment, unless otherwise agreed in writing. This includes source code, designs, and deliverables created as part of the project scope.</p>
+                    <p style="line-height: 1.8; font-size: 1.05rem; margin-bottom: 1rem; color: var(--gray-800);">We retain rights to general methodologies, frameworks, tools, and non-specific technical knowledge developed or used in the course of providing services. We may showcase completed work in our portfolio unless confidentiality is specifically requested.</p>
+                    <p style="line-height: 1.8; font-size: 1.05rem; color: var(--gray-800);">Third-party components, libraries, and open-source software used in projects remain under their respective licenses. Clients are responsible for obtaining necessary licenses for any third-party software or services they request.</p>
+                    <div style="margin-top: 1.5rem; padding: 1.5rem; background: var(--gray-100); border-radius: 6px; border-left: 4px solid var(--accent);">
+                        <p style="font-size: 0.95rem; color: var(--gray-700); margin: 0;"><strong>Copyright Notice:</strong> All website content, design, code, and materials © 2024 Samrath Singh. All rights reserved. Unauthorized reproduction or distribution of copyrighted material is prohibited.</p>
+                    </div>
+                </div>
+                
+                <div style="background: var(--white); border: 1px solid var(--gray-200); padding: 3rem; border-radius: 8px; margin-bottom: 2rem; box-shadow: var(--shadow);">
+                    <h3 style="color: var(--black); margin-bottom: 1.5rem; font-size: 1.4rem;">⚠️ Limitation of Liability</h3>
+                    <p style="line-height: 1.8; font-size: 1.05rem; margin-bottom: 1rem; color: var(--gray-800);">Services are provided to the best of our ability with professional care and skill. While we strive for excellence, we cannot guarantee that services will meet all specific requirements or be error-free, uninterrupted, or completely secure.</p>
+                    <p style="line-height: 1.8; font-size: 1.05rem; margin-bottom: 1rem; color: var(--gray-800);">To the maximum extent permitted by Australian Consumer Law, we are not liable for indirect, incidental, special, or consequential damages including but not limited to loss of profits, data, or business opportunities arising from use of our services.</p>
+                    <p style="line-height: 1.8; font-size: 1.05rem; margin-bottom: 1rem; color: var(--gray-800);">Our maximum liability is limited to the total amount paid for the specific project or service giving rise to the claim. Nothing in these terms excludes or limits consumer guarantees provided under Australian Consumer Law where such exclusion or limitation would be prohibited.</p>
+                    <p style="line-height: 1.8; font-size: 1.05rem; color: var(--gray-800);">Clients are responsible for maintaining backups of their data and testing deliverables in their own environment before deployment to production systems.</p>
+                </div>
+                
+                <div style="background: var(--gray-100); border: 1px solid var(--gray-300); padding: 2rem; border-radius: 8px; margin-top: 3rem;">
+                    <p style="color: var(--gray-700); font-size: 0.95rem; line-height: 1.7; margin: 0;"><strong>Effective Date:</strong> December 2024 • <strong>Governing Law:</strong> These terms are governed by the laws of Victoria, Australia. Any disputes arising from these terms will be subject to the exclusive jurisdiction of the courts of Victoria, Australia.</p>
+                </div>
+            </div>
+        </section>
+
+        <section class="page" id="faq">
+            <div class="page-header">
+                <h1>Frequently Asked Questions</h1>
+                <p class="page-subtitle">Common questions about my services and process</p>
+            </div>
+            
+            <div style="max-width: 900px; margin: 0 auto;">
+                <div class="faq-item" style="background: var(--white); padding: 2rem; border-radius: 8px; margin-bottom: 1.5rem; border: 1px solid var(--gray-200);">
+                    <h3 style="font-size: 1.3rem; margin-bottom: 1rem; color: var(--black);">💼 What services do you offer?</h3>
+                    <p style="color: var(--gray-700); line-height: 1.8;">I specialize in custom web development, Minecraft plugin development, eCommerce solutions (especially Shopify), API integration, and automation. I also provide technical support and troubleshooting services.</p>
+                </div>
+                
+                <div class="faq-item" style="background: var(--white); padding: 2rem; border-radius: 8px; margin-bottom: 1.5rem; border: 1px solid var(--gray-200);">
+                    <h3 style="font-size: 1.3rem; margin-bottom: 1rem; color: var(--black);">⏱️ How long does a typical project take?</h3>
+                    <p style="color: var(--gray-700); line-height: 1.8;">Project timelines vary based on complexity and scope. Simple websites can take 1-2 weeks, while custom applications may take 4-8 weeks. I provide detailed timelines during the initial consultation and keep you updated throughout the project.</p>
+                </div>
+                
+                <div class="faq-item" style="background: var(--white); padding: 2rem; border-radius: 8px; margin-bottom: 1.5rem; border: 1px solid var(--gray-200);">
+                    <h3 style="font-size: 1.3rem; margin-bottom: 1rem; color: var(--black);">💰 How much do you charge?</h3>
+                    <p style="color: var(--gray-700); line-height: 1.8;">Pricing depends on project scope, complexity, and requirements. I offer both hourly rates and project-based pricing. After understanding your needs, I'll provide a detailed quote with no hidden fees. Contact me for a free consultation and estimate.</p>
+                </div>
+                
+                <div class="faq-item" style="background: var(--white); padding: 2rem; border-radius: 8px; margin-bottom: 1.5rem; border: 1px solid var(--gray-200);">
+                    <h3 style="font-size: 1.3rem; margin-bottom: 1rem; color: var(--black);">🔄 Do you provide ongoing support?</h3>
+                    <p style="color: var(--gray-700); line-height: 1.8;">Yes! I offer post-launch support and maintenance packages. This includes bug fixes, updates, and technical assistance. We can discuss ongoing support options that fit your needs and budget.</p>
+                </div>
+                
+                <div class="faq-item" style="background: var(--white); padding: 2rem; border-radius: 8px; margin-bottom: 1.5rem; border: 1px solid var(--gray-200);">
+                    <h3 style="font-size: 1.3rem; margin-bottom: 1rem; color: var(--black);">📍 Do you work with clients outside Australia?</h3>
+                    <p style="color: var(--gray-700); line-height: 1.8;">Absolutely! While I'm based in Point Cook, VIC, Australia, I work with clients globally. I'm comfortable with remote collaboration and have experience coordinating across different time zones.</p>
+                </div>
+                
+                <div class="faq-item" style="background: var(--white); padding: 2rem; border-radius: 8px; margin-bottom: 1.5rem; border: 1px solid var(--gray-200);">
+                    <h3 style="font-size: 1.3rem; margin-bottom: 1rem; color: var(--black);">🛠️ What technologies do you work with?</h3>
+                    <p style="color: var(--gray-700); line-height: 1.8;">I work with HTML, CSS, JavaScript, Python, PHP, REST APIs, Cloudflare Workers, and various frameworks. For a complete list, check out my Skills page. I'm always learning new technologies to better serve my clients.</p>
+                </div>
+                
+                <div class="faq-item" style="background: var(--white); padding: 2rem; border-radius: 8px; margin-bottom: 1.5rem; border: 1px solid var(--gray-200);">
+                    <h3 style="font-size: 1.3rem; margin-bottom: 1rem; color: var(--black);">📝 How do we get started?</h3>
+                    <p style="color: var(--gray-700); line-height: 1.8;">Simply reach out via the Contact page or email me at samisingh988@gmail.com. We'll schedule a consultation to discuss your project requirements, timeline, and budget. From there, I'll provide a detailed proposal and we can begin!</p>
+                </div>
+                
+                <div class="faq-item" style="background: var(--white); padding: 2rem; border-radius: 8px; margin-bottom: 1.5rem; border: 1px solid var(--gray-200);">
+                    <h3 style="font-size: 1.3rem; margin-bottom: 1rem; color: var(--black);">🎓 Are you still a student?</h3>
+                    <p style="color: var(--gray-700); line-height: 1.8;">Yes, I'm currently studying at Point Cook College while running multiple businesses and freelance development work. This doesn't affect my commitment to quality—I've successfully delivered numerous projects and maintain professional standards in all my work.</p>
+                </div>
+            </div>
         </section>
 
         <section class="page" id="contact">
@@ -1452,13 +2371,53 @@
         </section>
 
         <footer class="footer">
-            <p>&copy; 2024 Samrath Singh. Built with passion and precision. Made with ❤️ using pure HTML, CSS & JavaScript.</p>
+            <div style="max-width: 1200px; margin: 0 auto;">
+                <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: 3rem; margin-bottom: 3rem; text-align: left;">
+                    <div>
+                        <h3 style="margin-bottom: 1rem; font-size: 1.2rem; color: var(--black); font-weight: 600;">Samrath Singh</h3>
+                        <p style="color: var(--gray-700); margin-bottom: 0.5rem; font-size: 0.95rem;">Junior Developer</p>
+                        <p style="color: var(--gray-600); font-size: 0.9rem;">Point Cook, VIC</p>
+                        <p style="color: var(--gray-600); font-size: 0.9rem; line-height: 1.6; margin-top: 1rem;">Building user-focused web solutions with clean code and attention to detail.</p>
+                    </div>
+                    
+                    <div>
+                        <h3 style="margin-bottom: 1rem; font-size: 1.2rem; color: var(--black); font-weight: 600;">Legal</h3>
+                        <div style="display: flex; flex-direction: column; gap: 0.5rem;">
+                            <a href="#" onclick="showPage('privacy'); return false;" style="color: var(--gray-600); text-decoration: none; transition: color 0.3s; font-size: 0.9rem;">Privacy Policy</a>
+                            <a href="#" onclick="showPage('terms'); return false;" style="color: var(--gray-600); text-decoration: none; transition: color 0.3s; font-size: 0.9rem;">Terms of Service</a>
+                        </div>
+                    </div>
+                    
+                    <div>
+                        <h3 style="margin-bottom: 1rem; font-size: 1.2rem; color: var(--black); font-weight: 600;">Connect</h3>
+                        <div style="display: flex; flex-direction: column; gap: 0.5rem;">
+                            <a href="mailto:samisingh988@gmail.com" style="color: var(--gray-600); text-decoration: none; transition: color 0.3s; font-size: 0.9rem;">samisingh988@gmail.com</a>
+                            <a href="https://github.com/Sami9889" target="_blank" style="color: var(--gray-600); text-decoration: none; transition: color 0.3s; font-size: 0.9rem;">GitHub</a>
+                            <a href="https://www.linkedin.com/in/samrath-singh-400705297" target="_blank" style="color: var(--gray-600); text-decoration: none; transition: color 0.3s; font-size: 0.9rem;">LinkedIn</a>
+                            <a href="https://discord.gg/fhvGABfw" target="_blank" style="color: var(--gray-600); text-decoration: none; transition: color 0.3s; font-size: 0.9rem;">Discord</a>
+                        </div>
+                    </div>
+                </div>
+                
+                <div style="border-top: 1px solid var(--gray-300); padding-top: 2rem; margin-top: 3rem; text-align: center;">
+                    <p style="color: var(--gray-700); margin-bottom: 0.5rem; font-size: 0.95rem;">&copy; 2024 Samrath Singh. All Rights Reserved.</p>
+                    <p style="color: var(--gray-600); margin-bottom: 0.5rem; font-size: 0.9rem;">ABN: 72 925 087 373 | Point Cook, VIC, Australia</p>
+                    <p style="margin-top: 1rem; color: var(--gray-600); font-size: 0.85rem;">Built with care using pure HTML, CSS & JavaScript. No frameworks, just clean code.</p>
+                    <p style="margin-top: 0.5rem; color: var(--gray-500); font-size: 0.8rem;">This website and its contents are protected by copyright law. Unauthorized reproduction is prohibited.</p>
+                </div>
+            </div>
         </footer>
     </div>
 
-    <div class="cursor-dot" id="cursor-dot" aria-hidden="true"></div>
-    <div class="cursor-outline" id="cursor-outline" aria-hidden="true"></div>
     <button class="scroll-to-top" id="scroll-to-top" onclick="scrollToTop()" aria-label="Scroll to top">↑</button>
+    
+    <!-- Quick Contact Button -->
+    <a href="mailto:samisingh988@gmail.com" class="quick-contact-btn" aria-label="Quick contact via email" title="Email me">
+        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"></path>
+            <polyline points="22,6 12,13 2,6"></polyline>
+        </svg>
+    </a>
 
     <script>
         function showPage(pageId) {
@@ -1485,8 +2444,13 @@
                 'home': 'Samrath "Sami" Singh - Full-Stack Developer',
                 'about': 'About - Samrath Singh',
                 'skills': 'Skills - Samrath Singh',
+                'services': 'Services - Samrath Singh',
+                'experience': 'Experience - Samrath Singh',
                 'projects': 'Projects - Samrath Singh',
-                'contact': 'Contact - Samrath Singh'
+                'faq': 'FAQ - Samrath Singh',
+                'contact': 'Contact - Samrath Singh',
+                'privacy': 'Privacy Policy - Samrath Singh',
+                'terms': 'Terms of Service - Samrath Singh'
             };
             document.title = pageTitles[pageId] || 'Samrath Singh';
             
@@ -1497,65 +2461,63 @@
             document.getElementById('nav-links').classList.toggle('open');
         }
 
-        const dot = document.getElementById('cursor-dot');
-        const outline = document.getElementById('cursor-outline');
+        // Custom cursor removed for better performance
         const prefersReducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
         const isTouchDevice = 'ontouchstart' in window || navigator.maxTouchPoints > 0;
 
-        if (!isTouchDevice) {
-            document.body.style.cursor = 'none';
-            dot.style.display = 'block';
-            outline.style.display = 'block';
-            
-            let mouseX = 0, mouseY = 0, dotX = 0, dotY = 0, outlineX = 0, outlineY = 0;
+        // Declare cursor element variables in broader scope
+        let dot, outline;
 
+        // Optimized cursor with better performance
+        if (!isTouchDevice && !prefersReducedMotion) {
+            // Create cursor elements
+            dot = document.createElement('div');
+            dot.className = 'cursor-dot';
+            document.body.appendChild(dot);
+            
+            outline = document.createElement('div');
+            outline.className = 'cursor-outline';
+            document.body.appendChild(outline);
+            
+            let mouseX = 0, mouseY = 0;
+
+            // Use direct transform for instant cursor movement (no lag)
             window.addEventListener('mousemove', (e) => {
                 mouseX = e.clientX;
                 mouseY = e.clientY;
-            });
-
-            function animateCursor() {
-                const speed = prefersReducedMotion ? 1 : 0.8;
-                const outlineSpeed = prefersReducedMotion ? 1 : 0.15;
                 
-                dotX += (mouseX - dotX) * speed;
-                dotY += (mouseY - dotY) * speed;
-                outlineX += (mouseX - outlineX) * outlineSpeed;
-                outlineY += (mouseY - outlineY) * outlineSpeed;
+                // Update cursor position immediately using transform (GPU accelerated)
+                // Add null checks to prevent ReferenceError
+                if (dot && dot.style) {
+                    dot.style.transform = `translate(${mouseX}px, ${mouseY}px) translate(-50%, -50%)`;
+                }
+                if (outline && outline.style) {
+                    outline.style.transform = `translate(${mouseX}px, ${mouseY}px) translate(-50%, -50%)`;
+                }
+            }, { passive: true });
 
-                dot.style.left = `${dotX}px`;
-                dot.style.top = `${dotY}px`;
-                outline.style.left = `${outlineX}px`;
-                outline.style.top = `${outlineY}px`;
-
-                requestAnimationFrame(animateCursor);
-            }
-            animateCursor();
-
-            document.addEventListener('mousedown', () => {
-                dot.classList.add('click');
-                outline.classList.add('click');
-            });
-
-            document.addEventListener('mouseup', () => {
-                dot.classList.remove('click');
-                outline.classList.remove('click');
-            });
-
-            const hoverElements = document.querySelectorAll('a, .skill-category, .project-card, .hero-stats, .stat-item, button, .logo');
-            hoverElements.forEach(element => {
-                element.addEventListener('mouseenter', () => {
-                    dot.classList.add('hover');
-                    outline.classList.add('hover');
-                });
-                element.addEventListener('mouseleave', () => {
-                    dot.classList.remove('hover');
-                    outline.classList.remove('hover');
-                });
+            // Add hover effects
+            const interactiveElements = document.querySelectorAll('a, button, .nav-links a, .project-card, .skill-category, .logo, .hero-stats, .stat-item');
+            interactiveElements.forEach(el => {
+                el.addEventListener('mouseenter', () => {
+                    if (dot && dot.classList) {
+                        dot.classList.add('hover');
+                    }
+                    if (outline && outline.classList) {
+                        outline.classList.add('hover');
+                    }
+                }, { passive: true });
+                el.addEventListener('mouseleave', () => {
+                    if (dot && dot.classList) {
+                        dot.classList.remove('hover');
+                    }
+                    if (outline && outline.classList) {
+                        outline.classList.remove('hover');
+                    }
+                }, { passive: true });
             });
         } else {
-            dot.style.display = 'none';
-            outline.style.display = 'none';
+            // Hide cursor on touch devices or if reduced motion preferred
             document.body.style.cursor = 'auto';
         }
 
@@ -1666,7 +2628,8 @@
                 else if (err.message.includes('rate limit')) errorElement.textContent = err.message;
                 else errorElement.textContent = `Failed to load projects: ${err.message}`;
                 
-                console.error('Error loading GitHub projects:', err);
+                // Silently handle error - don't spam console
+                // console.error('Error loading GitHub projects:', err);
             }
         }
 
@@ -1715,10 +2678,24 @@
         }
 
         function attachProjectEventListeners() {
-            if (!prefersReducedMotion) {
+            if (!prefersReducedMotion && !isTouchDevice && dot && outline) {
                 document.querySelectorAll('.project-card').forEach(card => {
-                    card.addEventListener('mouseenter', () => { dot.classList.add('hover'); outline.classList.add('hover'); });
-                    card.addEventListener('mouseleave', () => { dot.classList.remove('hover'); outline.classList.remove('hover'); });
+                    card.addEventListener('mouseenter', () => { 
+                        if (dot && dot.classList) {
+                            dot.classList.add('hover');
+                        }
+                        if (outline && outline.classList) {
+                            outline.classList.add('hover');
+                        }
+                    }, { passive: true });
+                    card.addEventListener('mouseleave', () => { 
+                        if (dot && dot.classList) {
+                            dot.classList.remove('hover');
+                        }
+                        if (outline && outline.classList) {
+                            outline.classList.remove('hover');
+                        }
+                    }, { passive: true });
                 });
             }
         }
@@ -1764,6 +2741,206 @@
         });
 
         createParticles();
+        
+        // ============================================
+        // DARK MODE TOGGLE
+        // ============================================
+        function toggleTheme() {
+            const html = document.documentElement;
+            const currentTheme = html.getAttribute('data-theme');
+            const newTheme = currentTheme === 'dark' ? 'light' : 'dark';
+            
+            html.setAttribute('data-theme', newTheme);
+            localStorage.setItem('theme', newTheme);
+            
+            // Update icon
+            const icon = document.getElementById('theme-icon');
+            icon.textContent = newTheme === 'dark' ? '☀️' : '🌙';
+            
+            // Add smooth transition animation
+            document.getElementById('theme-toggle').style.transform = 'rotate(360deg)';
+            setTimeout(() => {
+                document.getElementById('theme-toggle').style.transform = 'rotate(0deg)';
+            }, 300);
+        }
+        
+        // Load saved theme on page load
+        window.addEventListener('load', function() {
+            const savedTheme = localStorage.getItem('theme') || 'light';
+            document.documentElement.setAttribute('data-theme', savedTheme);
+            const icon = document.getElementById('theme-icon');
+            if (icon) {
+                icon.textContent = savedTheme === 'dark' ? '☀️' : '🌙';
+            }
+            
+            // Animate stats on load with a small delay to ensure DOM is ready
+            setTimeout(animateStats, 100);
+        });
+        
+        // ============================================
+        // ANIMATED STATISTICS
+        // ============================================
+        function animateStats() {
+            const stats = document.querySelectorAll('.stat-number[data-count]');
+            
+            stats.forEach(stat => {
+                const target = parseInt(stat.getAttribute('data-count'));
+                const duration = 2000; // 2 seconds
+                const increment = target / (duration / 16); // 60fps
+                let current = 0;
+                
+                const timer = setInterval(() => {
+                    current += increment;
+                    if (current >= target) {
+                        stat.textContent = target;
+                        clearInterval(timer);
+                    } else {
+                        stat.textContent = Math.floor(current);
+                    }
+                }, 16);
+            });
+        }
+        
+        // ============================================
+        // ANIMATE SKILL PROGRESS BARS
+        // ============================================
+        function animateSkillBars() {
+            const progressBars = document.querySelectorAll('.skill-progress-fill');
+            
+            progressBars.forEach(bar => {
+                const targetProgress = bar.getAttribute('data-progress');
+                setTimeout(() => {
+                    bar.style.width = targetProgress + '%';
+                }, 200);
+            });
+        }
+        
+        // Trigger skill bar animation when Skills page is shown
+        const originalShowPage = showPage;
+        showPage = function(pageId) {
+            originalShowPage(pageId);
+            if (pageId === 'skills') {
+                setTimeout(animateSkillBars, 100);
+            }
+        };
+        
+        // ============================================
+        // SCROLL PROGRESS BAR
+        // ============================================
+        function updateScrollProgress() {
+            const winScroll = document.body.scrollTop || document.documentElement.scrollTop;
+            const height = document.documentElement.scrollHeight - document.documentElement.clientHeight;
+            const scrolled = (winScroll / height) * 100;
+            document.getElementById('scroll-progress').style.width = scrolled + '%';
+        }
+        
+        window.addEventListener('scroll', updateScrollProgress);
+        
+        // ============================================
+        // TYPING ANIMATION
+        // ============================================
+        function typeWriter() {
+            const text = '// Building the web, one line of code at a time';
+            const element = document.getElementById('typing-text');
+            if (!element) return;
+            
+            element.textContent = '';
+            let i = 0;
+            
+            function type() {
+                if (i < text.length) {
+                    element.textContent += text.charAt(i);
+                    i++;
+                    setTimeout(type, 50);
+                } else {
+                    // Add blinking cursor
+                    element.style.borderRight = '2px solid var(--black)';
+                    element.style.paddingRight = '5px';
+                    setInterval(() => {
+                        element.style.borderRight = element.style.borderRight === '2px solid transparent' 
+                            ? '2px solid var(--black)' 
+                            : '2px solid transparent';
+                    }, 500);
+                }
+            }
+            
+            setTimeout(type, 500);
+        }
+        
+        // Start typing animation on load
+        window.addEventListener('load', typeWriter);
+        
+        // ============================================
+        // SCROLL REVEAL ANIMATIONS
+        // ============================================
+        function revealOnScroll() {
+            const reveals = document.querySelectorAll('.scroll-reveal');
+            
+            reveals.forEach(element => {
+                const windowHeight = window.innerHeight;
+                const elementTop = element.getBoundingClientRect().top;
+                const elementVisible = 150;
+                
+                if (elementTop < windowHeight - elementVisible) {
+                    element.classList.add('revealed');
+                }
+            });
+        }
+        
+        window.addEventListener('scroll', revealOnScroll);
+        revealOnScroll(); // Initial check
+        
+        // Add scroll-reveal class to sections when pages change
+        const originalShowPageFunc = showPage;
+        showPage = function(pageId) {
+            if (typeof originalShowPageFunc === 'function') {
+                originalShowPageFunc(pageId);
+            }
+            
+            setTimeout(() => {
+                // Add scroll-reveal class to main content sections
+                const sections = document.querySelectorAll('.skill-category, .project-card, .timeline-item, .faq-item');
+                sections.forEach((section, index) => {
+                    section.classList.add('scroll-reveal');
+                    section.style.transitionDelay = `${index * 0.1}s`;
+                });
+                revealOnScroll();
+            }, 100);
+            
+            if (pageId === 'skills') {
+                setTimeout(animateSkillBars, 100);
+            }
+        };
+        
+        // ============================================
+        // COOKIE CONSENT BANNER
+        // ============================================
+        function acceptCookies() {
+            localStorage.setItem('cookieConsent', 'accepted');
+            document.getElementById('cookieBanner').classList.remove('show');
+            loadAnalytics(); // Load analytics after consent
+            
+            // Initialize Sentry Session Replay after consent
+            if (typeof initSentry === 'function') {
+                initSentry();
+            }
+        }
+        
+        function declineCookies() {
+            localStorage.setItem('cookieConsent', 'declined');
+            document.getElementById('cookieBanner').classList.remove('show');
+            // Don't load analytics or Sentry
+        }
+        
+        // Show banner if user hasn't made a choice
+        window.addEventListener('load', function() {
+            const consent = localStorage.getItem('cookieConsent');
+            if (!consent) {
+                setTimeout(() => {
+                    document.getElementById('cookieBanner').classList.add('show');
+                }, 1000); // Show after 1 second
+            }
+        });
     </script>
 </body>
 </html>

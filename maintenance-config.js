@@ -1,4 +1,12 @@
-snippet
+// ============================================================================
+// NOTE: This file is NOT CURRENTLY IN USE
+// ============================================================================
+// This configuration file is for the advanced maintenance.js system which
+// relies on the StatusPage.io widget library. The current maintenance.html
+// uses a simpler, self-contained approach that doesn't need this config.
+// This file is preserved for reference but is not loaded by any HTML page.
+// ============================================================================
+
 // MAINTENANCE CONFIGURATION
 const MAINTENANCE_CONFIG = {
   // Your StatusPage.io page ID
