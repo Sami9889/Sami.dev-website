@@ -1,4 +1,4 @@
-name: Professional Repository Protection
+name: Repository Protection
 
 on:
   workflow_dispatch:
