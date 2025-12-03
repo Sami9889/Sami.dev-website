@@ -2411,6 +2411,15 @@
         const prefersReducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
         const isTouchDevice = 'ontouchstart' in window || navigator.maxTouchPoints > 0;
 
+        // Create custom cursor elements
+        const dot = document.createElement('div');
+        dot.className = 'cursor-dot';
+        document.body.appendChild(dot);
+
+        const outline = document.createElement('div');
+        outline.className = 'cursor-outline';
+        document.body.appendChild(outline);
+
         // Optimized cursor with better performance
         if (!isTouchDevice && !prefersReducedMotion) {
             let mouseX = 0, mouseY = 0;
