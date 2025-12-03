@@ -2487,20 +2487,33 @@
                 mouseY = e.clientY;
                 
                 // Update cursor position immediately using transform (GPU accelerated)
-                dot.style.transform = `translate(${mouseX}px, ${mouseY}px) translate(-50%, -50%)`;
-                outline.style.transform = `translate(${mouseX}px, ${mouseY}px) translate(-50%, -50%)`;
+                // Add null checks to prevent ReferenceError
+                if (dot && dot.style) {
+                    dot.style.transform = `translate(${mouseX}px, ${mouseY}px) translate(-50%, -50%)`;
+                }
+                if (outline && outline.style) {
+                    outline.style.transform = `translate(${mouseX}px, ${mouseY}px) translate(-50%, -50%)`;
+                }
             }, { passive: true });
 
             // Add hover effects
             const interactiveElements = document.querySelectorAll('a, button, .nav-links a, .project-card, .skill-category, .logo, .hero-stats, .stat-item');
             interactiveElements.forEach(el => {
                 el.addEventListener('mouseenter', () => {
-                    dot.classList.add('hover');
-                    outline.classList.add('hover');
+                    if (dot && dot.classList) {
+                        dot.classList.add('hover');
+                    }
+                    if (outline && outline.classList) {
+                        outline.classList.add('hover');
+                    }
                 }, { passive: true });
                 el.addEventListener('mouseleave', () => {
-                    dot.classList.remove('hover');
-                    outline.classList.remove('hover');
+                    if (dot && dot.classList) {
+                        dot.classList.remove('hover');
+                    }
+                    if (outline && outline.classList) {
+                        outline.classList.remove('hover');
+                    }
                 }, { passive: true });
             });
         } else {
@@ -2668,12 +2681,20 @@
             if (!prefersReducedMotion && !isTouchDevice && dot && outline) {
                 document.querySelectorAll('.project-card').forEach(card => {
                     card.addEventListener('mouseenter', () => { 
-                        dot.classList.add('hover'); 
-                        outline.classList.add('hover'); 
+                        if (dot && dot.classList) {
+                            dot.classList.add('hover');
+                        }
+                        if (outline && outline.classList) {
+                            outline.classList.add('hover');
+                        }
                     }, { passive: true });
                     card.addEventListener('mouseleave', () => { 
-                        dot.classList.remove('hover'); 
-                        outline.classList.remove('hover'); 
+                        if (dot && dot.classList) {
+                            dot.classList.remove('hover');
+                        }
+                        if (outline && outline.classList) {
+                            outline.classList.remove('hover');
+                        }
                     }, { passive: true });
                 });
             }
