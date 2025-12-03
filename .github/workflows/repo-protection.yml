@@ -1,4 +1,4 @@
-name: Repository Protection
+name: Professional Repository Protection
 
 on:
   workflow_dispatch:
@@ -60,7 +60,7 @@ permissions:
 
 env:
   MAX_BRANCH_AGE_DAYS: 30
-  SPECIAL_ADMINS: 'kinsta,getsentry,thnxdev,vercel,wasmer,coderabbit-ai'
+  SPECIAL_ADMINS: 'kinsta,getsentry,thnxdev,vercel,wasmer,coderabbit-ai,coderabbitai[bot]'
 
 jobs:
   validate-admin:
@@ -89,12 +89,23 @@ jobs:
               return;
             }
             
-            // Check if user is in special admins list
+            // Check if user is in special admins list (including bots)
             if (specialAdmins.includes(actor)) {
               console.log('User is special admin - AUTHORIZED');
               core.setOutput('authorized', 'true');
               core.setOutput('admin_name', actor);
               return;
+            }
+            
+            // Check if actor ends with [bot] and base name is in special admins
+            if (actor.endsWith('[bot]')) {
+              const baseName = actor.replace('[bot]', '');
+              if (specialAdmins.includes(baseName)) {
+                console.log('Bot account recognized - AUTHORIZED');
+                core.setOutput('authorized', 'true');
+                core.setOutput('admin_name', actor);
+                return;
+              }
             }
             
             // Check if user has write/admin/maintain permissions
@@ -823,11 +834,21 @@ jobs:
               return true;
             }
 
-            // Check if commenter is special admin
+            // Check if commenter is special admin (including bots)
             if (specialAdmins.includes(commenter)) {
               core.setOutput('authorized', 'true');
               core.setOutput('commenter', commenter);
               return true;
+            }
+
+            // Check if commenter ends with [bot] and base name is in special admins
+            if (commenter.endsWith('[bot]')) {
+              const baseName = commenter.replace('[bot]', '');
+              if (specialAdmins.includes(baseName)) {
+                core.setOutput('authorized', 'true');
+                core.setOutput('commenter', commenter);
+                return true;
+              }
             }
 
             // Check if commenter has sufficient permissions
