@@ -2420,6 +2420,11 @@
     </a>
 
     <script>
+        // Declare cursor element variables at the top to prevent ReferenceError
+        // Initialize to null explicitly so they're safe to reference even on touch devices
+        let dot = null;
+        let outline = null;
+
         function showPage(pageId) {
             const pages = document.querySelectorAll('.page');
             pages.forEach(page => page.classList.remove('active'));
@@ -2464,9 +2469,6 @@
         // Custom cursor removed for better performance
         const prefersReducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
         const isTouchDevice = 'ontouchstart' in window || navigator.maxTouchPoints > 0;
-
-        // Declare cursor element variables in broader scope
-        let dot, outline;
 
         // Optimized cursor with better performance
         if (!isTouchDevice && !prefersReducedMotion) {
