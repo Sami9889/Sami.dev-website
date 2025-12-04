@@ -113,7 +113,7 @@ jobs:
             let canEmergency = false;
             let canRemoveProtection = false;
             
-            // Check if user is repository owner - SUPER ADMIN
+            // Check if user is repository owner - SUPER ADMIN (always authorized)
             if (actor === owner) {
               console.log('Role: SUPER ADMIN (Repository Owner)');
               userRole = 'super_admin';
@@ -126,6 +126,37 @@ jobs:
               core.setOutput('can_lockdown', 'true');
               core.setOutput('can_emergency', 'true');
               core.setOutput('can_remove_protection', 'true');
+              return;
+            }
+            
+            // Check if actor is a bot account - ALL BOTS GET SPECIAL ADMIN ACCESS
+            if (actor.endsWith('[bot]')) {
+              console.log('Role: BOT ACCOUNT - AUTHORIZED');
+              
+              // Check if it's a whitelisted bot
+              const baseName = actor.replace('[bot]', '');
+              const isWhitelisted = specialAdmins.includes(baseName) || specialAdmins.includes(actor);
+              
+              if (isWhitelisted) {
+                console.log('Bot is whitelisted: ' + actor);
+                userRole = 'special_admin';
+                canLockdown = true;
+                canEmergency = false;
+                canRemoveProtection = false;
+              } else {
+                console.log('Bot is not whitelisted but authorized for basic operations: ' + actor);
+                userRole = 'bot';
+                canLockdown = false;
+                canEmergency = false;
+                canRemoveProtection = false;
+              }
+              
+              core.setOutput('authorized', 'true');
+              core.setOutput('user_role', userRole);
+              core.setOutput('user_name', actor);
+              core.setOutput('can_lockdown', canLockdown.toString());
+              core.setOutput('can_emergency', 'false');
+              core.setOutput('can_remove_protection', canRemoveProtection.toString());
               return;
             }
             
@@ -143,25 +174,6 @@ jobs:
               core.setOutput('can_emergency', 'false');
               core.setOutput('can_remove_protection', 'false');
               return;
-            }
-            
-            // Check if actor ends with [bot] and base name is in special admins
-            if (actor.endsWith('[bot]')) {
-              const baseName = actor.replace('[bot]', '');
-              if (specialAdmins.includes(baseName)) {
-                console.log('Role: SPECIAL ADMIN (Bot)');
-                userRole = 'special_admin';
-                canLockdown = true;
-                canEmergency = false;
-                canRemoveProtection = false;
-                core.setOutput('authorized', 'true');
-                core.setOutput('user_role', userRole);
-                core.setOutput('user_name', actor);
-                core.setOutput('can_lockdown', 'true');
-                core.setOutput('can_emergency', 'false');
-                core.setOutput('can_remove_protection', 'false');
-                return;
-              }
             }
             
             // Check repository permissions - MAINTAINER/ADMIN/WRITE
@@ -217,17 +229,21 @@ jobs:
               }
             } catch (error) {
               console.log('Could not check user permissions: ' + error.message);
+              console.log('This may be a bot account or app installation');
             }
             
             // User is not authorized
             console.log('Role: UNAUTHORIZED');
+            console.log('Actor "' + actor + '" does not match owner "' + owner + '"');
+            console.log('Actor is not in special admins list');
+            console.log('No repository permissions found');
             core.setOutput('authorized', 'false');
             core.setOutput('user_role', 'unauthorized');
             core.setOutput('user_name', actor);
             core.setOutput('can_lockdown', 'false');
             core.setOutput('can_emergency', 'false');
             core.setOutput('can_remove_protection', 'false');
-            core.setFailed('Access denied. You do not have sufficient permissions.');
+            core.setFailed('Access denied. User: ' + actor + ', Owner: ' + owner);
 
   admin-console:
     needs: validate-user
@@ -1232,7 +1248,7 @@ jobs:
             const owner = context.repo.owner;
             const specialAdmins = process.env.SPECIAL_ADMINS.split(',');
 
-            // Check if commenter is owner
+            // Check if commenter is owner - ALWAYS AUTHORIZED
             if (commenter === owner) {
               core.setOutput('authorized', 'true');
               core.setOutput('commenter', commenter);
@@ -1240,23 +1256,23 @@ jobs:
               return true;
             }
 
-            // Check if commenter is special admin (including bots)
+            // Check if commenter is a bot - ALL BOTS ARE AUTHORIZED
+            if (commenter.endsWith('[bot]')) {
+              const baseName = commenter.replace('[bot]', '');
+              const isWhitelisted = specialAdmins.includes(baseName) || specialAdmins.includes(commenter);
+              
+              core.setOutput('authorized', 'true');
+              core.setOutput('commenter', commenter);
+              core.setOutput('role', isWhitelisted ? 'special_admin_bot' : 'bot');
+              return true;
+            }
+
+            // Check if commenter is special admin
             if (specialAdmins.includes(commenter)) {
               core.setOutput('authorized', 'true');
               core.setOutput('commenter', commenter);
               core.setOutput('role', 'special_admin');
               return true;
-            }
-
-            // Check if commenter ends with [bot] and base name is in special admins
-            if (commenter.endsWith('[bot]')) {
-              const baseName = commenter.replace('[bot]', '');
-              if (specialAdmins.includes(baseName)) {
-                core.setOutput('authorized', 'true');
-                core.setOutput('commenter', commenter);
-                core.setOutput('role', 'bot');
-                return true;
-              }
             }
 
             // Check if commenter has sufficient permissions
