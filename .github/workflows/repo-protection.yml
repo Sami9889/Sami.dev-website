@@ -4,10 +4,10 @@ on:
   workflow_dispatch:
     inputs:
       action:
-        description: "Protection action to perform"
+        description: 'Protection action to perform'
         required: true
         type: choice
-        options:
+        options: 
           - lock-it-down
           - remove-protection
           - emergency-unlock
@@ -18,15 +18,15 @@ on:
         required: false
         type: string
       approval_count:
-        description: "Required approvals (1-6)"
+        description: 'Required approvals (1-6)'
         required: true
-        default: "2"
+        default: '2'
         type: choice
-        options: ["1", "2", "3", "4", "5", "6"]
+        options: ['1','2','3','4','5','6']
 
   schedule:
-    - cron: "0 2 * * *"
-    - cron: "0 8 * * 1"
+    - cron: '0 2 * * *'
+    - cron: '0 8 * * 1'
 
   issue_comment:
     types: [created]
@@ -42,6 +42,12 @@ on:
       - main
       - master
 
+# NOTE: This workflow requires a GitHub token with admin permissions.
+# The GITHUB_TOKEN has limitations - for branch protection, you need either:
+# 1. Repository admin permissions on the token
+# 2. A Personal Access Token (PAT) with 'repo' scope stored as a secret
+# 3. A GitHub App with repository administration permissions
+
 permissions:
   contents: write
   issues: write
@@ -53,116 +59,87 @@ permissions:
   id-token: write
 
 env:
-  # threshold for branch cleanup
   MAX_BRANCH_AGE_DAYS: 30
-  # Exact allowed special admins — only exact names here are accepted (base name, no [bot] suffix)
-  SPECIAL_ADMINS: "kinsta,getsentry,thnxdev,vercel,wasmer,coderabbit-ai,coderabbitai"
-  # Explicit deny list — exact matches (either full "actor" or base name). Add "seer-by-sentry" here to block it.
-  DENY_ADMINS: "seer-by-sentry,malicious-bot"
-  # Useful label names
-  PROTECTION_LABEL: "repo-protection-status"
-  EMERGENCY_LABEL: "emergency-unlock"
+  SPECIAL_ADMINS: 'kinsta,getsentry,thnxdev,vercel,wasmer,coderabbit-ai,coderabbitai[bot]'
 
 jobs:
-  # =========================================================
-  # VALIDATE ADMIN - central authorization check used by other jobs
-  # =========================================================
   validate-admin:
     runs-on: ubuntu-latest
     outputs:
       authorized: ${{ steps.check.outputs.authorized }}
       admin_name: ${{ steps.check.outputs.admin_name }}
     steps:
-      - name: Check admin authorization
+      - name: Validate admin access
         id: check
         uses: actions/github-script@v7
         with:
           github-token: ${{ secrets.GITHUB_TOKEN }}
           script: |
-            // auth logic:
-            // 1) If actor equals repo owner -> authorized
-            // 2) If actor or base actor (strip "[bot]") exactly matches SPECIAL_ADMINS -> authorized
-            // 3) If actor or base actor exactly matches DENY_ADMINS -> denied (block)
-            // 4) Fallback: check collaborator permission level (admin/maintain/write)
-            const core = require('@actions/core');
-
-            const actor = context.actor; // e.g. "alice" or "coderabbitai[bot]"
+            const actor = context.actor;
             const owner = context.repo.owner;
-            const specialAdmins = (process.env.SPECIAL_ADMINS || "").split(",").map(s => s.trim()).filter(Boolean);
-            const denyAdmins = (process.env.DENY_ADMINS || "").split(",").map(s => s.trim()).filter(Boolean);
-
-            console.log("Authorisation check for actor:", actor);
-            const actorBase = actor.endsWith('[bot]') ? actor.replace('[bot]', '') : actor;
-
-            // explicit deny (full actor OR base name)
-            if (denyAdmins.includes(actor) || denyAdmins.includes(actorBase)) {
-              console.log("Actor explicitly denied:", actor);
-              core.setOutput("authorized", "false");
-              core.setOutput("admin_name", "");
-              core.setFailed("Access denied (explicit blocklist).");
-              return;
-            }
-
-            // repo owner immediate allow
+            const specialAdmins = process.env.SPECIAL_ADMINS.split(',');
+            
+            console.log('Checking authorization for: ' + actor);
+            
+            // Check if user is repository owner
             if (actor === owner) {
-              console.log("Actor is repository owner:", owner);
-              core.setOutput("authorized", "true");
-              core.setOutput("admin_name", actor);
+              console.log('User is repository owner - AUTHORIZED');
+              core.setOutput('authorized', 'true');
+              core.setOutput('admin_name', actor);
               return;
             }
-
-            // exact match against allowed special admins (allow base or exact actor)
-            if (specialAdmins.includes(actor) || specialAdmins.includes(actorBase)) {
-              console.log("Actor matched SPECIAL_ADMINS:", actor);
-              core.setOutput("authorized", "true");
-              core.setOutput("admin_name", actor);
+            
+            // Check if user is in special admins list (including bots)
+            if (specialAdmins.includes(actor)) {
+              console.log('User is special admin - AUTHORIZED');
+              core.setOutput('authorized', 'true');
+              core.setOutput('admin_name', actor);
               return;
             }
-
-            // fallback: check collaborator permission level
+            
+            // Check if actor ends with [bot] and base name is in special admins
+            if (actor.endsWith('[bot]')) {
+              const baseName = actor.replace('[bot]', '');
+              if (specialAdmins.includes(baseName)) {
+                console.log('Bot account recognized - AUTHORIZED');
+                core.setOutput('authorized', 'true');
+                core.setOutput('admin_name', actor);
+                return;
+              }
+            }
+            
+            // Check if user has write/admin/maintain permissions
             try {
-              (async () => {
-                const { data: permission } = await github.rest.repos.getCollaboratorPermissionLevel({
-                  owner: context.repo.owner,
-                  repo: context.repo.repo,
-                  username: actor
-                });
-
-                console.log("Collaborator permission:", permission.permission);
-
-                if (["admin", "maintain", "write"].includes(permission.permission)) {
-                  console.log("Actor has adequate collaborator permissions:", permission.permission);
-                  core.setOutput("authorized", "true");
-                  core.setOutput("admin_name", actor);
-                  return;
-                } else {
-                  console.log("Actor does not have sufficient collaborator permissions:", permission.permission);
-                  core.setOutput("authorized", "false");
-                  core.setOutput("admin_name", "");
-                  core.setFailed("Access denied. Only repository maintainers and authorized admins can execute workflows.");
-                  return;
-                }
-              })();
-            } catch (err) {
-              console.log("Error checking collaborator permission:", err.message);
-              core.setOutput("authorized", "false");
-              core.setOutput("admin_name", "");
-              core.setFailed("Access denied (permission check error).");
-              return;
+              const { data: permission } = await github.rest.repos.getCollaboratorPermissionLevel({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                username: actor
+              });
+              
+              const userPermission = permission.permission;
+              console.log('User permission level: ' + userPermission);
+              
+              if (userPermission === 'admin' || userPermission === 'maintain' || userPermission === 'write') {
+                console.log('User has sufficient permissions - AUTHORIZED');
+                core.setOutput('authorized', 'true');
+                core.setOutput('admin_name', actor);
+                return;
+              }
+            } catch (error) {
+              console.log('Could not check user permissions: ' + error.message);
             }
+            
+            // User is not authorized
+            console.log('User is not authorized');
+            core.setOutput('authorized', 'false');
+            core.setFailed('Access denied. Only repository maintainers and authorized admins can execute workflows');
 
-  # =========================================================
-  # CLEANUP OLD BRANCHES - scheduled run (2:00 daily)
-  # =========================================================
   cleanup-old-branches:
     needs: validate-admin
-    if: >
-      needs.validate-admin.outputs.authorized == 'true' &&
-      github.event_name == 'schedule' &&
-      github.event.schedule == '0 2 * * *'
+    if: needs.validate-admin.outputs.authorized == 'true' && github.event_name == 'schedule' && github.event.schedule == '0 2 * * *'
     runs-on: ubuntu-latest
     steps:
-      - name: Checkout repo
+      - name: Checkout repository
         uses: actions/checkout@v4
         with:
           fetch-depth: 0
@@ -171,11 +148,13 @@ jobs:
       - name: Delete stale branches
         id: cleanup
         run: |
-          set -euo pipefail
+          echo "Branch cleanup starting..."
           git fetch --prune origin
 
           branches=$(git branch -r | grep -v "HEAD\|main\|master\|develop\|staging\|production" | sed 's/origin\///' || true)
+
           if [ -z "$branches" ]; then
+            echo "No branches to process"
             echo "deleted_count=0" >> $GITHUB_OUTPUT
             echo "skipped_count=0" >> $GITHUB_OUTPUT
             exit 0
@@ -183,19 +162,21 @@ jobs:
 
           deleted_count=0
           skipped_count=0
+          
+          echo "$branches" | while IFS= read -r branch; do
+            branch=$(echo "$branch" | xargs)
 
-          for branch in $branches; do
-            # skip empty
             if [ -z "$branch" ]; then
               continue
             fi
 
             if git rev-parse --verify "origin/$branch" >/dev/null 2>&1; then
               last_commit=$(git log -1 --format=%at "origin/$branch" 2>/dev/null || echo "0")
-              now=$(date +%s)
-              days_old=$(( (now - last_commit) / 86400 ))
-              if [ $days_old -gt $MAX_BRANCH_AGE_DAYS ]; then
-                echo "Deleting stale branch: $branch ($days_old days)"
+              current_time=$(date +%s)
+              days_old=$(( ($current_time - $last_commit) / 86400 ))
+
+              if [ $days_old -gt ${{ env.MAX_BRANCH_AGE_DAYS }} ]; then
+                echo "Deleting stale branch: $branch (${days_old} days old)"
                 if git push origin --delete "$branch" 2>/dev/null; then
                   deleted_count=$((deleted_count + 1))
                 else
@@ -215,54 +196,64 @@ jobs:
         with:
           github-token: ${{ secrets.GITHUB_TOKEN }}
           script: |
+            const deleted = '${{ steps.cleanup.outputs.deleted_count }}' || '0';
+            const skipped = '${{ steps.cleanup.outputs.skipped_count }}' || '0';
+            
             await github.rest.issues.create({
               owner: context.repo.owner,
               repo: context.repo.repo,
-              title: `Branch Cleanup Report - ${new Date().toISOString().split("T")[0]}`,
-              body: `### Automated Branch Cleanup\n\n**Deleted:** ${{ steps.cleanup.outputs.deleted_count }}\n**Kept:** ${{ steps.cleanup.outputs.skipped_count }}\n\nThreshold: ${process.env.MAX_BRANCH_AGE_DAYS} days`,
-              labels: ["automation", "branch-cleanup"]
+              title: `Branch Cleanup Report - ${new Date().toISOString().split('T')[0]}`,
+              body: `### Automated Branch Cleanup\n\n` +
+                    `**Date:** ${new Date().toLocaleString()}\n\n` +
+                    `**Statistics:**\n` +
+                    `- Branches deleted: ${deleted}\n` +
+                    `- Branches kept: ${skipped}\n` +
+                    `- Cleanup threshold: ${process.env.MAX_BRANCH_AGE_DAYS} days\n\n` +
+                    `Stale branches older than ${process.env.MAX_BRANCH_AGE_DAYS} days were removed.\n` +
+                    `Protected branches are never deleted.`,
+              labels: ['automation', 'maintenance', 'branch-cleanup']
             });
 
-  # =========================================================
-  # APPLY PROTECTION (lock-it-down)
-  # =========================================================
   apply-protection:
     needs: validate-admin
-    if: >
+    if: |
       needs.validate-admin.outputs.authorized == 'true' &&
       github.event.inputs.action == 'lock-it-down'
     runs-on: ubuntu-latest
     steps:
-      - name: Require confirmation
+      - name: Validate confirmation
         run: |
           if [ "${{ github.event.inputs.confirmation }}" != "CONFIRM" ]; then
-            echo "::error::Confirmation required. Type CONFIRM to proceed"
+            echo "::error::Confirmation required"
             exit 1
           fi
 
-      - name: Checkout repo
+      - name: Checkout repository
         uses: actions/checkout@v4
 
-      - name: Apply branch protection
+      - name: Apply branch protection rules
         id: protect
         uses: actions/github-script@v7
         with:
           github-token: ${{ secrets.GITHUB_TOKEN }}
           script: |
-            const approvals = parseInt("${{ github.event.inputs.approval_count }}");
-            const branches = ["main", "master"];
-            const protected = [];
-            const failed = [];
+            const approvals = parseInt('${{ github.event.inputs.approval_count }}');
 
-            for (const branch of branches) {
+            console.log('Applying branch protection...');
+            console.log('Required approvals: ' + approvals);
+
+            const protectedBranches = [];
+            const failedBranches = [];
+
+            for (const branch of ['main', 'master']) {
               try {
                 await github.rest.repos.updateBranchProtection({
                   owner: context.repo.owner,
                   repo: context.repo.repo,
-                  branch,
+                  branch: branch,
                   required_status_checks: {
                     strict: true,
-                    contexts: ["security-scan", "vercel-check", "sentry-check"]
+                    contexts: ['security-scan', 'vercel-check', 'sentry-check']
                   },
                   enforce_admins: true,
                   required_pull_request_reviews: {
@@ -285,31 +276,30 @@ jobs:
                   allow_fork_syncing: true,
                   block_creations: false
                 });
-
-                protected.push(branch);
-                console.log("Protected", branch);
+                
+                console.log('Protected ' + branch + ' branch');
+                protectedBranches.push(branch);
+                
               } catch (e) {
                 if (e.status === 404) {
-                  console.log("Branch not found:", branch);
+                  console.log('Branch ' + branch + ' not found');
                 } else {
-                  console.error("Failed to protect", branch, e.message);
-                  failed.push(branch);
+                  console.error('Failed to protect ' + branch + ': ' + e.message);
+                  failedBranches.push(branch);
                 }
               }
             }
 
-            core.setOutput("protected_branches", protected.join(","));
-            core.setOutput("failed_branches", failed.join(","));
-            if (failed.length > 0) {
-              core.setFailed("Failed to protect branches: " + failed.join(", "));
+            core.setOutput('protected_branches', protectedBranches.join(','));
+            core.setOutput('failed_branches', failedBranches.join(','));
+            
+            if (failedBranches.length > 0) {
+              core.setFailed('Failed to protect branches: ' + failedBranches.join(', '));
             }
 
-  # =========================================================
-  # REMOVE PROTECTION
-  # =========================================================
   remove-protection:
     needs: validate-admin
-    if: >
+    if: |
       needs.validate-admin.outputs.authorized == 'true' &&
       github.event.inputs.action == 'remove-protection'
     runs-on: ubuntu-latest
@@ -321,137 +311,160 @@ jobs:
             exit 1
           fi
 
-      - name: Remove protection
+      - name: Remove branch protection
         uses: actions/github-script@v7
         with:
           github-token: ${{ secrets.GITHUB_TOKEN }}
           script: |
-            for (const branch of ["main", "master"]) {
+            console.log('Removing branch protection...');
+
+            for (const branch of ['main', 'master']) {
               try {
                 await github.rest.repos.deleteBranchProtection({
                   owner: context.repo.owner,
                   repo: context.repo.repo,
-                  branch
+                  branch: branch
                 });
-                console.log("Removed protection from", branch);
+                console.log('Removed protection from ' + branch);
               } catch (e) {
                 if (e.status === 404) {
-                  console.log("No protection on", branch);
+                  console.log('No protection found on ' + branch);
                 } else {
-                  console.error("Error removing protection from", branch, e.message);
+                  console.error('Failed to remove protection from ' + branch + ': ' + e.message);
                 }
               }
             }
 
-  # =========================================================
-  # EMERGENCY UNLOCK
-  # =========================================================
   emergency-unlock:
     needs: validate-admin
-    if: >
+    if: |
       needs.validate-admin.outputs.authorized == 'true' &&
       github.event.inputs.action == 'emergency-unlock'
     runs-on: ubuntu-latest
     steps:
-      - name: Emergency unlock - create issue & remove protections
+      - name: Emergency unlock
         uses: actions/github-script@v7
         with:
           github-token: ${{ secrets.GITHUB_TOKEN }}
           script: |
+            console.log('EMERGENCY UNLOCK INITIATED');
+            
             const issue = await github.rest.issues.create({
               owner: context.repo.owner,
               repo: context.repo.repo,
-              title: "EMERGENCY UNLOCK - Security Override Active",
-              body: `### Emergency Security Override\n\n**Activated by:** @${context.actor}\n**Time:** ${new Date().toLocaleString()}\n\nAll branch protections are being temporarily disabled. Please follow the required emergency procedures.`,
-              labels: ["emergency", "security-override", "urgent"]
+              title: 'EMERGENCY UNLOCK - Security Override Active',
+              body: `### Emergency Security Override\n\n` +
+                    `**Activated by:** @${context.actor}\n` +
+                    `**Time:** ${new Date().toLocaleString()}\n\n` +
+                    `All branch protections have been temporarily disabled.\n\n` +
+                    `**Required Actions:**\n` +
+                    `1. Complete emergency changes\n` +
+                    `2. Document all modifications\n` +
+                    `3. Re-enable protection immediately\n` +
+                    `4. Close this issue when complete`,
+              labels: ['emergency', 'security-override', 'urgent']
             });
 
-            for (const branch of ["main", "master"]) {
+            for (const branch of ['main', 'master']) {
               try {
                 await github.rest.repos.deleteBranchProtection({
                   owner: context.repo.owner,
                   repo: context.repo.repo,
-                  branch
+                  branch: branch
                 });
-                console.log("Unlocked", branch);
+                console.log('Emergency unlock: ' + branch);
               } catch (e) {
-                console.log("Could not unlock", branch, e.message);
+                console.log(branch + ': ' + e.message);
               }
             }
 
-  # =========================================================
-  # STATUS CHECK - report protection state
-  # =========================================================
   status-check:
     needs: validate-admin
-    if: >
+    if: |
       needs.validate-admin.outputs.authorized == 'true' &&
       github.event.inputs.action == 'status-check'
     runs-on: ubuntu-latest
     steps:
-      - name: Build status report
+      - name: Check protection status
         uses: actions/github-script@v7
         with:
           github-token: ${{ secrets.GITHUB_TOKEN }}
           script: |
-            let report = `### Repository Protection Status\n\n**Generated:** ${new Date().toLocaleString()}\n**Checked by:** @${context.actor}\n\n`;
-            for (const branch of ["main", "master"]) {
+            console.log('Checking repository protection status...\n');
+            
+            let statusReport = '### Repository Protection Status\n\n';
+            statusReport += `**Generated:** ${new Date().toLocaleString()}\n`;
+            statusReport += `**Checked by:** @${context.actor}\n\n`;
+
+            for (const branch of ['main', 'master']) {
               try {
                 const protection = await github.rest.repos.getBranchProtection({
                   owner: context.repo.owner,
                   repo: context.repo.repo,
-                  branch
+                  branch: branch
                 });
 
-                const reviews = protection.data.required_pull_request_reviews || {};
-                const checks = protection.data.required_status_checks || {};
-                report += `#### Branch: ${branch}\n- Status: PROTECTED\n- Required approvals: ${reviews.required_approving_review_count || 0}\n- Code owner review: ${reviews.require_code_owner_reviews ? "YES" : "NO"}\n- Enforce for admins: ${protection.data.enforce_admins?.enabled ? "YES" : "NO"}\n- Required status checks: ${checks.contexts?.join(", ") || "None"}\n- Linear history: ${protection.data.required_linear_history?.enabled ? "YES" : "NO"}\n\n`;
+                const reviews = protection.data.required_pull_request_reviews;
+                const checks = protection.data.required_status_checks;
+
+                statusReport += `#### Branch: ${branch}\n\n`;
+                statusReport += `- Status: PROTECTED\n`;
+                statusReport += `- Required approvals: ${reviews?.required_approving_review_count || 0}\n`;
+                statusReport += `- Code owner review: ${reviews?.require_code_owner_reviews ? 'YES' : 'NO'}\n`;
+                statusReport += `- Dismiss stale reviews: ${reviews?.dismiss_stale_reviews ? 'YES' : 'NO'}\n`;
+                statusReport += `- Enforce for admins: ${protection.data.enforce_admins?.enabled ? 'YES' : 'NO'}\n`;
+                statusReport += `- Required status checks: ${checks?.contexts?.join(', ') || 'None'}\n`;
+                statusReport += `- Linear history: ${protection.data.required_linear_history?.enabled ? 'YES' : 'NO'}\n`;
+                statusReport += `- Conversation resolution: ${protection.data.required_conversation_resolution?.enabled ? 'YES' : 'NO'}\n\n`;
+
               } catch (e) {
                 if (e.status === 404) {
-                  report += `#### Branch: ${branch}\n- Status: NOT PROTECTED\n\n`;
+                  statusReport += `#### Branch: ${branch}\n\n`;
+                  statusReport += `- Status: NOT PROTECTED\n\n`;
                 } else {
-                  report += `#### Branch: ${branch}\n- Status: ERROR\n- Error: ${e.message}\n\n`;
+                  statusReport += `#### Branch: ${branch}\n\n`;
+                  statusReport += `- Status: ERROR\n`;
+                  statusReport += `- Error: ${e.message}\n\n`;
                 }
               }
             }
 
+            console.log(statusReport);
+
             await github.rest.issues.create({
               owner: context.repo.owner,
               repo: context.repo.repo,
-              title: `Protection Status - ${new Date().toISOString().split("T")[0]}`,
-              body: report,
-              labels: ["status-report", "automation"]
+              title: `Protection Status - ${new Date().toISOString().split('T')[0]}`,
+              body: statusReport,
+              labels: ['status-report', 'automation']
             });
 
-  # =========================================================
-  # AUDIT REPORT (weekly or manual)
-  # =========================================================
   audit-report:
     needs: validate-admin
-    if: >
+    if: |
       (needs.validate-admin.outputs.authorized == 'true' && github.event.inputs.action == 'audit-report') ||
       (github.event_name == 'schedule' && github.event.schedule == '0 8 * * 1')
     runs-on: ubuntu-latest
     steps:
-      - name: Generate weekly audit report
+      - name: Generate security audit
         uses: actions/github-script@v7
         with:
           github-token: ${{ secrets.GITHUB_TOKEN }}
           script: |
-            const now = new Date();
             const weekAgo = new Date();
-            weekAgo.setDate(now.getDate() - 7);
+            weekAgo.setDate(weekAgo.getDate() - 7);
 
-            const pulls = await github.paginate(github.rest.pulls.list, {
+            const prs = await github.rest.pulls.list({
               owner: context.repo.owner,
               repo: context.repo.repo,
-              state: "all",
+              state: 'all',
               per_page: 100,
-              sort: "updated",
-              direction: "desc"
+              sort: 'updated',
+              direction: 'desc'
             });
 
-            const recentPRs = pulls.filter(pr => new Date(pr.updated_at) >= weekAgo);
+            const recentPRs = prs.data.filter(pr => new Date(pr.updated_at) >= weekAgo);
+
             const commits = await github.rest.repos.listCommits({
               owner: context.repo.owner,
               repo: context.repo.repo,
@@ -459,33 +472,40 @@ jobs:
               per_page: 100
             });
 
-            let report = `### Weekly Security Audit\n**Period:** ${weekAgo.toLocaleDateString()} - ${now.toLocaleDateString()}\n\n`;
-            report += `#### Activity Summary\n- Total PRs updated: ${recentPRs.length}\n- Commits in period: ${commits.data.length}\n- PRs merged: ${recentPRs.filter(pr => pr.merged_at).length}\n- PRs open: ${recentPRs.filter(pr => pr.state === 'open').length}\n\n`;
+            let report = '### Weekly Security Audit\n\n';
+            report += `**Period:** ${weekAgo.toLocaleDateString()} - ${new Date().toLocaleDateString()}\n\n`;
+            
+            report += `#### Activity Summary\n\n`;
+            report += `- Total PRs: ${recentPRs.length}\n`;
+            report += `- Direct commits: ${commits.data.length}\n`;
+            report += `- PRs merged: ${recentPRs.filter(pr => pr.merged_at).length}\n`;
+            report += `- PRs open: ${recentPRs.filter(pr => pr.state === 'open').length}\n`;
+            report += `- PRs closed: ${recentPRs.filter(pr => pr.state === 'closed' && !pr.merged_at).length}\n\n`;
 
             if (recentPRs.filter(pr => pr.merged_at).length > 0) {
-              report += "#### Recent Merged PRs\n";
+              report += `#### Recent Merged PRs\n\n`;
               recentPRs.filter(pr => pr.merged_at).slice(0, 10).forEach(pr => {
-                report += `- #${pr.number}: ${pr.title} (by @${pr.merged_by?.login || "unknown"})\n`;
+                report += `- #${pr.number}: ${pr.title} (by @${pr.merged_by?.login || 'unknown'})\n`;
               });
-              report += "\n";
+              report += `\n`;
             }
 
-            report += `---\n**Special Admins:** ${process.env.SPECIAL_ADMINS}\n`;
+            report += `---\n`;
+            report += `**Special Admins:** ${process.env.SPECIAL_ADMINS}\n`;
+            report += `**Note:** All repository maintainers are also authorized\n`;
+
             await github.rest.issues.create({
               owner: context.repo.owner,
               repo: context.repo.repo,
-              title: `Security Audit - ${new Date().toISOString().split("T")[0]}`,
+              title: `Security Audit - ${new Date().toISOString().split('T')[0]}`,
               body: report,
-              labels: ["security-audit", "weekly-report"]
+              labels: ['security-audit', 'weekly-report']
             });
 
-  # =========================================================
-  # CREATE SECURITY GUIDELINES - posted after successful lock
-  # =========================================================
   create-security-guidelines:
     name: Post Security Guidelines
     needs: [validate-admin, apply-protection]
-    if: >
+    if: |
       needs.validate-admin.outputs.authorized == 'true' &&
       github.event.inputs.action == 'lock-it-down' &&
       needs.apply-protection.result == 'success'
@@ -496,130 +516,228 @@ jobs:
         with:
           github-token: ${{ secrets.GITHUB_TOKEN }}
           script: |
-            const approvals = "${{ github.event.inputs.approval_count }}";
-            const specialAdmins = process.env.SPECIAL_ADMINS.split(",").map(a => "@" + a).join(", ");
+            const approvals = '${{ github.event.inputs.approval_count }}';
+            const specialAdmins = process.env.SPECIAL_ADMINS.split(',').map(a => '@' + a).join(', ');
 
-            // close existing
             const existing = await github.rest.issues.listForRepo({
-              owner: context.repo.owner, repo: context.repo.repo, labels: ["security-guidelines"], state: "open"
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              labels: ['security-guidelines'],
+              state: 'open'
             });
+
             for (const issue of existing.data) {
-              await github.rest.issues.update({ owner: context.repo.owner, repo: context.repo.repo, issue_number: issue.number, state: "closed", state_reason: "completed" });
+              await github.rest.issues.update({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                issue_number: issue.number,
+                state: 'closed',
+                state_reason: 'completed'
+              });
             }
 
-            const body = `# Repository Security Rules\n\nThis repository is under strict security protection.\n\n---\n\n## Allowed Actions\n- Create feature branches\n- Open PRs with detailed descriptions\n- Pass security-scan, vercel-check, sentry-check\n- Obtain ${approvals} approvals and code owner review\n\n## Forbidden Actions\n- Direct pushes to protected branches\n- Merging without required approvals\n- Adding forbidden files (.pem, .key, .p12, .env, /secrets/)\n\n**Special Admins:** ${specialAdmins}\n**Activated by:** @${context.actor}\n**Date:** ${new Date().toLocaleString()}\n`;
-
             const newIssue = await github.rest.issues.create({
-              owner: context.repo.owner, repo: context.repo.repo,
-              title: "LOCKDOWN: Repository Security Rules",
-              body,
-              labels: ["security-guidelines", "documentation", "pinned"]
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              title: 'LOCKDOWN: Repository Security Rules',
+              body: `# Repository Security Rules\n\n` +
+                    `This repository is under strict security protection.\n\n` +
+                    `---\n\n` +
+                    `## Allowed Actions\n\n` +
+                    `- Create feature branches from main/master\n` +
+                    `- Open pull requests with detailed descriptions\n` +
+                    `- Pass all required security scans\n` +
+                    `- Pass Vercel deployment checks\n` +
+                    `- Pass Sentry error tracking validation\n` +
+                    `- Obtain ${approvals} required approvals\n` +
+                    `- Get code owner review approval\n` +
+                    `- Resolve all conversations\n` +
+                    `- Use bot commands for approvals\n\n` +
+                    `## Forbidden Actions\n\n` +
+                    `- Direct pushes to protected branches\n` +
+                    `- Merging without required approvals\n` +
+                    `- Merging with failing security scans\n` +
+                    `- Merging with failing Vercel checks\n` +
+                    `- Merging with Sentry errors\n` +
+                    `- Force pushing or deleting branches\n` +
+                    `- Bypassing conversation resolution\n` +
+                    `- Bypassing linear history requirements\n\n` +
+                    `## Forbidden Content\n\n` +
+                    `**File Types:**\n` +
+                    `- .pem, .key, .p12, .pfx, .keystore files\n` +
+                    `- .env files and variants\n` +
+                    `- Files in /secrets/ directory\n` +
+                    `- SSH private keys\n\n` +
+                    `**Sensitive Data:**\n` +
+                    `- API keys and tokens\n` +
+                    `- AWS credentials (AKIA...)\n` +
+                    `- GitHub tokens (ghp_, gho_...)\n` +
+                    `- OpenAI keys (sk-...)\n` +
+                    `- Private keys and certificates\n` +
+                    `- Database credentials\n` +
+                    `- Passwords and secrets\n\n` +
+                    `## Required Status Checks\n\n` +
+                    `All PRs must pass:\n` +
+                    `- **security-scan** - Automated security scanning\n` +
+                    `- **vercel-check** - Vercel deployment validation\n` +
+                    `- **sentry-check** - Sentry error tracking\n\n` +
+                    `---\n\n` +
+                    `## Bot Commands\n\n` +
+                    `Authorized admins can use:\n` +
+                    `- \`/bot approve\` - Approve PR for merge\n` +
+                    `- \`/bot reject [reason]\` - Reject PR with reason\n` +
+                    `- \`/bot status\` - Check PR status\n\n` +
+                    `PRs with forbidden content will be flagged during security scans.\n\n` +
+                    `---\n\n` +
+                    `## Authorization\n\n` +
+                    `**Repository Owner:** @${{ github.repository_owner }}\n` +
+                    `**All Maintainers:** Anyone with write/maintain/admin access\n` +
+                    `**Special Admins:** ${specialAdmins}\n\n` +
+                    `**Protection activated by:** @${{ github.actor }}\n` +
+                    `**Protection level:** ${approvals} required approvals\n` +
+                    `**Admin enforcement:** YES\n` +
+                    `**Code owner review:** YES\n` +
+                    `**Linear history:** YES\n` +
+                    `**Date:** ${new Date().toLocaleString()}\n\n` +
+                    `---\n\n` +
+                    `**Developed by:**\n` +
+                    `- Kinsta (kinsta)\n` +
+                    `- GetSentry (getsentry) - Sentry error tracking\n` +
+                    `- ThnxDev (thnxdev)\n` +
+                    `- Vercel (vercel) - Deployment platform\n` +
+                    `- Wasmer (wasmer)\n` +
+                    `- CodeRabbit AI (coderabbit-ai) - Automated code review`,
+              labels: ['security-guidelines', 'documentation', 'pinned']
             });
 
-            console.log("Created guidelines issue #", newIssue.data.number);
+            console.log('Created security guidelines issue #' + newIssue.data.number);
 
-  # =========================================================
-  # SECURITY SCAN - PR-triggered
-  # =========================================================
   security-scan:
     runs-on: ubuntu-latest
     if: github.event_name == 'pull_request'
     steps:
-      - name: Checkout PR
+      - name: Checkout repository
         uses: actions/checkout@v4
         with:
           fetch-depth: 0
 
-      - name: Run security scan
+      - name: Security scan
         id: scan
         continue-on-error: true
         run: |
-          set -euo pipefail
-          echo "Starting security scan..."
-
+          echo "Starting comprehensive security scan..."
+          
           base_sha="${{ github.event.pull_request.base.sha }}"
           head_sha="${{ github.event.pull_request.head.sha }}"
-
+          
           changed_files=$(git diff --name-only "$base_sha" "$head_sha" 2>/dev/null || true)
+
           if [ -z "$changed_files" ]; then
             echo "scan_result=passed" >> $GITHUB_OUTPUT
             echo "scan_details=No files changed" >> $GITHUB_OUTPUT
             exit 0
           fi
 
+          echo "Files changed:"
+          echo "$changed_files"
+
           forbidden_count=0
           secret_count=0
           warning_count=0
           findings=""
 
+          # Check forbidden file types
           while IFS= read -r file; do
-            [ -f "$file" ] || continue
+            if [ ! -f "$file" ]; then
+              continue
+            fi
 
             case "$file" in
-              *.pem|*.key|*.p12|*.pfx|*.keystore|id_rsa|id_dsa|id_ecdsa|id_ed25519)
-                findings="${findings}FORBIDDEN: Private key or certificate: $file\n"
-                forbidden_count=$((forbidden_count + 1));;
+              *.pem|*.key|*.p12|*.pfx|*.keystore)
+                findings="${findings}FORBIDDEN: Certificate/key file: $file\n"
+                forbidden_count=$((forbidden_count + 1))
+                ;;
               *.env|*.env.*|.env.*)
                 findings="${findings}FORBIDDEN: Environment file: $file\n"
-                forbidden_count=$((forbidden_count + 1));;
+                forbidden_count=$((forbidden_count + 1))
+                ;;
               */secrets/*|*/.secrets/*)
-                findings="${findings}FORBIDDEN: File in secrets directory: $file\n"
-                forbidden_count=$((forbidden_count + 1));;
+                findings="${findings}FORBIDDEN: Secrets directory: $file\n"
+                forbidden_count=$((forbidden_count + 1))
+                ;;
+              *.ppk|*.pem.pub|id_rsa|id_dsa|id_ecdsa|id_ed25519)
+                findings="${findings}FORBIDDEN: SSH key: $file\n"
+                forbidden_count=$((forbidden_count + 1))
+                ;;
             esac
+          done <<< "$changed_files"
 
-            # skip .github config files from secret detection
+          # Secret detection
+          while IFS= read -r file; do
+            if [ ! -f "$file" ]; then
+              continue
+            fi
+
             if [[ "$file" == .github/* ]]; then
               continue
             fi
 
+            # AWS Keys
             if grep -qE "AKIA[0-9A-Z]{16}" "$file" 2>/dev/null; then
               findings="${findings}SECRET: AWS key in $file\n"
               secret_count=$((secret_count + 1))
             fi
 
+            # GitHub Tokens
             if grep -qE "(ghp_|gho_|ghu_|ghs_|ghr_)[a-zA-Z0-9]{36,}" "$file" 2>/dev/null; then
               findings="${findings}SECRET: GitHub token in $file\n"
               secret_count=$((secret_count + 1))
             fi
 
+            # OpenAI Keys
             if grep -qE "sk-[a-zA-Z0-9]{48}" "$file" 2>/dev/null; then
               findings="${findings}SECRET: OpenAI key in $file\n"
               secret_count=$((secret_count + 1))
             fi
 
+            # Vercel Tokens
             if grep -qE "vercel_[a-zA-Z0-9]{24}" "$file" 2>/dev/null; then
               findings="${findings}SECRET: Vercel token in $file\n"
               secret_count=$((secret_count + 1))
             fi
 
+            # Sentry DSN
             if grep -qE "https://[a-z0-9]+@[a-z0-9]+\.ingest\.sentry\.io/[0-9]+" "$file" 2>/dev/null; then
               findings="${findings}WARNING: Sentry DSN in $file\n"
               warning_count=$((warning_count + 1))
             fi
 
+            # Generic API Keys
             if grep -qE "(api[_-]?key|apikey|api[_-]?secret)['\"]?\s*[:=]\s*['\"][a-zA-Z0-9]{20,}" "$file" 2>/dev/null; then
               findings="${findings}WARNING: Potential API key in $file\n"
               warning_count=$((warning_count + 1))
             fi
 
+            # Private Keys
             if grep -q "BEGIN.*PRIVATE KEY" "$file" 2>/dev/null; then
-              findings="${findings}SECRET: Private key content in $file\n"
+              findings="${findings}SECRET: Private key in $file\n"
               secret_count=$((secret_count + 1))
             fi
 
+            # Passwords
             if grep -qE "(password|passwd|pwd)['\"]?\s*[:=]\s*['\"][^'\"]{8,}" "$file" 2>/dev/null; then
               findings="${findings}WARNING: Potential password in $file\n"
               warning_count=$((warning_count + 1))
             fi
 
+            # Database URLs
             if grep -qE "(mongodb|postgres|mysql)://[^'\"\s]+" "$file" 2>/dev/null; then
               findings="${findings}SECRET: Database connection string in $file\n"
               secret_count=$((secret_count + 1))
             fi
-
           done <<< "$changed_files"
 
-          # write outputs
+          # Determine result
           if [ $forbidden_count -gt 0 ] || [ $secret_count -gt 0 ]; then
             echo "scan_result=failed" >> $GITHUB_OUTPUT
             echo "scan_details=$findings" >> $GITHUB_OUTPUT
@@ -631,7 +749,7 @@ jobs:
             echo "scan_result=warning" >> $GITHUB_OUTPUT
             echo "scan_details=$findings" >> $GITHUB_OUTPUT
             echo "warning_count=$warning_count" >> $GITHUB_OUTPUT
-            echo "Security scan: warnings"
+            echo "Security scan has warnings"
           else
             echo "scan_result=passed" >> $GITHUB_OUTPUT
             echo "scan_details=All checks passed" >> $GITHUB_OUTPUT
@@ -644,98 +762,117 @@ jobs:
         with:
           github-token: ${{ secrets.GITHUB_TOKEN }}
           script: |
-            const scanResult = "${{ steps.scan.outputs.scan_result }}";
-            const scanDetails = `${{ steps.scan.outputs.scan_details }}` || "";
+            const scanResult = '${{ steps.scan.outputs.scan_result }}';
+            const scanDetails = '${{ steps.scan.outputs.scan_details }}';
             const prNumber = context.issue.number;
-            let body = "";
 
-            if (scanResult === "passed") {
-              body = "### Security Scan Results\n\n**Status:** PASSED\n\nAll checks passed.\n";
-            } else if (scanResult === "warning") {
-              body = "### Security Scan Results\n\n**Status:** WARNING\n\n```\n" + scanDetails + "\n```\n\nPlease review these warnings.";
-            } else if (scanResult === "failed") {
-              const forbidden = "${{ steps.scan.outputs.forbidden_count }}" || "0";
-              const secrets = "${{ steps.scan.outputs.secret_count }}" || "0";
-              body = "### Security Scan Results\n\n**Status:** FAILED\n\n**Forbidden:** " + forbidden + "\n**Secrets:** " + secrets + "\n\n```\n" + scanDetails + "\n```\n\nThis PR cannot be merged until resolved.";
+            let body = '';
+            if (scanResult === 'passed') {
+              body = '### Security Scan Results\n\n' +
+                     '**Status:** PASSED\n\n' +
+                     'All security checks completed successfully:\n' +
+                     '- No forbidden files detected\n' +
+                     '- No secrets found\n' +
+                     '- No security warnings\n\n' +
+                     'PR is ready for review.\n\n' +
+                     '---\n' +
+                     'Waiting for required checks: vercel-check, sentry-check';
+            } else if (scanResult === 'warning') {
+              const details = scanDetails.replace(/\\n/g, '\n');
+              body = '### Security Scan Results\n\n' +
+                     '**Status:** WARNING\n\n' +
+                     'Potential issues detected:\n\n```\n' +
+                     details + '\n```\n\n' +
+                     'Please review these warnings before merging.\n\n' +
+                     '---\n' +
+                     'Admin approval may be required.';
+            } else if (scanResult === 'failed') {
+              const details = scanDetails.replace(/\\n/g, '\n');
+              const forbiddenCount = '${{ steps.scan.outputs.forbidden_count }}' || '0';
+              const secretCount = '${{ steps.scan.outputs.secret_count }}' || '0';
+              body = '### Security Scan Results\n\n' +
+                     '**Status:** FAILED\n\n' +
+                     `**Violations Found:**\n` +
+                     `- Forbidden files: ${forbiddenCount}\n` +
+                     `- Secrets detected: ${secretCount}\n\n` +
+                     '```\n' + details + '\n```\n\n' +
+                     'This PR cannot be merged until all security violations are resolved.\n\n' +
+                     '---\n' +
+                     'Contact authorized admins for guidance.';
             } else {
-              body = "### Security Scan Results\n\n**Status:** PASSED (no changes to scan)";
+              body = '### Security Scan Results\n\n' +
+                     '**Status:** PASSED\n\n' +
+                     'No changes to scan.';
             }
 
             await github.rest.issues.createComment({
               owner: context.repo.owner,
               repo: context.repo.repo,
               issue_number: prNumber,
-              body
+              body: body
             });
 
-  # =========================================================
-  # BOT COMMAND HANDLER (issue comments on PRs)
-  # =========================================================
   bot-command-handler:
     name: Handle Bot Commands
     runs-on: ubuntu-latest
-    if: >
-      github.event_name == 'issue_comment' &&
-      github.event.issue.pull_request == true
+    if: github.event_name == 'issue_comment' && github.event.issue.pull_request
     steps:
-      - name: Check admin authorization (bot)
+      - name: Check admin authorization
         id: auth_check
         uses: actions/github-script@v7
         with:
           github-token: ${{ secrets.GITHUB_TOKEN }}
           script: |
-            const core = require('@actions/core');
-            const actor = context.payload.comment.user.login;
+            const commenter = context.payload.comment.user.login;
             const owner = context.repo.owner;
-            const specialAdmins = (process.env.SPECIAL_ADMINS || "").split(",").map(s => s.trim()).filter(Boolean);
-            const denyAdmins = (process.env.DENY_ADMINS || "").split(",").map(s => s.trim()).filter(Boolean);
-            const actorBase = actor.endsWith("[bot]") ? actor.replace("[bot]","") : actor;
+            const specialAdmins = process.env.SPECIAL_ADMINS.split(',');
 
-            // explicit deny
-            if (denyAdmins.includes(actor) || denyAdmins.includes(actorBase)) {
-              core.setOutput("authorized", "false");
-              core.setOutput("commenter", actor);
-              core.setFailed("Actor explicitly denied");
-              return;
+            // Check if commenter is owner
+            if (commenter === owner) {
+              core.setOutput('authorized', 'true');
+              core.setOutput('commenter', commenter);
+              return true;
             }
 
-            // owner
-            if (actor === owner) {
-              core.setOutput("authorized", "true");
-              core.setOutput("commenter", actor);
-              return;
+            // Check if commenter is special admin (including bots)
+            if (specialAdmins.includes(commenter)) {
+              core.setOutput('authorized', 'true');
+              core.setOutput('commenter', commenter);
+              return true;
             }
 
-            // exact special admin match
-            if (specialAdmins.includes(actor) || specialAdmins.includes(actorBase)) {
-              core.setOutput("authorized", "true");
-              core.setOutput("commenter", actor);
-              return;
+            // Check if commenter ends with [bot] and base name is in special admins
+            if (commenter.endsWith('[bot]')) {
+              const baseName = commenter.replace('[bot]', '');
+              if (specialAdmins.includes(baseName)) {
+                core.setOutput('authorized', 'true');
+                core.setOutput('commenter', commenter);
+                return true;
+              }
             }
 
-            // fallback permission check
+            // Check if commenter has sufficient permissions
             try {
-              (async () => {
-                const { data: permission } = await github.rest.repos.getCollaboratorPermissionLevel({
-                  owner: context.repo.owner, repo: context.repo.repo, username: actor
-                });
-
-                if (["admin","maintain","write"].includes(permission.permission)) {
-                  core.setOutput("authorized", "true");
-                  core.setOutput("commenter", actor);
-                  return;
-                } else {
-                  core.setOutput("authorized", "false");
-                  core.setOutput("commenter", actor);
-                  core.setFailed("Not authorized");
-                  return;
-                }
-              })();
-            } catch (err) {
-              core.setOutput("authorized", "false");
-              core.setOutput("commenter", actor);
-              core.setFailed("Permission check error");
+              const { data: permission } = await github.rest.repos.getCollaboratorPermissionLevel({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                username: commenter
+              });
+              
+              const userPermission = permission.permission;
+              
+              if (userPermission === 'admin' || userPermission === 'maintain' || userPermission === 'write') {
+                core.setOutput('authorized', 'true');
+                core.setOutput('commenter', commenter);
+                return true;
+              }
+            } catch (error) {
+              console.log('Could not check permissions: ' + error.message);
             }
+
+            core.setOutput('authorized', 'false');
+            core.setOutput('commenter', commenter);
+            return false;
 
       - name: Process bot command
         if: steps.auth_check.outputs.authorized == 'true'
@@ -743,54 +880,107 @@ jobs:
         with:
           github-token: ${{ secrets.GITHUB_TOKEN }}
           script: |
-            const comment = context.payload.comment.body.trim();
-            const commenter = "${{ steps.auth_check.outputs.commenter }}";
+            const comment = context.payload.comment.body.trim().toLowerCase();
             const prNumber = context.issue.number;
+            const commenter = '${{ steps.auth_check.outputs.commenter }}';
 
-            // normalize command
-            const cmd = comment.toLowerCase();
-
-            if (cmd.startsWith("/bot approve")) {
+            if (comment.startsWith('/bot approve')) {
               await github.rest.issues.createComment({
-                owner: context.repo.owner, repo: context.repo.repo, issue_number: prNumber,
-                body: `### PR Approved\nApproved by: @${commenter}\nStatus: APPROVED`
-              });
-              await github.rest.issues.addLabels({ owner: context.repo.owner, repo: context.repo.repo, issue_number: prNumber, labels: ["approved","ready-to-merge"] });
-
-            } else if (cmd.startsWith("/bot reject")) {
-              const reason = comment.replace("/bot reject","").trim() || "No reason provided";
-              await github.rest.issues.createComment({
-                owner: context.repo.owner, repo: context.repo.repo, issue_number: prNumber,
-                body: `### PR Rejected\nRejected by: @${commenter}\nReason: ${reason}\nStatus: CHANGES REQUESTED`
-              });
-              await github.rest.issues.addLabels({ owner: context.repo.owner, repo: context.repo.repo, issue_number: prNumber, labels: ["changes-requested"] });
-
-            } else if (cmd.startsWith("/bot status")) {
-              const pr = await github.rest.pulls.get({ owner: context.repo.owner, repo: context.repo.repo, pull_number: prNumber });
-              const reviews = await github.rest.pulls.listReviews({ owner: context.repo.owner, repo: context.repo.repo, pull_number: prNumber });
-              const approvals = reviews.data.filter(r => r.state === "APPROVED").length;
-              await github.rest.issues.createComment({
-                owner: context.repo.owner, repo: context.repo.repo, issue_number: prNumber,
-                body: `### PR Status\n**Approvals:** ${approvals}\n**Mergeable:** ${pr.data.mergeable ? "YES" : "NO"}\nRequested by: @${commenter}`
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                issue_number: prNumber,
+                body: '### PR Approved\n\n' +
+                      'Approved by: @' + commenter + '\n\n' +
+                      'This PR has been reviewed and approved.\n' +
+                      'Status: APPROVED'
               });
 
-            } else if (cmd.startsWith("/bot")) {
+              await github.rest.issues.addLabels({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                issue_number: prNumber,
+                labels: ['approved', 'ready-to-merge']
+              });
+
+            } else if (comment.startsWith('/bot reject')) {
+              const reason = comment.replace('/bot reject', '').trim() || 'No reason provided';
+
               await github.rest.issues.createComment({
-                owner: context.repo.owner, repo: context.repo.repo, issue_number: prNumber,
-                body: "Unknown /bot command. Available: `/bot approve`, `/bot reject [reason]`, `/bot status`"
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                issue_number: prNumber,
+                body: '### PR Rejected\n\n' +
+                      'Rejected by: @' + commenter + '\n' +
+                      'Reason: ' + reason + '\n\n' +
+                      'Status: CHANGES REQUESTED'
+              });
+
+              await github.rest.issues.addLabels({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                issue_number: prNumber,
+                labels: ['changes-requested']
+              });
+
+            } else if (comment.startsWith('/bot status')) {
+              const pr = await github.rest.pulls.get({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                pull_number: prNumber
+              });
+
+              const reviews = await github.rest.pulls.listReviews({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                pull_number: prNumber
+              });
+
+              const checks = await github.rest.checks.listForRef({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                ref: pr.data.head.sha
+              });
+
+              const approvals = reviews.data.filter(r => r.state === 'APPROVED').length;
+              const checksStatus = checks.data.check_runs.map(c => `${c.name}: ${c.conclusion || c.status}`).join('\n');
+
+              await github.rest.issues.createComment({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                issue_number: prNumber,
+                body: '### PR Status Check\n\n' +
+                      `**Approvals:** ${approvals}\n` +
+                      `**Mergeable:** ${pr.data.mergeable ? 'YES' : 'NO'}\n` +
+                      `**Status Checks:**\n\`\`\`\n${checksStatus || 'None'}\n\`\`\`\n\n` +
+                      'Requested by: @' + commenter
+              });
+
+            } else if (comment.startsWith('/bot')) {
+              await github.rest.issues.createComment({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                issue_number: prNumber,
+                body: '### Unknown Command\n\n' +
+                      'Available commands:\n' +
+                      '- `/bot approve` - Approve PR\n' +
+                      '- `/bot reject [reason]` - Reject PR\n' +
+                      '- `/bot status` - Check PR status'
               });
             }
 
-      - name: Unauthorized command reply
+      - name: Unauthorized command
         if: steps.auth_check.outputs.authorized == 'false'
         uses: actions/github-script@v7
         with:
           github-token: ${{ secrets.GITHUB_TOKEN }}
           script: |
             const comment = context.payload.comment.body.trim();
-            if (comment.toLowerCase().startsWith("/bot")) {
+            if (comment.toLowerCase().startsWith('/bot')) {
               await github.rest.issues.createComment({
-                owner: context.repo.owner, repo: context.repo.repo, issue_number: context.issue.number,
-                body: "Only authorized admins and maintainers can use bot commands.\nSpecial admins: " + process.env.SPECIAL_ADMINS
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                issue_number: context.issue.number,
+                body: 'Only repository maintainers and authorized admins can use bot commands.\n\n' +
+                      'Special admins: ' + process.env.SPECIAL_ADMINS
               });
             }
