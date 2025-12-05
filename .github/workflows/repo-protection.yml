@@ -689,49 +689,177 @@ jobs:
             
             let statusReport = '### Repository Protection Status\n\n';
             statusReport += `**Generated:** ${new Date().toLocaleString()}\n`;
-            statusReport += `**Checked by:** @${context.actor}\n\n`;
+            statusReport += `**Checked by:** @${context.actor}\n`;
+            statusReport += `**Role:** ${needs.validate-user.outputs.user_role}\n\n`;
 
-            for (const branch of ['main', 'master']) {
+            // Get repository info first
+            const repo = await github.rest.repos.get({
+              owner: context.repo.owner,
+              repo: context.repo.repo
+            });
+
+            const protectedBranches = process.env.PROTECTED_BRANCHES.split(',');
+            
+            for (const branchName of protectedBranches) {
               try {
-                const protection = await github.rest.repos.getBranchProtection({
+                // First check if branch exists
+                const branch = await github.rest.repos.getBranch({
                   owner: context.repo.owner,
                   repo: context.repo.repo,
-                  branch: branch
+                  branch: branchName
                 });
 
-                const reviews = protection.data.required_pull_request_reviews;
-                const checks = protection.data.required_status_checks;
+                statusReport += `#### Branch: \`${branchName}\` ✅\n\n`;
+                statusReport += `**Branch exists:** YES\n`;
+                statusReport += `**Last commit:** ${branch.data.commit.commit.author.date}\n`;
+                statusReport += `**Commit SHA:** \`${branch.data.commit.sha.substring(0, 7)}\`\n\n`;
 
-                statusReport += `#### Branch: ${branch}\n\n`;
-                statusReport += `- Status: PROTECTED\n`;
-                statusReport += `- Required approvals: ${reviews?.required_approving_review_count || 0}\n`;
-                statusReport += `- Code owner review: ${reviews?.require_code_owner_reviews ? 'YES' : 'NO'}\n`;
-                statusReport += `- Dismiss stale reviews: ${reviews?.dismiss_stale_reviews ? 'YES' : 'NO'}\n`;
-                statusReport += `- Enforce for admins: ${protection.data.enforce_admins?.enabled ? 'YES' : 'NO'}\n`;
-                statusReport += `- Required status checks: ${checks?.contexts?.join(', ') || 'None'}\n`;
-                statusReport += `- Linear history: ${protection.data.required_linear_history?.enabled ? 'YES' : 'NO'}\n`;
-                statusReport += `- Conversation resolution: ${protection.data.required_conversation_resolution?.enabled ? 'YES' : 'NO'}\n\n`;
+                // Try to get protection info
+                try {
+                  const protection = await github.rest.repos.getBranchProtection({
+                    owner: context.repo.owner,
+                    repo: context.repo.repo,
+                    branch: branchName
+                  });
 
-              } catch (e) {
-                if (e.status === 404) {
-                  statusReport += `#### Branch: ${branch}\n\n`;
-                  statusReport += `- Status: NOT PROTECTED\n\n`;
+                  const reviews = protection.data.required_pull_request_reviews;
+                  const checks = protection.data.required_status_checks;
+
+                  statusReport += `**Protection Status:** PROTECTED 🔒\n\n`;
+                  statusReport += `**Protection Details:**\n`;
+                  statusReport += `- Required approvals: ${reviews?.required_approving_review_count || 0}\n`;
+                  statusReport += `- Code owner review: ${reviews?.require_code_owner_reviews ? 'YES' : 'NO'}\n`;
+                  statusReport += `- Dismiss stale reviews: ${reviews?.dismiss_stale_reviews ? 'YES' : 'NO'}\n`;
+                  statusReport += `- Last push approval: ${reviews?.require_last_push_approval ? 'YES' : 'NO'}\n`;
+                  statusReport += `- Enforce for admins: ${protection.data.enforce_admins?.enabled ? 'YES' : 'NO'}\n`;
+                  statusReport += `- Required checks: ${checks?.contexts?.join(', ') || 'None'}\n`;
+                  statusReport += `- Strict status checks: ${checks?.strict ? 'YES' : 'NO'}\n`;
+                  statusReport += `- Linear history: ${protection.data.required_linear_history?.enabled ? 'YES' : 'NO'}\n`;
+                  statusReport += `- Conversation resolution: ${protection.data.required_conversation_resolution?.enabled ? 'YES' : 'NO'}\n`;
+                  statusReport += `- Force pushes: ${protection.data.allow_force_pushes?.enabled ? 'ALLOWED' : 'BLOCKED'}\n`;
+                  statusReport += `- Deletions: ${protection.data.allow_deletions?.enabled ? 'ALLOWED' : 'BLOCKED'}\n\n`;
+
+                } catch (protectionError) {
+                  if (protectionError.status === 404) {
+                    statusReport += `**Protection Status:** NOT PROTECTED ⚠️\n\n`;
+                    statusReport += `⚠️ This branch exists but has no protection rules.\n`;
+                    statusReport += `**Recommendation:** Enable branch protection immediately.\n\n`;
+                  } else if (protectionError.status === 403) {
+                    statusReport += `**Protection Status:** UNKNOWN (Permission Denied) 🔐\n\n`;
+                    statusReport += `ℹ️ Unable to check protection rules due to insufficient permissions.\n`;
+                    statusReport += `This usually means:\n`;
+                    statusReport += `- The GITHUB_TOKEN lacks admin permissions\n`;
+                    statusReport += `- Branch protection exists but cannot be read\n`;
+                    statusReport += `- A Personal Access Token (PAT) is needed for full access\n\n`;
+                    statusReport += `**Alternative Method:**\n`;
+                    statusReport += `1. Go to Settings > Branches\n`;
+                    statusReport += `2. Check protection rules for \`${branchName}\` manually\n\n`;
+                  } else {
+                    statusReport += `**Protection Status:** ERROR ❌\n\n`;
+                    statusReport += `Error: ${protectionError.message}\n\n`;
+                  }
+                }
+
+              } catch (branchError) {
+                if (branchError.status === 404) {
+                  statusReport += `#### Branch: \`${branchName}\` ❌\n\n`;
+                  statusReport += `**Branch exists:** NO\n`;
+                  statusReport += `This branch has not been created yet.\n\n`;
                 } else {
-                  statusReport += `#### Branch: ${branch}\n\n`;
-                  statusReport += `- Status: ERROR\n`;
-                  statusReport += `- Error: ${e.message}\n\n`;
+                  statusReport += `#### Branch: \`${branchName}\` ⚠️\n\n`;
+                  statusReport += `**Error checking branch:** ${branchError.message}\n\n`;
                 }
               }
             }
+
+            // Add repository-wide security settings
+            statusReport += '---\n\n';
+            statusReport += '## Repository Security Settings\n\n';
+            
+            statusReport += `**Visibility:** ${repo.data.private ? 'PRIVATE 🔒' : 'PUBLIC 🌐'}\n`;
+            statusReport += `**Default Branch:** \`${repo.data.default_branch}\`\n`;
+            statusReport += `**Vulnerability Alerts:** ${repo.data.has_vulnerability_alerts ? 'ENABLED ✅' : 'DISABLED ❌'}\n`;
+            statusReport += `**Automated Security Fixes:** ${repo.data.security_and_analysis?.advanced_security?.status === 'enabled' ? 'ENABLED ✅' : 'DISABLED ❌'}\n`;
+            statusReport += `**Allow Squash Merge:** ${repo.data.allow_squash_merge ? 'YES' : 'NO'}\n`;
+            statusReport += `**Allow Merge Commit:** ${repo.data.allow_merge_commit ? 'YES' : 'NO'}\n`;
+            statusReport += `**Allow Rebase Merge:** ${repo.data.allow_rebase_merge ? 'YES' : 'NO'}\n`;
+            statusReport += `**Delete Branch on Merge:** ${repo.data.delete_branch_on_merge ? 'YES ✅' : 'NO ⚠️'}\n`;
+            statusReport += `**Allow Auto-Merge:** ${repo.data.allow_auto_merge ? 'YES' : 'NO'}\n\n`;
+
+            // Add recent activity summary
+            statusReport += '## Recent Activity (Last 7 Days)\n\n';
+            
+            const weekAgo = new Date();
+            weekAgo.setDate(weekAgo.getDate() - 7);
+            
+            const recentPRs = await github.rest.pulls.list({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              state: 'all',
+              per_page: 100
+            });
+            
+            const recentPRsFiltered = recentPRs.data.filter(pr => 
+              new Date(pr.updated_at) >= weekAgo
+            );
+            
+            statusReport += `**Pull Requests:** ${recentPRsFiltered.length} total\n`;
+            statusReport += `- Open: ${recentPRsFiltered.filter(pr => pr.state === 'open').length}\n`;
+            statusReport += `- Merged: ${recentPRsFiltered.filter(pr => pr.merged_at).length}\n`;
+            statusReport += `- Closed: ${recentPRsFiltered.filter(pr => pr.state === 'closed' && !pr.merged_at).length}\n\n`;
+
+            const recentCommits = await github.rest.repos.listCommits({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              since: weekAgo.toISOString(),
+              per_page: 100
+            });
+            
+            statusReport += `**Commits:** ${recentCommits.data.length}\n`;
+            statusReport += `**Contributors:** ${[...new Set(recentCommits.data.map(c => c.author?.login))].filter(Boolean).length}\n\n`;
+
+            // Add recommendations
+            statusReport += '---\n\n';
+            statusReport += '## Recommendations\n\n';
+            
+            const recommendations = [];
+            
+            if (!repo.data.private) {
+              recommendations.push('⚠️ Repository is public - ensure no sensitive data is committed');
+            }
+            
+            if (!repo.data.has_vulnerability_alerts) {
+              recommendations.push('❌ Enable vulnerability alerts in Settings > Security');
+            }
+            
+            if (!repo.data.delete_branch_on_merge) {
+              recommendations.push('⚠️ Enable automatic branch deletion to keep repository clean');
+            }
+            
+            if (repo.data.allow_squash_merge && repo.data.allow_merge_commit && repo.data.allow_rebase_merge) {
+              recommendations.push('ℹ️ Consider restricting merge strategies to maintain consistent history');
+            }
+            
+            if (recommendations.length > 0) {
+              recommendations.forEach((rec, index) => {
+                statusReport += `${index + 1}. ${rec}\n`;
+              });
+            } else {
+              statusReport += '✅ No immediate recommendations - repository is well configured!\n';
+            }
+            
+            statusReport += '\n---\n\n';
+            statusReport += '**Note:** If you see "Permission Denied" errors above, create a Personal Access Token (PAT) with `repo` scope and add it as a repository secret named `ADMIN_TOKEN`. Then update the workflow to use `secrets.ADMIN_TOKEN` instead of `secrets.GITHUB_TOKEN` for admin operations.\n\n';
+            statusReport += '*Generated by Professional Repository Protection System*';
 
             console.log(statusReport);
 
             await github.rest.issues.create({
               owner: context.repo.owner,
               repo: context.repo.repo,
-              title: `Protection Status - ${new Date().toISOString().split('T')[0]}`,
+              title: `Protection Status Report - ${new Date().toISOString().split('T')[0]}`,
               body: statusReport,
-              labels: ['status-report', 'automation']
+              labels: ['status-report', 'automation', 'security']
             });
 
   audit-report:
