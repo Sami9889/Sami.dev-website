@@ -2498,23 +2498,25 @@
                 }
             }, { passive: true });
 
-            // Add hover effects
+            // Add hover effects - capture dot and outline in closure to prevent reference errors
+            const cursorDot = dot;
+            const cursorOutline = outline;
             const interactiveElements = document.querySelectorAll('a, button, .nav-links a, .project-card, .skill-category, .logo, .hero-stats, .stat-item');
             interactiveElements.forEach(el => {
                 el.addEventListener('mouseenter', () => {
-                    if (dot && dot.classList) {
-                        dot.classList.add('hover');
+                    if (cursorDot && cursorDot.classList) {
+                        cursorDot.classList.add('hover');
                     }
-                    if (outline && outline.classList) {
-                        outline.classList.add('hover');
+                    if (cursorOutline && cursorOutline.classList) {
+                        cursorOutline.classList.add('hover');
                     }
                 }, { passive: true });
                 el.addEventListener('mouseleave', () => {
-                    if (dot && dot.classList) {
-                        dot.classList.remove('hover');
+                    if (cursorDot && cursorDot.classList) {
+                        cursorDot.classList.remove('hover');
                     }
-                    if (outline && outline.classList) {
-                        outline.classList.remove('hover');
+                    if (cursorOutline && cursorOutline.classList) {
+                        cursorOutline.classList.remove('hover');
                     }
                 }, { passive: true });
             });
@@ -2681,21 +2683,24 @@
 
         function attachProjectEventListeners() {
             if (!prefersReducedMotion && !isTouchDevice && dot && outline) {
+                // Capture dot and outline in closure to prevent reference errors
+                const cursorDot = dot;
+                const cursorOutline = outline;
                 document.querySelectorAll('.project-card').forEach(card => {
                     card.addEventListener('mouseenter', () => { 
-                        if (dot && dot.classList) {
-                            dot.classList.add('hover');
+                        if (cursorDot && cursorDot.classList) {
+                            cursorDot.classList.add('hover');
                         }
-                        if (outline && outline.classList) {
-                            outline.classList.add('hover');
+                        if (cursorOutline && cursorOutline.classList) {
+                            cursorOutline.classList.add('hover');
                         }
                     }, { passive: true });
                     card.addEventListener('mouseleave', () => { 
-                        if (dot && dot.classList) {
-                            dot.classList.remove('hover');
+                        if (cursorDot && cursorDot.classList) {
+                            cursorDot.classList.remove('hover');
                         }
-                        if (outline && outline.classList) {
-                            outline.classList.remove('hover');
+                        if (cursorOutline && cursorOutline.classList) {
+                            cursorOutline.classList.remove('hover');
                         }
                     }, { passive: true });
                 });
