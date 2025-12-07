@@ -2420,7 +2420,13 @@
     </a>
 
     <script>
-        function showPage(pageId) {
+        // Declare all global variables at the top to prevent ReferenceError
+        let dot = null, outline = null;
+        let projectsLoaded = false;
+        let loadingAttempts = 0;
+        const maxRetries = 3;
+        
+        function showPage(pageId, updateHistory = true) {
             const pages = document.querySelectorAll('.page');
             pages.forEach(page => page.classList.remove('active'));
             
@@ -2454,6 +2460,12 @@
             };
             document.title = pageTitles[pageId] || 'Samrath Singh';
             
+            // Update URL with history.pushState
+            if (updateHistory) {
+                const path = pageId === 'home' ? '/' : '/' + pageId;
+                history.pushState({ page: pageId }, document.title, path);
+            }
+            
             window.scrollTo({ top: 0, behavior: 'smooth' });
         }
 
@@ -2464,9 +2476,6 @@
         // Custom cursor removed for better performance
         const prefersReducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
         const isTouchDevice = 'ontouchstart' in window || navigator.maxTouchPoints > 0;
-
-        // Declare cursor element variables in broader scope
-        let dot, outline;
 
         // Optimized cursor with better performance
         if (!isTouchDevice && !prefersReducedMotion) {
@@ -2539,10 +2548,6 @@
         function scrollToTop() {
             window.scrollTo({ top: 0, behavior: 'smooth' });
         }
-
-        let projectsLoaded = false;
-        let loadingAttempts = 0;
-        const maxRetries = 3;
 
         async function loadGitHubProjects() {
             const loading = document.getElementById('loading');
@@ -2939,6 +2944,41 @@
                 setTimeout(() => {
                     document.getElementById('cookieBanner').classList.add('show');
                 }, 1000); // Show after 1 second
+            }
+        });
+        
+        // ============================================
+        // URL ROUTING - Handle browser back/forward buttons
+        // ============================================
+        window.addEventListener('popstate', function(event) {
+            if (event.state && event.state.page) {
+                showPage(event.state.page, false);
+            } else {
+                // If no state, determine page from URL
+                const path = window.location.pathname;
+                const pageId = path === '/' ? 'home' : path.substring(1);
+                showPage(pageId, false);
+            }
+        });
+        
+        // ============================================
+        // INITIALIZE PAGE BASED ON URL ON LOAD
+        // ============================================
+        window.addEventListener('DOMContentLoaded', function() {
+            const path = window.location.pathname;
+            const pageId = path === '/' ? 'home' : path.substring(1);
+            
+            // Valid page IDs
+            const validPages = ['home', 'about', 'skills', 'services', 'experience', 'projects', 'faq', 'contact', 'privacy', 'terms'];
+            
+            if (validPages.includes(pageId)) {
+                // Remove active class from home page
+                document.getElementById('home').classList.remove('active');
+                // Show the correct page without updating history
+                showPage(pageId, false);
+            } else if (pageId !== 'home' && path !== '/') {
+                // Invalid page, redirect to home
+                showPage('home', true);
             }
         });
     </script>
