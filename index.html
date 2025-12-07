@@ -2420,6 +2420,11 @@
     </a>
 
     <script>
+        // Declare cursor element variables at the top to prevent ReferenceError
+        // Initialize to null explicitly so they're safe to reference even on touch devices
+        let dot = null;
+        let outline = null;
+
         function showPage(pageId) {
             const pages = document.querySelectorAll('.page');
             pages.forEach(page => page.classList.remove('active'));
@@ -2454,6 +2459,12 @@
             };
             document.title = pageTitles[pageId] || 'Samrath Singh';
             
+            // Update URL with history.pushState
+            if (updateHistory) {
+                const path = pageId === 'home' ? '/' : '/' + pageId;
+                history.pushState({ page: pageId }, document.title, path);
+            }
+            
             window.scrollTo({ top: 0, behavior: 'smooth' });
         }
 
@@ -2464,9 +2475,6 @@
         // Custom cursor removed for better performance
         const prefersReducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
         const isTouchDevice = 'ontouchstart' in window || navigator.maxTouchPoints > 0;
-
-        // Declare cursor element variables in broader scope
-        let dot = null, outline = null;
 
         // Optimized cursor with better performance
         if (!isTouchDevice && !prefersReducedMotion) {
@@ -2496,23 +2504,25 @@
                 }
             }, { passive: true });
 
-            // Add hover effects
+            // Add hover effects - capture dot and outline in closure to prevent reference errors
+            const cursorDot = dot;
+            const cursorOutline = outline;
             const interactiveElements = document.querySelectorAll('a, button, .nav-links a, .project-card, .skill-category, .logo, .hero-stats, .stat-item');
             interactiveElements.forEach(el => {
                 el.addEventListener('mouseenter', () => {
-                    if (dot && dot.classList) {
-                        dot.classList.add('hover');
+                    if (cursorDot && cursorDot.classList) {
+                        cursorDot.classList.add('hover');
                     }
-                    if (outline && outline.classList) {
-                        outline.classList.add('hover');
+                    if (cursorOutline && cursorOutline.classList) {
+                        cursorOutline.classList.add('hover');
                     }
                 }, { passive: true });
                 el.addEventListener('mouseleave', () => {
-                    if (dot && dot.classList) {
-                        dot.classList.remove('hover');
+                    if (cursorDot && cursorDot.classList) {
+                        cursorDot.classList.remove('hover');
                     }
-                    if (outline && outline.classList) {
-                        outline.classList.remove('hover');
+                    if (cursorOutline && cursorOutline.classList) {
+                        cursorOutline.classList.remove('hover');
                     }
                 }, { passive: true });
             });
@@ -2539,10 +2549,6 @@
         function scrollToTop() {
             window.scrollTo({ top: 0, behavior: 'smooth' });
         }
-
-        let projectsLoaded = false;
-        let loadingAttempts = 0;
-        const maxRetries = 3;
 
         async function loadGitHubProjects() {
             const loading = document.getElementById('loading');
@@ -2679,21 +2685,24 @@
 
         function attachProjectEventListeners() {
             if (!prefersReducedMotion && !isTouchDevice && dot && outline) {
+                // Capture dot and outline in closure to prevent reference errors
+                const cursorDot = dot;
+                const cursorOutline = outline;
                 document.querySelectorAll('.project-card').forEach(card => {
                     card.addEventListener('mouseenter', () => { 
-                        if (dot && dot.classList) {
-                            dot.classList.add('hover');
+                        if (cursorDot && cursorDot.classList) {
+                            cursorDot.classList.add('hover');
                         }
-                        if (outline && outline.classList) {
-                            outline.classList.add('hover');
+                        if (cursorOutline && cursorOutline.classList) {
+                            cursorOutline.classList.add('hover');
                         }
                     }, { passive: true });
                     card.addEventListener('mouseleave', () => { 
-                        if (dot && dot.classList) {
-                            dot.classList.remove('hover');
+                        if (cursorDot && cursorDot.classList) {
+                            cursorDot.classList.remove('hover');
                         }
-                        if (outline && outline.classList) {
-                            outline.classList.remove('hover');
+                        if (cursorOutline && cursorOutline.classList) {
+                            cursorOutline.classList.remove('hover');
                         }
                     }, { passive: true });
                 });
@@ -2884,31 +2893,28 @@
         window.addEventListener('scroll', revealOnScroll);
         revealOnScroll(); // Initial check
         
-        // Wrap showPage to add scroll-reveal and skill bar animations
-        (function() {
-            const originalShowPage = showPage;
-            showPage = function(pageId) {
-                // Call the original showPage function
-                if (typeof originalShowPage === 'function') {
-                    originalShowPage(pageId);
-                }
-                
-                // Add scroll-reveal class to main content sections
-                setTimeout(() => {
-                    const sections = document.querySelectorAll('.skill-category, .project-card, .timeline-item, .faq-item');
-                    sections.forEach((section, index) => {
-                        section.classList.add('scroll-reveal');
-                        section.style.transitionDelay = `${index * 0.1}s`;
-                    });
-                    revealOnScroll();
-                }, 100);
-                
-                // Trigger skill bar animation when Skills page is shown
-                if (pageId === 'skills') {
-                    setTimeout(animateSkillBars, 100);
-                }
-            };
-        })();
+        // Add scroll-reveal class to sections when pages change
+        const originalShowPageFunc = showPage;
+        showPage = function(pageId, updateHistory = true) {
+            if (typeof originalShowPageFunc === 'function') {
+                originalShowPageFunc(pageId, updateHistory);
+            }
+            
+            // Add scroll-reveal class to main content sections
+            setTimeout(() => {
+                const sections = document.querySelectorAll('.skill-category, .project-card, .timeline-item, .faq-item');
+                sections.forEach((section, index) => {
+                    section.classList.add('scroll-reveal');
+                    section.style.transitionDelay = `${index * 0.1}s`;
+                });
+                revealOnScroll();
+            }, 100);
+            
+            // Trigger skill bar animation when Skills page is shown
+            if (pageId === 'skills') {
+                setTimeout(animateSkillBars, 100);
+            }
+        };
         
         // ============================================
         // COOKIE CONSENT BANNER
@@ -2937,6 +2943,41 @@
                 setTimeout(() => {
                     document.getElementById('cookieBanner').classList.add('show');
                 }, 1000); // Show after 1 second
+            }
+        });
+        
+        // ============================================
+        // URL ROUTING - Handle browser back/forward buttons
+        // ============================================
+        window.addEventListener('popstate', function(event) {
+            if (event.state && event.state.page) {
+                showPage(event.state.page, false);
+            } else {
+                // If no state, determine page from URL
+                const path = window.location.pathname;
+                const pageId = path === '/' ? 'home' : path.substring(1);
+                showPage(pageId, false);
+            }
+        });
+        
+        // ============================================
+        // INITIALIZE PAGE BASED ON URL ON LOAD
+        // ============================================
+        window.addEventListener('DOMContentLoaded', function() {
+            const path = window.location.pathname;
+            const pageId = path === '/' ? 'home' : path.substring(1);
+            
+            // Valid page IDs
+            const validPages = ['home', 'about', 'skills', 'services', 'experience', 'projects', 'faq', 'contact', 'privacy', 'terms'];
+            
+            if (validPages.includes(pageId)) {
+                // Remove active class from home page
+                document.getElementById('home').classList.remove('active');
+                // Show the correct page without updating history
+                showPage(pageId, false);
+            } else if (pageId !== 'home' && path !== '/') {
+                // Invalid page, redirect to home
+                showPage('home', true);
             }
         });
     </script>
