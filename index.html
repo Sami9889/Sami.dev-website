@@ -2825,13 +2825,7 @@
         }
         
         // Trigger skill bar animation when Skills page is shown
-        const originalShowPage = showPage;
-        showPage = function(pageId) {
-            originalShowPage(pageId);
-            if (pageId === 'skills') {
-                setTimeout(animateSkillBars, 100);
-            }
-        };
+        // (This wrapper will be extended below to include scroll-reveal functionality)
         
         // ============================================
         // SCROLL PROGRESS BAR
@@ -2906,8 +2900,8 @@
                 originalShowPageFunc(pageId, updateHistory);
             }
             
+            // Add scroll-reveal class to main content sections
             setTimeout(() => {
-                // Add scroll-reveal class to main content sections
                 const sections = document.querySelectorAll('.skill-category, .project-card, .timeline-item, .faq-item');
                 sections.forEach((section, index) => {
                     section.classList.add('scroll-reveal');
@@ -2916,6 +2910,7 @@
                 revealOnScroll();
             }, 100);
             
+            // Trigger skill bar animation when Skills page is shown
             if (pageId === 'skills') {
                 setTimeout(animateSkillBars, 100);
             }
