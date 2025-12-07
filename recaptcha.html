@@ -22,40 +22,55 @@
   </script>
   
   <script>
+    // Initialize StatusPage availability flag
+    window.statusPageAvailable = false;
+    
     // Load StatusPage widget with error handling
     (function() {
       try {
         const script = document.createElement('script');
         script.src = 'https://samidev.statuspage.io/embed/script.js';
+        script.async = true;
+        script.defer = true;
         script.crossOrigin = 'anonymous';
+        
+        script.onload = function() {
+          // Mark as available when script loads successfully
+          window.statusPageAvailable = true;
+        };
+        
         script.onerror = function() {
-          console.warn('StatusPage widget failed to load. This is non-critical.');
+          // Silently fail - StatusPage is optional
+          window.statusPageAvailable = false;
           // Create a dummy StatusPage object to prevent errors if code tries to use it
           window.StatusPage = window.StatusPage || {
             page: function() {
               return {
-                scheduledMaintenances: function() {
-                  console.warn('StatusPage widget not loaded - using fallback');
+                scheduledMaintenances: function(opts) {
+                  // Silent fallback - no warnings
+                  if (opts && opts.error) opts.error(new Error('StatusPage not available'));
                 },
-                components: function() {
-                  console.warn('StatusPage widget not loaded - using fallback');
+                components: function(opts) {
+                  // Silent fallback - no warnings
+                  if (opts && opts.error) opts.error(new Error('StatusPage not available'));
                 }
               };
             }
           };
         };
+        
         document.head.appendChild(script);
       } catch (e) {
-        console.warn('Error loading StatusPage widget:', e);
-        // Create a dummy StatusPage object to prevent errors
+        // Silently handle error - StatusPage is optional
+        window.statusPageAvailable = false;
         window.StatusPage = window.StatusPage || {
           page: function() {
             return {
-              scheduledMaintenances: function() {
-                console.warn('StatusPage widget not loaded - using fallback');
+              scheduledMaintenances: function(opts) {
+                if (opts && opts.error) opts.error(new Error('StatusPage not available'));
               },
-              components: function() {
-                console.warn('StatusPage widget not loaded - using fallback');
+              components: function(opts) {
+                if (opts && opts.error) opts.error(new Error('StatusPage not available'));
               }
             };
           }
@@ -107,7 +122,7 @@
     function checkMaintenanceStatus() {
       // Only check if StatusPage widget is available
       if (!window.statusPageAvailable || typeof StatusPage === 'undefined' || typeof StatusPage.page !== 'function') {
-        console.log('StatusPage widget not available, skipping maintenance check');
+        // Silently skip - StatusPage is optional
         return;
       }
       
@@ -116,7 +131,7 @@
         
         // Check if scheduledMaintenances method exists
         if (typeof sp.scheduledMaintenances !== 'function') {
-          console.warn('StatusPage scheduledMaintenances method not available');
+          // Silently skip if method not available
           return;
         }
         
@@ -126,18 +141,15 @@
           success: function(data) {
             if (data.scheduled_maintenances && data.scheduled_maintenances.length > 0) {
               // Active maintenance found, redirect
-              console.log('Active maintenance detected, redirecting...');
               window.location.replace('/maintenance.html');
             }
           },
           error: function(err) {
-            console.warn('Error checking maintenance status:', err);
-            // On error, continue normally
+            // Silently continue on error - maintenance check is optional
           }
         });
       } catch (e) {
-        console.warn('Error initializing StatusPage maintenance check:', e);
-        // Continue normally if check fails
+        // Silently continue if check fails - StatusPage is optional
       }
     }
     
