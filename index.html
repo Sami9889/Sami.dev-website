@@ -2466,7 +2466,7 @@
         const isTouchDevice = 'ontouchstart' in window || navigator.maxTouchPoints > 0;
 
         // Declare cursor element variables in broader scope
-        let dot, outline;
+        let dot = null, outline = null;
 
         // Optimized cursor with better performance
         if (!isTouchDevice && !prefersReducedMotion) {
@@ -2816,13 +2816,7 @@
         }
         
         // Trigger skill bar animation when Skills page is shown
-        const originalShowPage = showPage;
-        showPage = function(pageId) {
-            originalShowPage(pageId);
-            if (pageId === 'skills') {
-                setTimeout(animateSkillBars, 100);
-            }
-        };
+        // (This wrapper will be extended below to include scroll-reveal functionality)
         
         // ============================================
         // SCROLL PROGRESS BAR
@@ -2890,15 +2884,14 @@
         window.addEventListener('scroll', revealOnScroll);
         revealOnScroll(); // Initial check
         
-        // Add scroll-reveal class to sections when pages change
-        const originalShowPageFunc = showPage;
+        // Wrap showPage to add scroll-reveal and skill bar animations
+        const originalShowPage = showPage;
         showPage = function(pageId) {
-            if (typeof originalShowPageFunc === 'function') {
-                originalShowPageFunc(pageId);
-            }
+            // Call the original showPage function
+            originalShowPage(pageId);
             
+            // Add scroll-reveal class to main content sections
             setTimeout(() => {
-                // Add scroll-reveal class to main content sections
                 const sections = document.querySelectorAll('.skill-category, .project-card, .timeline-item, .faq-item');
                 sections.forEach((section, index) => {
                     section.classList.add('scroll-reveal');
@@ -2907,6 +2900,7 @@
                 revealOnScroll();
             }, 100);
             
+            // Trigger skill bar animation when Skills page is shown
             if (pageId === 'skills') {
                 setTimeout(animateSkillBars, 100);
             }
