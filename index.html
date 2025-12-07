@@ -2901,9 +2901,9 @@
         
         // Add scroll-reveal class to sections when pages change
         const originalShowPageFunc = showPage;
-        showPage = function(pageId) {
+        showPage = function(pageId, updateHistory = true) {
             if (typeof originalShowPageFunc === 'function') {
-                originalShowPageFunc(pageId);
+                originalShowPageFunc(pageId, updateHistory);
             }
             
             setTimeout(() => {
