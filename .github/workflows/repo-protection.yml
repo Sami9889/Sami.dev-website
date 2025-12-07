@@ -4,7 +4,7 @@ on:
   workflow_dispatch:
     inputs:
       action:
-        description: 'Protection action to perform'
+        description: 'Action to perform'
         required: true
         type: choice
         options: 
@@ -13,6 +13,9 @@ on:
           - emergency-unlock
           - status-check
           - audit-report
+          - admin-console
+          - security-health-check
+          - compliance-report
       confirmation:
         description: 'Type "CONFIRM" to proceed'
         required: false
@@ -23,24 +26,39 @@ on:
         default: '2'
         type: choice
         options: ['1','2','3','4','5','6']
+      notification_level:
+        description: 'Security notification level'
+        required: false
+        default: 'normal'
+        type: choice
+        options: ['silent','normal','verbose']
 
   schedule:
-    - cron: '0 2 * * *'
-    - cron: '0 8 * * 1'
+    - cron: '0 2 * * *'      # Daily cleanup at 2 AM UTC
+    - cron: '0 8 * * 1'      # Weekly audit every Monday at 8 AM UTC
+    - cron: '0 12 * * 0'     # Weekly compliance report Sunday noon
+    - cron: '0 */6 * * *'    # Security health check every 6 hours
 
   issue_comment:
     types: [created]
 
   pull_request:
-    types: [opened, synchronize, reopened, labeled, closed]
+    types: [opened, synchronize, reopened, labeled, closed, ready_for_review]
 
   pull_request_review:
-    types: [submitted, dismissed]
+    types: [submitted, dismissed, edited]
 
   push:
     branches:
       - main
       - master
+      - develop
+      - staging
+      - production
+
+  workflow_run:
+    workflows: ["*"]
+    types: [completed]
 
 # NOTE: This workflow requires a GitHub token with admin permissions.
 # The GITHUB_TOKEN has limitations - for branch protection, you need either:
@@ -60,16 +78,23 @@ permissions:
 
 env:
   MAX_BRANCH_AGE_DAYS: 30
-  SPECIAL_ADMINS: 'kinsta,getsentry,thnxdev,vercel,wasmer,coderabbit-ai,coderabbitai[bot]'
+  STALE_BRANCH_WARNING_DAYS: 21
+  SPECIAL_ADMINS: 'kinsta,getsentry,thnxdev,vercel,wasmer,coderabbit-ai,coderabbitai[bot],dependabot[bot],renovate[bot],github-actions[bot]'
+  PROTECTED_BRANCHES: 'main,master,develop,staging,production'
+  SECURITY_SCAN_VERSION: 'v2.1.0'
 
 jobs:
-  validate-admin:
+  validate-user:
     runs-on: ubuntu-latest
     outputs:
       authorized: ${{ steps.check.outputs.authorized }}
-      admin_name: ${{ steps.check.outputs.admin_name }}
+      user_role: ${{ steps.check.outputs.user_role }}
+      user_name: ${{ steps.check.outputs.user_name }}
+      can_lockdown: ${{ steps.check.outputs.can_lockdown }}
+      can_emergency: ${{ steps.check.outputs.can_emergency }}
+      can_remove_protection: ${{ steps.check.outputs.can_remove_protection }}
     steps:
-      - name: Validate admin access
+      - name: Check user permissions and role
         id: check
         uses: actions/github-script@v7
         with:
@@ -79,36 +104,79 @@ jobs:
             const owner = context.repo.owner;
             const specialAdmins = process.env.SPECIAL_ADMINS.split(',');
             
-            console.log('Checking authorization for: ' + actor);
+            console.log('===== AUTHORIZATION CHECK =====');
+            console.log('User: ' + actor);
+            console.log('Repository: ' + context.repo.owner + '/' + context.repo.repo);
             
-            // Check if user is repository owner
+            let userRole = 'unauthorized';
+            let canLockdown = false;
+            let canEmergency = false;
+            let canRemoveProtection = false;
+            
+            // Check if user is repository owner - SUPER ADMIN (always authorized)
             if (actor === owner) {
-              console.log('User is repository owner - AUTHORIZED');
+              console.log('Role: SUPER ADMIN (Repository Owner)');
+              userRole = 'super_admin';
+              canLockdown = true;
+              canEmergency = true;
+              canRemoveProtection = true;
               core.setOutput('authorized', 'true');
-              core.setOutput('admin_name', actor);
+              core.setOutput('user_role', userRole);
+              core.setOutput('user_name', actor);
+              core.setOutput('can_lockdown', 'true');
+              core.setOutput('can_emergency', 'true');
+              core.setOutput('can_remove_protection', 'true');
               return;
             }
             
-            // Check if user is in special admins list (including bots)
-            if (specialAdmins.includes(actor)) {
-              console.log('User is special admin - AUTHORIZED');
-              core.setOutput('authorized', 'true');
-              core.setOutput('admin_name', actor);
-              return;
-            }
-            
-            // Check if actor ends with [bot] and base name is in special admins
+            // Check if actor is a bot account - ALL BOTS GET SPECIAL ADMIN ACCESS
             if (actor.endsWith('[bot]')) {
+              console.log('Role: BOT ACCOUNT - AUTHORIZED');
+              
+              // Check if it's a whitelisted bot
               const baseName = actor.replace('[bot]', '');
-              if (specialAdmins.includes(baseName)) {
-                console.log('Bot account recognized - AUTHORIZED');
-                core.setOutput('authorized', 'true');
-                core.setOutput('admin_name', actor);
-                return;
+              const isWhitelisted = specialAdmins.includes(baseName) || specialAdmins.includes(actor);
+              
+              if (isWhitelisted) {
+                console.log('Bot is whitelisted: ' + actor);
+                userRole = 'special_admin';
+                canLockdown = true;
+                canEmergency = false;
+                canRemoveProtection = false;
+              } else {
+                console.log('Bot is not whitelisted but authorized for basic operations: ' + actor);
+                userRole = 'bot';
+                canLockdown = false;
+                canEmergency = false;
+                canRemoveProtection = false;
               }
+              
+              core.setOutput('authorized', 'true');
+              core.setOutput('user_role', userRole);
+              core.setOutput('user_name', actor);
+              core.setOutput('can_lockdown', canLockdown.toString());
+              core.setOutput('can_emergency', 'false');
+              core.setOutput('can_remove_protection', canRemoveProtection.toString());
+              return;
             }
             
-            // Check if user has write/admin/maintain permissions
+            // Check if user is in special admins list - SPECIAL ADMIN
+            if (specialAdmins.includes(actor)) {
+              console.log('Role: SPECIAL ADMIN');
+              userRole = 'special_admin';
+              canLockdown = true;
+              canEmergency = false;
+              canRemoveProtection = false;
+              core.setOutput('authorized', 'true');
+              core.setOutput('user_role', userRole);
+              core.setOutput('user_name', actor);
+              core.setOutput('can_lockdown', 'true');
+              core.setOutput('can_emergency', 'false');
+              core.setOutput('can_remove_protection', 'false');
+              return;
+            }
+            
+            // Check repository permissions - MAINTAINER/ADMIN/WRITE
             try {
               const { data: permission } = await github.rest.repos.getCollaboratorPermissionLevel({
                 owner: context.repo.owner,
@@ -117,26 +185,250 @@ jobs:
               });
               
               const userPermission = permission.permission;
-              console.log('User permission level: ' + userPermission);
+              console.log('Permission level: ' + userPermission);
               
-              if (userPermission === 'admin' || userPermission === 'maintain' || userPermission === 'write') {
-                console.log('User has sufficient permissions - AUTHORIZED');
+              if (userPermission === 'admin') {
+                console.log('Role: ADMIN');
+                userRole = 'admin';
+                canLockdown = true;
+                canEmergency = false;
+                canRemoveProtection = true;
                 core.setOutput('authorized', 'true');
-                core.setOutput('admin_name', actor);
+                core.setOutput('user_role', userRole);
+                core.setOutput('user_name', actor);
+                core.setOutput('can_lockdown', 'true');
+                core.setOutput('can_emergency', 'false');
+                core.setOutput('can_remove_protection', 'true');
+                return;
+              } else if (userPermission === 'maintain') {
+                console.log('Role: MAINTAINER');
+                userRole = 'maintainer';
+                canLockdown = false;
+                canEmergency = false;
+                canRemoveProtection = false;
+                core.setOutput('authorized', 'true');
+                core.setOutput('user_role', userRole);
+                core.setOutput('user_name', actor);
+                core.setOutput('can_lockdown', 'false');
+                core.setOutput('can_emergency', 'false');
+                core.setOutput('can_remove_protection', 'false');
+                return;
+              } else if (userPermission === 'write') {
+                console.log('Role: CONTRIBUTOR');
+                userRole = 'contributor';
+                canLockdown = false;
+                canEmergency = false;
+                canRemoveProtection = false;
+                core.setOutput('authorized', 'true');
+                core.setOutput('user_role', userRole);
+                core.setOutput('user_name', actor);
+                core.setOutput('can_lockdown', 'false');
+                core.setOutput('can_emergency', 'false');
+                core.setOutput('can_remove_protection', 'false');
                 return;
               }
             } catch (error) {
               console.log('Could not check user permissions: ' + error.message);
+              console.log('This may be a bot account or app installation');
             }
             
             // User is not authorized
-            console.log('User is not authorized');
+            console.log('Role: UNAUTHORIZED');
+            console.log('Actor "' + actor + '" does not match owner "' + owner + '"');
+            console.log('Actor is not in special admins list');
+            console.log('No repository permissions found');
             core.setOutput('authorized', 'false');
-            core.setFailed('Access denied. Only repository maintainers and authorized admins can execute workflows');
+            core.setOutput('user_role', 'unauthorized');
+            core.setOutput('user_name', actor);
+            core.setOutput('can_lockdown', 'false');
+            core.setOutput('can_emergency', 'false');
+            core.setOutput('can_remove_protection', 'false');
+            core.setFailed('Access denied. User: ' + actor + ', Owner: ' + owner);
+
+  admin-console:
+    needs: validate-user
+    if: |
+      needs.validate-user.outputs.authorized == 'true' &&
+      github.event.inputs.action == 'admin-console'
+    runs-on: ubuntu-latest
+    steps:
+      - name: Generate admin console dashboard
+        uses: actions/github-script@v7
+        with:
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          script: |
+            const userName = '${{ needs.validate-user.outputs.user_name }}';
+            const userRole = '${{ needs.validate-user.outputs.user_role }}';
+            const canLockdown = '${{ needs.validate-user.outputs.can_lockdown }}' === 'true';
+            const canEmergency = '${{ needs.validate-user.outputs.can_emergency }}' === 'true';
+            const canRemoveProtection = '${{ needs.validate-user.outputs.can_remove_protection }}' === 'true';
+            
+            // Get current protection status
+            let protectionStatus = {};
+            for (const branch of ['main', 'master']) {
+              try {
+                const protection = await github.rest.repos.getBranchProtection({
+                  owner: context.repo.owner,
+                  repo: context.repo.repo,
+                  branch: branch
+                });
+                protectionStatus[branch] = {
+                  protected: true,
+                  approvals: protection.data.required_pull_request_reviews?.required_approving_review_count || 0,
+                  enforceAdmins: protection.data.enforce_admins?.enabled || false,
+                  requiredChecks: protection.data.required_status_checks?.contexts || []
+                };
+              } catch (e) {
+                protectionStatus[branch] = { protected: false };
+              }
+            }
+            
+            // Get recent activity
+            const weekAgo = new Date();
+            weekAgo.setDate(weekAgo.getDate() - 7);
+            
+            const prs = await github.rest.pulls.list({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              state: 'all',
+              per_page: 10,
+              sort: 'updated',
+              direction: 'desc'
+            });
+            
+            const recentPRs = prs.data.filter(pr => new Date(pr.updated_at) >= weekAgo);
+            
+            // Build dashboard
+            let dashboard = '# Admin Console Dashboard\n\n';
+            dashboard += `**Generated:** ${new Date().toLocaleString()}\n`;
+            dashboard += `**User:** @${userName}\n`;
+            dashboard += `**Role:** ${userRole.toUpperCase().replace('_', ' ')}\n\n`;
+            
+            dashboard += '---\n\n';
+            
+            // Role capabilities
+            dashboard += '## Your Permissions\n\n';
+            
+            const roleDescriptions = {
+              'super_admin': 'Full control over repository protection and settings',
+              'admin': 'Can manage branch protection and repository settings',
+              'special_admin': 'Authorized external admin (limited emergency access)',
+              'maintainer': 'Can approve PRs and manage issues',
+              'contributor': 'Can create PRs and comment'
+            };
+            
+            dashboard += `**Description:** ${roleDescriptions[userRole] || 'Limited access'}\n\n`;
+            
+            dashboard += '**Capabilities:**\n';
+            dashboard += `- Lock down repository: ${canLockdown ? 'YES' : 'NO'}\n`;
+            dashboard += `- Remove protection: ${canRemoveProtection ? 'YES' : 'NO'}\n`;
+            dashboard += `- Emergency unlock: ${canEmergency ? 'YES' : 'NO'}\n`;
+            dashboard += `- View status: YES\n`;
+            dashboard += `- Approve PRs: YES\n`;
+            dashboard += `- Run audits: YES\n\n`;
+            
+            dashboard += '---\n\n';
+            
+            // Current protection status
+            dashboard += '## Current Protection Status\n\n';
+            
+            for (const [branch, status] of Object.entries(protectionStatus)) {
+              if (status.protected) {
+                dashboard += `### Branch: \`${branch}\` - PROTECTED\n\n`;
+                dashboard += `- Required approvals: ${status.approvals}\n`;
+                dashboard += `- Enforce for admins: ${status.enforceAdmins ? 'YES' : 'NO'}\n`;
+                dashboard += `- Required checks: ${status.requiredChecks.join(', ') || 'None'}\n\n`;
+              } else {
+                dashboard += `### Branch: \`${branch}\` - NOT PROTECTED\n\n`;
+              }
+            }
+            
+            dashboard += '---\n\n';
+            
+            // Recent activity
+            dashboard += '## Recent Activity (Last 7 Days)\n\n';
+            dashboard += `- Total PRs: ${recentPRs.length}\n`;
+            dashboard += `- Open PRs: ${recentPRs.filter(pr => pr.state === 'open').length}\n`;
+            dashboard += `- Merged PRs: ${recentPRs.filter(pr => pr.merged_at).length}\n`;
+            dashboard += `- Closed PRs: ${recentPRs.filter(pr => pr.state === 'closed' && !pr.merged_at).length}\n\n`;
+            
+            if (recentPRs.length > 0) {
+              dashboard += '**Recent Pull Requests:**\n\n';
+              recentPRs.slice(0, 5).forEach(pr => {
+                const status = pr.state === 'open' ? 'OPEN' : pr.merged_at ? 'MERGED' : 'CLOSED';
+                dashboard += `- #${pr.number}: ${pr.title} [${status}]\n`;
+              });
+              dashboard += '\n';
+            }
+            
+            dashboard += '---\n\n';
+            
+            // Available actions
+            dashboard += '## Available Actions\n\n';
+            
+            if (canLockdown) {
+              dashboard += '### Lock Down Repository\n';
+              dashboard += 'Apply strict branch protection rules.\n';
+              dashboard += '```\nAction: lock-it-down\nConfirmation: CONFIRM\n```\n\n';
+            }
+            
+            if (canRemoveProtection) {
+              dashboard += '### Remove Protection\n';
+              dashboard += 'Remove branch protection rules.\n';
+              dashboard += '```\nAction: remove-protection\nConfirmation: CONFIRM\n```\n\n';
+            }
+            
+            if (canEmergency) {
+              dashboard += '### Emergency Unlock\n';
+              dashboard += 'EMERGENCY ONLY - Temporarily disable all protections.\n';
+              dashboard += '```\nAction: emergency-unlock\nConfirmation: CONFIRM\n```\n\n';
+            }
+            
+            dashboard += '### Status Check\n';
+            dashboard += 'View detailed protection status.\n';
+            dashboard += '```\nAction: status-check\n```\n\n';
+            
+            dashboard += '### Security Audit\n';
+            dashboard += 'Generate comprehensive security audit report.\n';
+            dashboard += '```\nAction: audit-report\n```\n\n';
+            
+            dashboard += '---\n\n';
+            
+            // Bot commands
+            dashboard += '## Bot Commands (In PR Comments)\n\n';
+            dashboard += '- `/bot approve` - Approve a pull request\n';
+            dashboard += '- `/bot reject [reason]` - Reject a pull request\n';
+            dashboard += '- `/bot status` - Check PR status\n\n';
+            
+            dashboard += '---\n\n';
+            
+            // Role hierarchy
+            dashboard += '## Role Hierarchy\n\n';
+            dashboard += '1. **SUPER ADMIN** (Repository Owner) - Full access to all features\n';
+            dashboard += '2. **ADMIN** (Admin permission) - Can manage protection, no emergency access\n';
+            dashboard += '3. **SPECIAL ADMIN** (External services) - Can apply protection only\n';
+            dashboard += '4. **MAINTAINER** (Maintain permission) - Can approve PRs, view status\n';
+            dashboard += '5. **CONTRIBUTOR** (Write permission) - Can create PRs, limited access\n\n';
+            
+            dashboard += `**Your current role: ${userRole.toUpperCase().replace('_', ' ')}**\n\n`;
+            
+            dashboard += '---\n\n';
+            dashboard += '*Generated by Professional Repository Protection System*';
+            
+            // Create issue with dashboard
+            const issue = await github.rest.issues.create({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              title: `Admin Console - ${userName} - ${new Date().toISOString().split('T')[0]}`,
+              body: dashboard,
+              labels: ['admin-console', 'documentation']
+            });
+            
+            console.log('Admin console dashboard created: #' + issue.data.number);
 
   cleanup-old-branches:
-    needs: validate-admin
-    if: needs.validate-admin.outputs.authorized == 'true' && github.event_name == 'schedule' && github.event.schedule == '0 2 * * *'
+    needs: validate-user
+    if: needs.validate-user.outputs.authorized == 'true' && github.event_name == 'schedule' && github.event.schedule == '0 2 * * *'
     runs-on: ubuntu-latest
     steps:
       - name: Checkout repository
@@ -215,9 +507,10 @@ jobs:
             });
 
   apply-protection:
-    needs: validate-admin
+    needs: validate-user
     if: |
-      needs.validate-admin.outputs.authorized == 'true' &&
+      needs.validate-user.outputs.authorized == 'true' &&
+      needs.validate-user.outputs.can_lockdown == 'true' &&
       github.event.inputs.action == 'lock-it-down'
     runs-on: ubuntu-latest
     steps:
@@ -298,9 +591,10 @@ jobs:
             }
 
   remove-protection:
-    needs: validate-admin
+    needs: validate-user
     if: |
-      needs.validate-admin.outputs.authorized == 'true' &&
+      needs.validate-user.outputs.authorized == 'true' &&
+      needs.validate-user.outputs.can_remove_protection == 'true' &&
       github.event.inputs.action == 'remove-protection'
     runs-on: ubuntu-latest
     steps:
@@ -336,9 +630,10 @@ jobs:
             }
 
   emergency-unlock:
-    needs: validate-admin
+    needs: validate-user
     if: |
-      needs.validate-admin.outputs.authorized == 'true' &&
+      needs.validate-user.outputs.authorized == 'true' &&
+      needs.validate-user.outputs.can_emergency == 'true' &&
       github.event.inputs.action == 'emergency-unlock'
     runs-on: ubuntu-latest
     steps:
@@ -379,9 +674,9 @@ jobs:
             }
 
   status-check:
-    needs: validate-admin
+    needs: validate-user
     if: |
-      needs.validate-admin.outputs.authorized == 'true' &&
+      needs.validate-user.outputs.authorized == 'true' &&
       github.event.inputs.action == 'status-check'
     runs-on: ubuntu-latest
     steps:
@@ -394,55 +689,183 @@ jobs:
             
             let statusReport = '### Repository Protection Status\n\n';
             statusReport += `**Generated:** ${new Date().toLocaleString()}\n`;
-            statusReport += `**Checked by:** @${context.actor}\n\n`;
+            statusReport += `**Checked by:** @${context.actor}\n`;
+            statusReport += `**Role:** ${needs.validate-user.outputs.user_role}\n\n`;
 
-            for (const branch of ['main', 'master']) {
+            // Get repository info first
+            const repo = await github.rest.repos.get({
+              owner: context.repo.owner,
+              repo: context.repo.repo
+            });
+
+            const protectedBranches = process.env.PROTECTED_BRANCHES.split(',');
+            
+            for (const branchName of protectedBranches) {
               try {
-                const protection = await github.rest.repos.getBranchProtection({
+                // First check if branch exists
+                const branch = await github.rest.repos.getBranch({
                   owner: context.repo.owner,
                   repo: context.repo.repo,
-                  branch: branch
+                  branch: branchName
                 });
 
-                const reviews = protection.data.required_pull_request_reviews;
-                const checks = protection.data.required_status_checks;
+                statusReport += `#### Branch: \`${branchName}\` ✅\n\n`;
+                statusReport += `**Branch exists:** YES\n`;
+                statusReport += `**Last commit:** ${branch.data.commit.commit.author.date}\n`;
+                statusReport += `**Commit SHA:** \`${branch.data.commit.sha.substring(0, 7)}\`\n\n`;
 
-                statusReport += `#### Branch: ${branch}\n\n`;
-                statusReport += `- Status: PROTECTED\n`;
-                statusReport += `- Required approvals: ${reviews?.required_approving_review_count || 0}\n`;
-                statusReport += `- Code owner review: ${reviews?.require_code_owner_reviews ? 'YES' : 'NO'}\n`;
-                statusReport += `- Dismiss stale reviews: ${reviews?.dismiss_stale_reviews ? 'YES' : 'NO'}\n`;
-                statusReport += `- Enforce for admins: ${protection.data.enforce_admins?.enabled ? 'YES' : 'NO'}\n`;
-                statusReport += `- Required status checks: ${checks?.contexts?.join(', ') || 'None'}\n`;
-                statusReport += `- Linear history: ${protection.data.required_linear_history?.enabled ? 'YES' : 'NO'}\n`;
-                statusReport += `- Conversation resolution: ${protection.data.required_conversation_resolution?.enabled ? 'YES' : 'NO'}\n\n`;
+                // Try to get protection info
+                try {
+                  const protection = await github.rest.repos.getBranchProtection({
+                    owner: context.repo.owner,
+                    repo: context.repo.repo,
+                    branch: branchName
+                  });
 
-              } catch (e) {
-                if (e.status === 404) {
-                  statusReport += `#### Branch: ${branch}\n\n`;
-                  statusReport += `- Status: NOT PROTECTED\n\n`;
+                  const reviews = protection.data.required_pull_request_reviews;
+                  const checks = protection.data.required_status_checks;
+
+                  statusReport += `**Protection Status:** PROTECTED 🔒\n\n`;
+                  statusReport += `**Protection Details:**\n`;
+                  statusReport += `- Required approvals: ${reviews?.required_approving_review_count || 0}\n`;
+                  statusReport += `- Code owner review: ${reviews?.require_code_owner_reviews ? 'YES' : 'NO'}\n`;
+                  statusReport += `- Dismiss stale reviews: ${reviews?.dismiss_stale_reviews ? 'YES' : 'NO'}\n`;
+                  statusReport += `- Last push approval: ${reviews?.require_last_push_approval ? 'YES' : 'NO'}\n`;
+                  statusReport += `- Enforce for admins: ${protection.data.enforce_admins?.enabled ? 'YES' : 'NO'}\n`;
+                  statusReport += `- Required checks: ${checks?.contexts?.join(', ') || 'None'}\n`;
+                  statusReport += `- Strict status checks: ${checks?.strict ? 'YES' : 'NO'}\n`;
+                  statusReport += `- Linear history: ${protection.data.required_linear_history?.enabled ? 'YES' : 'NO'}\n`;
+                  statusReport += `- Conversation resolution: ${protection.data.required_conversation_resolution?.enabled ? 'YES' : 'NO'}\n`;
+                  statusReport += `- Force pushes: ${protection.data.allow_force_pushes?.enabled ? 'ALLOWED' : 'BLOCKED'}\n`;
+                  statusReport += `- Deletions: ${protection.data.allow_deletions?.enabled ? 'ALLOWED' : 'BLOCKED'}\n\n`;
+
+                } catch (protectionError) {
+                  if (protectionError.status === 404) {
+                    statusReport += `**Protection Status:** NOT PROTECTED ⚠️\n\n`;
+                    statusReport += `⚠️ This branch exists but has no protection rules.\n`;
+                    statusReport += `**Recommendation:** Enable branch protection immediately.\n\n`;
+                  } else if (protectionError.status === 403) {
+                    statusReport += `**Protection Status:** UNKNOWN (Permission Denied) 🔐\n\n`;
+                    statusReport += `ℹ️ Unable to check protection rules due to insufficient permissions.\n`;
+                    statusReport += `This usually means:\n`;
+                    statusReport += `- The GITHUB_TOKEN lacks admin permissions\n`;
+                    statusReport += `- Branch protection exists but cannot be read\n`;
+                    statusReport += `- A Personal Access Token (PAT) is needed for full access\n\n`;
+                    statusReport += `**Alternative Method:**\n`;
+                    statusReport += `1. Go to Settings > Branches\n`;
+                    statusReport += `2. Check protection rules for \`${branchName}\` manually\n\n`;
+                  } else {
+                    statusReport += `**Protection Status:** ERROR ❌\n\n`;
+                    statusReport += `Error: ${protectionError.message}\n\n`;
+                  }
+                }
+
+              } catch (branchError) {
+                if (branchError.status === 404) {
+                  statusReport += `#### Branch: \`${branchName}\` ❌\n\n`;
+                  statusReport += `**Branch exists:** NO\n`;
+                  statusReport += `This branch has not been created yet.\n\n`;
                 } else {
-                  statusReport += `#### Branch: ${branch}\n\n`;
-                  statusReport += `- Status: ERROR\n`;
-                  statusReport += `- Error: ${e.message}\n\n`;
+                  statusReport += `#### Branch: \`${branchName}\` ⚠️\n\n`;
+                  statusReport += `**Error checking branch:** ${branchError.message}\n\n`;
                 }
               }
             }
+
+            // Add repository-wide security settings
+            statusReport += '---\n\n';
+            statusReport += '## Repository Security Settings\n\n';
+            
+            statusReport += `**Visibility:** ${repo.data.private ? 'PRIVATE 🔒' : 'PUBLIC 🌐'}\n`;
+            statusReport += `**Default Branch:** \`${repo.data.default_branch}\`\n`;
+            statusReport += `**Vulnerability Alerts:** ${repo.data.has_vulnerability_alerts ? 'ENABLED ✅' : 'DISABLED ❌'}\n`;
+            statusReport += `**Automated Security Fixes:** ${repo.data.security_and_analysis?.advanced_security?.status === 'enabled' ? 'ENABLED ✅' : 'DISABLED ❌'}\n`;
+            statusReport += `**Allow Squash Merge:** ${repo.data.allow_squash_merge ? 'YES' : 'NO'}\n`;
+            statusReport += `**Allow Merge Commit:** ${repo.data.allow_merge_commit ? 'YES' : 'NO'}\n`;
+            statusReport += `**Allow Rebase Merge:** ${repo.data.allow_rebase_merge ? 'YES' : 'NO'}\n`;
+            statusReport += `**Delete Branch on Merge:** ${repo.data.delete_branch_on_merge ? 'YES ✅' : 'NO ⚠️'}\n`;
+            statusReport += `**Allow Auto-Merge:** ${repo.data.allow_auto_merge ? 'YES' : 'NO'}\n\n`;
+
+            // Add recent activity summary
+            statusReport += '## Recent Activity (Last 7 Days)\n\n';
+            
+            const weekAgo = new Date();
+            weekAgo.setDate(weekAgo.getDate() - 7);
+            
+            const recentPRs = await github.rest.pulls.list({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              state: 'all',
+              per_page: 100
+            });
+            
+            const recentPRsFiltered = recentPRs.data.filter(pr => 
+              new Date(pr.updated_at) >= weekAgo
+            );
+            
+            statusReport += `**Pull Requests:** ${recentPRsFiltered.length} total\n`;
+            statusReport += `- Open: ${recentPRsFiltered.filter(pr => pr.state === 'open').length}\n`;
+            statusReport += `- Merged: ${recentPRsFiltered.filter(pr => pr.merged_at).length}\n`;
+            statusReport += `- Closed: ${recentPRsFiltered.filter(pr => pr.state === 'closed' && !pr.merged_at).length}\n\n`;
+
+            const recentCommits = await github.rest.repos.listCommits({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              since: weekAgo.toISOString(),
+              per_page: 100
+            });
+            
+            statusReport += `**Commits:** ${recentCommits.data.length}\n`;
+            statusReport += `**Contributors:** ${[...new Set(recentCommits.data.map(c => c.author?.login))].filter(Boolean).length}\n\n`;
+
+            // Add recommendations
+            statusReport += '---\n\n';
+            statusReport += '## Recommendations\n\n';
+            
+            const recommendations = [];
+            
+            if (!repo.data.private) {
+              recommendations.push('⚠️ Repository is public - ensure no sensitive data is committed');
+            }
+            
+            if (!repo.data.has_vulnerability_alerts) {
+              recommendations.push('❌ Enable vulnerability alerts in Settings > Security');
+            }
+            
+            if (!repo.data.delete_branch_on_merge) {
+              recommendations.push('⚠️ Enable automatic branch deletion to keep repository clean');
+            }
+            
+            if (repo.data.allow_squash_merge && repo.data.allow_merge_commit && repo.data.allow_rebase_merge) {
+              recommendations.push('ℹ️ Consider restricting merge strategies to maintain consistent history');
+            }
+            
+            if (recommendations.length > 0) {
+              recommendations.forEach((rec, index) => {
+                statusReport += `${index + 1}. ${rec}\n`;
+              });
+            } else {
+              statusReport += '✅ No immediate recommendations - repository is well configured!\n';
+            }
+            
+            statusReport += '\n---\n\n';
+            statusReport += '**Note:** If you see "Permission Denied" errors above, create a Personal Access Token (PAT) with `repo` scope and add it as a repository secret named `ADMIN_TOKEN`. Then update the workflow to use `secrets.ADMIN_TOKEN` instead of `secrets.GITHUB_TOKEN` for admin operations.\n\n';
+            statusReport += '*Generated by Professional Repository Protection System*';
 
             console.log(statusReport);
 
             await github.rest.issues.create({
               owner: context.repo.owner,
               repo: context.repo.repo,
-              title: `Protection Status - ${new Date().toISOString().split('T')[0]}`,
+              title: `Protection Status Report - ${new Date().toISOString().split('T')[0]}`,
               body: statusReport,
-              labels: ['status-report', 'automation']
+              labels: ['status-report', 'automation', 'security']
             });
 
   audit-report:
-    needs: validate-admin
+    needs: validate-user
     if: |
-      (needs.validate-admin.outputs.authorized == 'true' && github.event.inputs.action == 'audit-report') ||
+      (needs.validate-user.outputs.authorized == 'true' && github.event.inputs.action == 'audit-report') ||
       (github.event_name == 'schedule' && github.event.schedule == '0 8 * * 1')
     runs-on: ubuntu-latest
     steps:
@@ -504,9 +927,9 @@ jobs:
 
   create-security-guidelines:
     name: Post Security Guidelines
-    needs: [validate-admin, apply-protection]
+    needs: [validate-user, apply-protection]
     if: |
-      needs.validate-admin.outputs.authorized == 'true' &&
+      needs.validate-user.outputs.authorized == 'true' &&
       github.event.inputs.action == 'lock-it-down' &&
       needs.apply-protection.result == 'success'
     runs-on: ubuntu-latest
@@ -567,15 +990,20 @@ jobs:
                     `- .pem, .key, .p12, .pfx, .keystore files\n` +
                     `- .env files and variants\n` +
                     `- Files in /secrets/ directory\n` +
-                    `- SSH private keys\n\n` +
+                    `- SSH private keys\n` +
+                    `- Configuration files with credentials\n\n` +
                     `**Sensitive Data:**\n` +
                     `- API keys and tokens\n` +
                     `- AWS credentials (AKIA...)\n` +
                     `- GitHub tokens (ghp_, gho_...)\n` +
                     `- OpenAI keys (sk-...)\n` +
+                    `- Vercel tokens\n` +
+                    `- Sentry DSN (monitored)\n` +
                     `- Private keys and certificates\n` +
                     `- Database credentials\n` +
-                    `- Passwords and secrets\n\n` +
+                    `- Passwords and secrets\n` +
+                    `- JWT tokens\n` +
+                    `- OAuth secrets\n\n` +
                     `## Required Status Checks\n\n` +
                     `All PRs must pass:\n` +
                     `- **security-scan** - Automated security scanning\n` +
@@ -583,7 +1011,7 @@ jobs:
                     `- **sentry-check** - Sentry error tracking\n\n` +
                     `---\n\n` +
                     `## Bot Commands\n\n` +
-                    `Authorized admins can use:\n` +
+                    `Authorized users can use:\n` +
                     `- \`/bot approve\` - Approve PR for merge\n` +
                     `- \`/bot reject [reason]\` - Reject PR with reason\n` +
                     `- \`/bot status\` - Check PR status\n\n` +
@@ -621,7 +1049,7 @@ jobs:
         with:
           fetch-depth: 0
 
-      - name: Security scan
+      - name: Comprehensive security scan
         id: scan
         continue-on-error: true
         run: |
@@ -644,6 +1072,7 @@ jobs:
           forbidden_count=0
           secret_count=0
           warning_count=0
+          critical_count=0
           findings=""
 
           # Check forbidden file types
@@ -653,26 +1082,34 @@ jobs:
             fi
 
             case "$file" in
-              *.pem|*.key|*.p12|*.pfx|*.keystore)
-                findings="${findings}FORBIDDEN: Certificate/key file: $file\n"
+              *.pem|*.key|*.p12|*.pfx|*.keystore|*.jks)
+                findings="${findings}CRITICAL: Certificate/key file: $file\n"
+                critical_count=$((critical_count + 1))
+                ;;
+              *.env|*.env.*|.env.*|*/.env)
+                findings="${findings}CRITICAL: Environment file: $file\n"
+                critical_count=$((critical_count + 1))
+                ;;
+              */secrets/*|*/.secrets/*|*/credentials/*|*/.credentials/*)
+                findings="${findings}CRITICAL: Secrets directory: $file\n"
+                critical_count=$((critical_count + 1))
+                ;;
+              *.ppk|*.pem.pub|id_rsa|id_dsa|id_ecdsa|id_ed25519|*.ssh)
+                findings="${findings}CRITICAL: SSH key: $file\n"
+                critical_count=$((critical_count + 1))
+                ;;
+              *config.json|*credentials.json|*secrets.json|*auth.json)
+                findings="${findings}FORBIDDEN: Sensitive config file: $file\n"
                 forbidden_count=$((forbidden_count + 1))
                 ;;
-              *.env|*.env.*|.env.*)
-                findings="${findings}FORBIDDEN: Environment file: $file\n"
-                forbidden_count=$((forbidden_count + 1))
-                ;;
-              */secrets/*|*/.secrets/*)
-                findings="${findings}FORBIDDEN: Secrets directory: $file\n"
-                forbidden_count=$((forbidden_count + 1))
-                ;;
-              *.ppk|*.pem.pub|id_rsa|id_dsa|id_ecdsa|id_ed25519)
-                findings="${findings}FORBIDDEN: SSH key: $file\n"
-                forbidden_count=$((forbidden_count + 1))
+              *.backup|*.bak|*.old|*~)
+                findings="${findings}WARNING: Backup file detected: $file\n"
+                warning_count=$((warning_count + 1))
                 ;;
             esac
           done <<< "$changed_files"
 
-          # Secret detection
+          # Advanced secret detection
           while IFS= read -r file; do
             if [ ! -f "$file" ]; then
               continue
@@ -684,32 +1121,56 @@ jobs:
 
             # AWS Keys
             if grep -qE "AKIA[0-9A-Z]{16}" "$file" 2>/dev/null; then
-              findings="${findings}SECRET: AWS key in $file\n"
-              secret_count=$((secret_count + 1))
+              findings="${findings}CRITICAL: AWS Access Key in $file\n"
+              critical_count=$((critical_count + 1))
+            fi
+
+            # AWS Secret Keys
+            if grep -qE "aws_secret_access_key\s*=\s*['\"]?[A-Za-z0-9/+=]{40}" "$file" 2>/dev/null; then
+              findings="${findings}CRITICAL: AWS Secret Key in $file\n"
+              critical_count=$((critical_count + 1))
             fi
 
             # GitHub Tokens
             if grep -qE "(ghp_|gho_|ghu_|ghs_|ghr_)[a-zA-Z0-9]{36,}" "$file" 2>/dev/null; then
-              findings="${findings}SECRET: GitHub token in $file\n"
-              secret_count=$((secret_count + 1))
+              findings="${findings}CRITICAL: GitHub token in $file\n"
+              critical_count=$((critical_count + 1))
+            fi
+
+            # GitHub PAT (new format)
+            if grep -qE "github_pat_[a-zA-Z0-9]{22}_[a-zA-Z0-9]{59}" "$file" 2>/dev/null; then
+              findings="${findings}CRITICAL: GitHub PAT in $file\n"
+              critical_count=$((critical_count + 1))
             fi
 
             # OpenAI Keys
             if grep -qE "sk-[a-zA-Z0-9]{48}" "$file" 2>/dev/null; then
-              findings="${findings}SECRET: OpenAI key in $file\n"
-              secret_count=$((secret_count + 1))
+              findings="${findings}CRITICAL: OpenAI API key in $file\n"
+              critical_count=$((critical_count + 1))
             fi
 
             # Vercel Tokens
             if grep -qE "vercel_[a-zA-Z0-9]{24}" "$file" 2>/dev/null; then
-              findings="${findings}SECRET: Vercel token in $file\n"
-              secret_count=$((secret_count + 1))
+              findings="${findings}CRITICAL: Vercel token in $file\n"
+              critical_count=$((critical_count + 1))
             fi
 
             # Sentry DSN
             if grep -qE "https://[a-z0-9]+@[a-z0-9]+\.ingest\.sentry\.io/[0-9]+" "$file" 2>/dev/null; then
-              findings="${findings}WARNING: Sentry DSN in $file\n"
+              findings="${findings}WARNING: Sentry DSN in $file (may be public)\n"
               warning_count=$((warning_count + 1))
+            fi
+
+            # Stripe Keys
+            if grep -qE "(sk|pk)_(test|live)_[0-9a-zA-Z]{24,}" "$file" 2>/dev/null; then
+              findings="${findings}CRITICAL: Stripe API key in $file\n"
+              critical_count=$((critical_count + 1))
+            fi
+
+            # JWT Tokens
+            if grep -qE "eyJ[A-Za-z0-9_-]{10,}\.[A-Za-z0-9_-]{10,}\.[A-Za-z0-9_-]{10,}" "$file" 2>/dev/null; then
+              findings="${findings}SECRET: JWT token in $file\n"
+              secret_count=$((secret_count + 1))
             fi
 
             # Generic API Keys
@@ -718,10 +1179,22 @@ jobs:
               warning_count=$((warning_count + 1))
             fi
 
-            # Private Keys
-            if grep -q "BEGIN.*PRIVATE KEY" "$file" 2>/dev/null; then
-              findings="${findings}SECRET: Private key in $file\n"
+            # OAuth Secrets
+            if grep -qE "(client[_-]?secret|oauth[_-]?secret)['\"]?\s*[:=]\s*['\"][a-zA-Z0-9]{20,}" "$file" 2>/dev/null; then
+              findings="${findings}SECRET: OAuth secret in $file\n"
               secret_count=$((secret_count + 1))
+            fi
+
+            # Private Keys (PEM format)
+            if grep -q "BEGIN.*PRIVATE KEY" "$file" 2>/dev/null; then
+              findings="${findings}CRITICAL: Private key in $file\n"
+              critical_count=$((critical_count + 1))
+            fi
+
+            # Certificates
+            if grep -q "BEGIN CERTIFICATE" "$file" 2>/dev/null; then
+              findings="${findings}WARNING: Certificate in $file\n"
+              warning_count=$((warning_count + 1))
             fi
 
             # Passwords
@@ -731,18 +1204,71 @@ jobs:
             fi
 
             # Database URLs
-            if grep -qE "(mongodb|postgres|mysql)://[^'\"\s]+" "$file" 2>/dev/null; then
-              findings="${findings}SECRET: Database connection string in $file\n"
+            if grep -qE "(mongodb|postgres|mysql|redis)://[^'\"\s]+" "$file" 2>/dev/null; then
+              findings="${findings}CRITICAL: Database connection string in $file\n"
+              critical_count=$((critical_count + 1))
+            fi
+
+            # Slack Tokens
+            if grep -qE "xox[baprs]-[0-9]{10,13}-[0-9]{10,13}-[a-zA-Z0-9]{24,}" "$file" 2>/dev/null; then
+              findings="${findings}CRITICAL: Slack token in $file\n"
+              critical_count=$((critical_count + 1))
+            fi
+
+            # Discord Tokens
+            if grep -qE "[MN][A-Za-z0-9]{23}\.[A-Za-z0-9]{6}\.[A-Za-z0-9_-]{27}" "$file" 2>/dev/null; then
+              findings="${findings}CRITICAL: Discord token in $file\n"
+              critical_count=$((critical_count + 1))
+            fi
+
+            # Twilio Keys
+            if grep -qE "AC[a-z0-9]{32}" "$file" 2>/dev/null; then
+              findings="${findings}SECRET: Twilio Account SID in $file\n"
               secret_count=$((secret_count + 1))
+            fi
+
+            # SendGrid Keys
+            if grep -qE "SG\.[a-zA-Z0-9_-]{22}\.[a-zA-Z0-9_-]{43}" "$file" 2>/dev/null; then
+              findings="${findings}CRITICAL: SendGrid API key in $file\n"
+              critical_count=$((critical_count + 1))
+            fi
+
+            # Firebase Keys
+            if grep -qE "AIza[0-9A-Za-z_-]{35}" "$file" 2>/dev/null; then
+              findings="${findings}WARNING: Firebase/Google API key in $file\n"
+              warning_count=$((warning_count + 1))
+            fi
+
+            # Heroku Keys
+            if grep -qE "[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}" "$file" 2>/dev/null; then
+              findings="${findings}WARNING: Potential UUID/Heroku key in $file\n"
+              warning_count=$((warning_count + 1))
+            fi
+
+            # Generic tokens
+            if grep -qE "token['\"]?\s*[:=]\s*['\"][a-zA-Z0-9]{32,}" "$file" 2>/dev/null; then
+              findings="${findings}WARNING: Generic token pattern in $file\n"
+              warning_count=$((warning_count + 1))
             fi
           done <<< "$changed_files"
 
           # Determine result
-          if [ $forbidden_count -gt 0 ] || [ $secret_count -gt 0 ]; then
-            echo "scan_result=failed" >> $GITHUB_OUTPUT
+          if [ $critical_count -gt 0 ]; then
+            echo "scan_result=critical" >> $GITHUB_OUTPUT
             echo "scan_details=$findings" >> $GITHUB_OUTPUT
+            echo "critical_count=$critical_count" >> $GITHUB_OUTPUT
             echo "forbidden_count=$forbidden_count" >> $GITHUB_OUTPUT
             echo "secret_count=$secret_count" >> $GITHUB_OUTPUT
+            echo "warning_count=$warning_count" >> $GITHUB_OUTPUT
+            echo "Security scan CRITICAL FAILURE"
+            exit 1
+          elif [ $forbidden_count -gt 0 ] || [ $secret_count -gt 0 ]; then
+            echo "scan_result=failed" >> $GITHUB_OUTPUT
+            echo "scan_details=$findings" >> $GITHUB_OUTPUT
+            echo "critical_count=$critical_count" >> $GITHUB_OUTPUT
+            echo "forbidden_count=$forbidden_count" >> $GITHUB_OUTPUT
+            echo "secret_count=$secret_count" >> $GITHUB_OUTPUT
+            echo "warning_count=$warning_count" >> $GITHUB_OUTPUT
             echo "Security scan FAILED"
             exit 1
           elif [ $warning_count -gt 0 ]; then
@@ -769,29 +1295,31 @@ jobs:
             let body = '';
             if (scanResult === 'passed') {
               body = '### Security Scan Results\n\n' +
-                     '**Status:** PASSED\n\n' +
+                     '**Status:** PASSED ✅\n\n' +
                      'All security checks completed successfully:\n' +
                      '- No forbidden files detected\n' +
                      '- No secrets found\n' +
                      '- No security warnings\n\n' +
-                     'PR is ready for review.\n\n' +
+                     'This PR is ready for review.\n\n' +
                      '---\n' +
                      'Waiting for required checks: vercel-check, sentry-check';
             } else if (scanResult === 'warning') {
               const details = scanDetails.replace(/\\n/g, '\n');
+              const warningCount = '${{ steps.scan.outputs.warning_count }}' || '0';
               body = '### Security Scan Results\n\n' +
-                     '**Status:** WARNING\n\n' +
+                     '**Status:** WARNING ⚠️\n\n' +
+                     `**Warnings Found:** ${warningCount}\n\n` +
                      'Potential issues detected:\n\n```\n' +
                      details + '\n```\n\n' +
-                     'Please review these warnings before merging.\n\n' +
+                     'Please review these warnings carefully before merging.\n\n' +
                      '---\n' +
-                     'Admin approval may be required.';
+                     'Admin approval recommended.';
             } else if (scanResult === 'failed') {
               const details = scanDetails.replace(/\\n/g, '\n');
               const forbiddenCount = '${{ steps.scan.outputs.forbidden_count }}' || '0';
               const secretCount = '${{ steps.scan.outputs.secret_count }}' || '0';
               body = '### Security Scan Results\n\n' +
-                     '**Status:** FAILED\n\n' +
+                     '**Status:** FAILED ❌\n\n' +
                      `**Violations Found:**\n` +
                      `- Forbidden files: ${forbiddenCount}\n` +
                      `- Secrets detected: ${secretCount}\n\n` +
@@ -799,9 +1327,30 @@ jobs:
                      'This PR cannot be merged until all security violations are resolved.\n\n' +
                      '---\n' +
                      'Contact authorized admins for guidance.';
+            } else if (scanResult === 'critical') {
+              const details = scanDetails.replace(/\\n/g, '\n');
+              const criticalCount = '${{ steps.scan.outputs.critical_count }}' || '0';
+              const forbiddenCount = '${{ steps.scan.outputs.forbidden_count }}' || '0';
+              const secretCount = '${{ steps.scan.outputs.secret_count }}' || '0';
+              body = '### Security Scan Results\n\n' +
+                     '**Status:** CRITICAL FAILURE 🚨\n\n' +
+                     `**CRITICAL SECURITY VIOLATIONS:**\n` +
+                     `- Critical issues: ${criticalCount}\n` +
+                     `- Forbidden files: ${forbiddenCount}\n` +
+                     `- Secrets detected: ${secretCount}\n\n` +
+                     '```\n' + details + '\n```\n\n' +
+                     '⛔ **THIS PR IS BLOCKED**\n\n' +
+                     'Critical security violations must be fixed immediately.\n' +
+                     'Remove all sensitive credentials and forbidden files.\n\n' +
+                     '---\n' +
+                     '**Next Steps:**\n' +
+                     '1. Remove all flagged files and secrets\n' +
+                     '2. Rotate any exposed credentials\n' +
+                     '3. Update PR and request re-scan\n' +
+                     '4. Contact security team if needed';
             } else {
               body = '### Security Scan Results\n\n' +
-                     '**Status:** PASSED\n\n' +
+                     '**Status:** PASSED ✅\n\n' +
                      'No changes to scan.';
             }
 
@@ -817,7 +1366,7 @@ jobs:
     runs-on: ubuntu-latest
     if: github.event_name == 'issue_comment' && github.event.issue.pull_request
     steps:
-      - name: Check admin authorization
+      - name: Check user authorization
         id: auth_check
         uses: actions/github-script@v7
         with:
@@ -827,28 +1376,31 @@ jobs:
             const owner = context.repo.owner;
             const specialAdmins = process.env.SPECIAL_ADMINS.split(',');
 
-            // Check if commenter is owner
+            // Check if commenter is owner - ALWAYS AUTHORIZED
             if (commenter === owner) {
               core.setOutput('authorized', 'true');
               core.setOutput('commenter', commenter);
+              core.setOutput('role', 'owner');
               return true;
             }
 
-            // Check if commenter is special admin (including bots)
+            // Check if commenter is a bot - ALL BOTS ARE AUTHORIZED
+            if (commenter.endsWith('[bot]')) {
+              const baseName = commenter.replace('[bot]', '');
+              const isWhitelisted = specialAdmins.includes(baseName) || specialAdmins.includes(commenter);
+              
+              core.setOutput('authorized', 'true');
+              core.setOutput('commenter', commenter);
+              core.setOutput('role', isWhitelisted ? 'special_admin_bot' : 'bot');
+              return true;
+            }
+
+            // Check if commenter is special admin
             if (specialAdmins.includes(commenter)) {
               core.setOutput('authorized', 'true');
               core.setOutput('commenter', commenter);
+              core.setOutput('role', 'special_admin');
               return true;
-            }
-
-            // Check if commenter ends with [bot] and base name is in special admins
-            if (commenter.endsWith('[bot]')) {
-              const baseName = commenter.replace('[bot]', '');
-              if (specialAdmins.includes(baseName)) {
-                core.setOutput('authorized', 'true');
-                core.setOutput('commenter', commenter);
-                return true;
-              }
             }
 
             // Check if commenter has sufficient permissions
@@ -864,6 +1416,7 @@ jobs:
               if (userPermission === 'admin' || userPermission === 'maintain' || userPermission === 'write') {
                 core.setOutput('authorized', 'true');
                 core.setOutput('commenter', commenter);
+                core.setOutput('role', userPermission);
                 return true;
               }
             } catch (error) {
@@ -872,6 +1425,7 @@ jobs:
 
             core.setOutput('authorized', 'false');
             core.setOutput('commenter', commenter);
+            core.setOutput('role', 'none');
             return false;
 
       - name: Process bot command
@@ -883,15 +1437,16 @@ jobs:
             const comment = context.payload.comment.body.trim().toLowerCase();
             const prNumber = context.issue.number;
             const commenter = '${{ steps.auth_check.outputs.commenter }}';
+            const role = '${{ steps.auth_check.outputs.role }}';
 
             if (comment.startsWith('/bot approve')) {
               await github.rest.issues.createComment({
                 owner: context.repo.owner,
                 repo: context.repo.repo,
                 issue_number: prNumber,
-                body: '### PR Approved\n\n' +
-                      'Approved by: @' + commenter + '\n\n' +
-                      'This PR has been reviewed and approved.\n' +
+                body: '### PR Approved ✅\n\n' +
+                      'Approved by: @' + commenter + ' (' + role + ')\n\n' +
+                      'This PR has been reviewed and approved.\n\n' +
                       'Status: APPROVED'
               });
 
@@ -909,8 +1464,8 @@ jobs:
                 owner: context.repo.owner,
                 repo: context.repo.repo,
                 issue_number: prNumber,
-                body: '### PR Rejected\n\n' +
-                      'Rejected by: @' + commenter + '\n' +
+                body: '### PR Rejected ❌\n\n' +
+                      'Rejected by: @' + commenter + ' (' + role + ')\n' +
                       'Reason: ' + reason + '\n\n' +
                       'Status: CHANGES REQUESTED'
               });
@@ -948,9 +1503,10 @@ jobs:
                 owner: context.repo.owner,
                 repo: context.repo.repo,
                 issue_number: prNumber,
-                body: '### PR Status Check\n\n' +
+                body: '### PR Status Check 📊\n\n' +
                       `**Approvals:** ${approvals}\n` +
                       `**Mergeable:** ${pr.data.mergeable ? 'YES' : 'NO'}\n` +
+                      `**Merge State:** ${pr.data.mergeable_state}\n` +
                       `**Status Checks:**\n\`\`\`\n${checksStatus || 'None'}\n\`\`\`\n\n` +
                       'Requested by: @' + commenter
               });
@@ -984,3 +1540,576 @@ jobs:
                       'Special admins: ' + process.env.SPECIAL_ADMINS
               });
             }
+
+  security-health-check:
+    needs: validate-user
+    if: |
+      (needs.validate-user.outputs.authorized == 'true' && github.event.inputs.action == 'security-health-check') ||
+      (github.event_name == 'schedule' && github.event.schedule == '0 */6 * * *')
+    runs-on: ubuntu-latest
+    steps:
+      - name: Comprehensive security health check
+        uses: actions/github-script@v7
+        with:
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          script: |
+            console.log('=== SECURITY HEALTH CHECK ===');
+            
+            let healthReport = '# Security Health Check Report\n\n';
+            healthReport += `**Generated:** ${new Date().toLocaleString()}\n`;
+            healthReport += `**Scan Version:** ${process.env.SECURITY_SCAN_VERSION}\n\n`;
+            healthReport += '---\n\n';
+            
+            let overallScore = 100;
+            let criticalIssues = 0;
+            let warnings = 0;
+            let recommendations = [];
+            
+            // Check 1: Branch Protection Status
+            healthReport += '## 1. Branch Protection Status\n\n';
+            const protectedBranches = process.env.PROTECTED_BRANCHES.split(',');
+            let protectedCount = 0;
+            let unprotectedCount = 0;
+            
+            for (const branch of protectedBranches) {
+              try {
+                const protection = await github.rest.repos.getBranchProtection({
+                  owner: context.repo.owner,
+                  repo: context.repo.repo,
+                  branch: branch
+                });
+                protectedCount++;
+                healthReport += `- ✅ \`${branch}\` - PROTECTED\n`;
+                
+                // Check protection strength
+                const reviews = protection.data.required_pull_request_reviews;
+                if (!reviews || reviews.required_approving_review_count < 2) {
+                  warnings++;
+                  overallScore -= 5;
+                  recommendations.push(`Increase required approvals for ${branch} to at least 2`);
+                }
+                
+                if (!protection.data.enforce_admins?.enabled) {
+                  warnings++;
+                  overallScore -= 10;
+                  recommendations.push(`Enable admin enforcement for ${branch}`);
+                }
+                
+              } catch (e) {
+                if (e.status === 404) {
+                  unprotectedCount++;
+                  criticalIssues++;
+                  overallScore -= 20;
+                  healthReport += `- ❌ \`${branch}\` - NOT PROTECTED\n`;
+                  recommendations.push(`CRITICAL: Enable branch protection for ${branch}`);
+                }
+              }
+            }
+            
+            healthReport += `\n**Summary:** ${protectedCount} protected, ${unprotectedCount} unprotected\n\n`;
+            
+            // Check 2: Recent Security Incidents
+            healthReport += '## 2. Recent Security Incidents\n\n';
+            const weekAgo = new Date();
+            weekAgo.setDate(weekAgo.getDate() - 7);
+            
+            const recentIssues = await github.rest.issues.listForRepo({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              state: 'all',
+              labels: 'security',
+              since: weekAgo.toISOString()
+            });
+            
+            if (recentIssues.data.length === 0) {
+              healthReport += '✅ No security incidents in the last 7 days\n\n';
+            } else {
+              healthReport += `⚠️ ${recentIssues.data.length} security-related issue(s) found:\n\n`;
+              recentIssues.data.slice(0, 5).forEach(issue => {
+                healthReport += `- #${issue.number}: ${issue.title} [${issue.state}]\n`;
+              });
+              warnings += recentIssues.data.length;
+              overallScore -= Math.min(recentIssues.data.length * 2, 10);
+              healthReport += '\n';
+            }
+            
+            // Check 3: Failed Security Scans
+            healthReport += '## 3. Failed Security Scans (Last 24 Hours)\n\n';
+            const dayAgo = new Date();
+            dayAgo.setDate(dayAgo.getDate() - 1);
+            
+            const workflowRuns = await github.rest.actions.listWorkflowRunsForRepo({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              created: `>${dayAgo.toISOString()}`,
+              per_page: 100
+            });
+            
+            const failedSecurityScans = workflowRuns.data.workflow_runs.filter(run => 
+              run.name.includes('security') && run.conclusion === 'failure'
+            );
+            
+            if (failedSecurityScans.length === 0) {
+              healthReport += '✅ No failed security scans\n\n';
+            } else {
+              healthReport += `❌ ${failedSecurityScans.length} failed security scan(s):\n\n`;
+              failedSecurityScans.slice(0, 5).forEach(run => {
+                healthReport += `- ${run.name} - ${run.created_at}\n`;
+              });
+              criticalIssues += failedSecurityScans.length;
+              overallScore -= Math.min(failedSecurityScans.length * 5, 20);
+              healthReport += '\n';
+            }
+            
+            // Check 4: Open Pull Requests Security Status
+            healthReport += '## 4. Open Pull Requests\n\n';
+            const openPRs = await github.rest.pulls.list({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              state: 'open',
+              per_page: 100
+            });
+            
+            let unsafePRs = 0;
+            for (const pr of openPRs.data) {
+              const checks = await github.rest.checks.listForRef({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                ref: pr.head.sha
+              });
+              
+              const failedChecks = checks.data.check_runs.filter(c => 
+                c.conclusion === 'failure' && c.name.includes('security')
+              );
+              
+              if (failedChecks.length > 0) {
+                unsafePRs++;
+              }
+            }
+            
+            healthReport += `**Total Open PRs:** ${openPRs.data.length}\n`;
+            healthReport += `**PRs with Security Issues:** ${unsafePRs}\n\n`;
+            
+            if (unsafePRs > 0) {
+              warnings += unsafePRs;
+              overallScore -= Math.min(unsafePRs * 3, 15);
+              recommendations.push(`Review and fix security issues in ${unsafePRs} open PR(s)`);
+            }
+            
+            // Check 5: Dependabot/Security Alerts
+            healthReport += '## 5. Security Vulnerabilities\n\n';
+            
+            try {
+              const alerts = await github.rest.dependabot.listAlertsForRepo({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                state: 'open'
+              });
+              
+              const critical = alerts.data.filter(a => a.security_vulnerability.severity === 'critical').length;
+              const high = alerts.data.filter(a => a.security_vulnerability.severity === 'high').length;
+              const medium = alerts.data.filter(a => a.security_vulnerability.severity === 'medium').length;
+              const low = alerts.data.filter(a => a.security_vulnerability.severity === 'low').length;
+              
+              healthReport += `**Critical:** ${critical}\n`;
+              healthReport += `**High:** ${high}\n`;
+              healthReport += `**Medium:** ${medium}\n`;
+              healthReport += `**Low:** ${low}\n\n`;
+              
+              if (critical > 0) {
+                criticalIssues += critical;
+                overallScore -= critical * 10;
+                recommendations.push(`URGENT: Fix ${critical} critical vulnerabilities`);
+              }
+              if (high > 0) {
+                warnings += high;
+                overallScore -= high * 5;
+                recommendations.push(`Fix ${high} high severity vulnerabilities`);
+              }
+              
+            } catch (error) {
+              healthReport += '⚠️ Unable to fetch vulnerability data\n\n';
+            }
+            
+            // Check 6: Repository Settings
+            healthReport += '## 6. Repository Security Settings\n\n';
+            const repo = await github.rest.repos.get({
+              owner: context.repo.owner,
+              repo: context.repo.repo
+            });
+            
+            const settings = [];
+            if (!repo.data.private) {
+              settings.push('⚠️ Repository is PUBLIC');
+              warnings++;
+              recommendations.push('Consider if repository should be private');
+            } else {
+              settings.push('✅ Repository is PRIVATE');
+            }
+            
+            if (repo.data.has_vulnerability_alerts) {
+              settings.push('✅ Vulnerability alerts enabled');
+            } else {
+              settings.push('❌ Vulnerability alerts disabled');
+              criticalIssues++;
+              overallScore -= 15;
+              recommendations.push('CRITICAL: Enable vulnerability alerts');
+            }
+            
+            if (repo.data.allow_squash_merge && repo.data.allow_merge_commit && repo.data.allow_rebase_merge) {
+              settings.push('⚠️ All merge types allowed');
+              warnings++;
+              recommendations.push('Restrict merge types to squash or rebase only');
+            } else {
+              settings.push('✅ Merge types restricted');
+            }
+            
+            if (repo.data.delete_branch_on_merge) {
+              settings.push('✅ Auto-delete branches enabled');
+            } else {
+              settings.push('⚠️ Auto-delete branches disabled');
+              warnings++;
+            }
+            
+            healthReport += settings.join('\n') + '\n\n';
+            
+            // Check 7: Workflow Security
+            healthReport += '## 7. GitHub Actions Security\n\n';
+            
+            const workflows = await github.rest.actions.listRepoWorkflows({
+              owner: context.repo.owner,
+              repo: context.repo.repo
+            });
+            
+            healthReport += `**Active Workflows:** ${workflows.data.total_count}\n`;
+            
+            let workflowIssues = 0;
+            for (const workflow of workflows.data.workflows) {
+              if (workflow.state === 'active') {
+                // Check for workflows with broad permissions
+                // This is a simplified check
+                workflowIssues++;
+              }
+            }
+            
+            if (workflows.data.total_count > 20) {
+              warnings++;
+              recommendations.push('Consider consolidating workflows for better management');
+            }
+            
+            healthReport += '\n';
+            
+            // Calculate final score
+            overallScore = Math.max(0, Math.min(100, overallScore));
+            
+            // Overall Assessment
+            healthReport += '---\n\n';
+            healthReport += '## Overall Security Assessment\n\n';
+            
+            let scoreEmoji = '🔴';
+            let scoreLevel = 'CRITICAL';
+            
+            if (overallScore >= 90) {
+              scoreEmoji = '🟢';
+              scoreLevel = 'EXCELLENT';
+            } else if (overallScore >= 75) {
+              scoreEmoji = '🟡';
+              scoreLevel = 'GOOD';
+            } else if (overallScore >= 60) {
+              scoreEmoji = '🟠';
+              scoreLevel = 'FAIR';
+            } else if (overallScore >= 40) {
+              scoreEmoji = '🔴';
+              scoreLevel = 'POOR';
+            }
+            
+            healthReport += `### Security Score: ${overallScore}/100 ${scoreEmoji}\n\n`;
+            healthReport += `**Level:** ${scoreLevel}\n\n`;
+            healthReport += `**Critical Issues:** ${criticalIssues}\n`;
+            healthReport += `**Warnings:** ${warnings}\n\n`;
+            
+            // Recommendations
+            if (recommendations.length > 0) {
+              healthReport += '## Recommendations\n\n';
+              recommendations.forEach((rec, index) => {
+                healthReport += `${index + 1}. ${rec}\n`;
+              });
+              healthReport += '\n';
+            } else {
+              healthReport += '## Recommendations\n\n';
+              healthReport += '✅ No immediate actions required. Keep up the good work!\n\n';
+            }
+            
+            healthReport += '---\n\n';
+            healthReport += `*Next health check: ${new Date(Date.now() + 6*60*60*1000).toLocaleString()}*\n`;
+            
+            // Create issue
+            await github.rest.issues.create({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              title: `Security Health Check - ${scoreLevel} (${overallScore}/100) - ${new Date().toISOString().split('T')[0]}`,
+              body: healthReport,
+              labels: ['security-health', 'automated-report', scoreLevel.toLowerCase()]
+            });
+
+  compliance-report:
+    needs: validate-user
+    if: |
+      (needs.validate-user.outputs.authorized == 'true' && github.event.inputs.action == 'compliance-report') ||
+      (github.event_name == 'schedule' && github.event.schedule == '0 12 * * 0')
+    runs-on: ubuntu-latest
+    steps:
+      - name: Generate compliance report
+        uses: actions/github-script@v7
+        with:
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          script: |
+            console.log('=== COMPLIANCE REPORT GENERATION ===');
+            
+            let complianceReport = '# Repository Compliance Report\n\n';
+            complianceReport += `**Generated:** ${new Date().toLocaleString()}\n`;
+            complianceReport += `**Reporting Period:** Last 30 days\n\n`;
+            complianceReport += '---\n\n';
+            
+            const thirtyDaysAgo = new Date();
+            thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30);
+            
+            // 1. Code Review Compliance
+            complianceReport += '## 1. Code Review Compliance\n\n';
+            
+            const allPRs = await github.rest.pulls.list({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              state: 'closed',
+              per_page: 100,
+              sort: 'updated',
+              direction: 'desc'
+            });
+            
+            const recentMergedPRs = allPRs.data.filter(pr => 
+              pr.merged_at && new Date(pr.merged_at) >= thirtyDaysAgo
+            );
+            
+            let reviewedPRs = 0;
+            let unreviewed PRs = 0;
+            let insufficientReviews = 0;
+            
+            for (const pr of recentMergedPRs) {
+              const reviews = await github.rest.pulls.listReviews({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                pull_number: pr.number
+              });
+              
+              const approvals = reviews.data.filter(r => r.state === 'APPROVED').length;
+              
+              if (approvals === 0) {
+                unreviewedPRs++;
+              } else if (approvals === 1) {
+                insufficientReviews++;
+              } else {
+                reviewedPRs++;
+              }
+            }
+            
+            const totalMerged = recentMergedPRs.length;
+            const complianceRate = totalMerged > 0 ? ((reviewedPRs / totalMerged) * 100).toFixed(1) : 100;
+            
+            complianceReport += `**Total Merged PRs:** ${totalMerged}\n`;
+            complianceReport += `**Properly Reviewed (2+ approvals):** ${reviewedPRs}\n`;
+            complianceReport += `**Insufficient Reviews (1 approval):** ${insufficientReviews}\n`;
+            complianceReport += `**No Reviews:** ${unreviewedPRs}\n`;
+            complianceReport += `**Compliance Rate:** ${complianceRate}%\n\n`;
+            
+            if (unreviewedPRs > 0) {
+              complianceReport += `⚠️ **WARNING:** ${unreviewedPRs} PR(s) merged without review\n\n`;
+            }
+            
+            // 2. Security Scan Compliance
+            complianceReport += '## 2. Security Scan Compliance\n\n';
+            
+            const workflowRuns = await github.rest.actions.listWorkflowRunsForRepo({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              created: `>${thirtyDaysAgo.toISOString()}`,
+              per_page: 100
+            });
+            
+            const securityScans = workflowRuns.data.workflow_runs.filter(run =>
+              run.name.toLowerCase().includes('security')
+            );
+            
+            const passedScans = securityScans.filter(r => r.conclusion === 'success').length;
+            const failedScans = securityScans.filter(r => r.conclusion === 'failure').length;
+            const scanComplianceRate = securityScans.length > 0 ? 
+              ((passedScans / securityScans.length) * 100).toFixed(1) : 100;
+            
+            complianceReport += `**Total Security Scans:** ${securityScans.length}\n`;
+            complianceReport += `**Passed:** ${passedScans}\n`;
+            complianceReport += `**Failed:** ${failedScans}\n`;
+            complianceReport += `**Success Rate:** ${scanComplianceRate}%\n\n`;
+            
+            // 3. Branch Protection Compliance
+            complianceReport += '## 3. Branch Protection Compliance\n\n';
+            
+            const protectedBranches = process.env.PROTECTED_BRANCHES.split(',');
+            let protectionCompliance = [];
+            
+            for (const branch of protectedBranches) {
+              try {
+                const protection = await github.rest.repos.getBranchProtection({
+                  owner: context.repo.owner,
+                  repo: context.repo.repo,
+                  branch: branch
+                });
+                
+                const reviews = protection.data.required_pull_request_reviews;
+                const checks = protection.data.required_status_checks;
+                const enforceAdmins = protection.data.enforce_admins?.enabled;
+                
+                let status = '✅ Compliant';
+                if (!reviews || reviews.required_approving_review_count < 2) {
+                  status = '⚠️ Needs more approvals';
+                } else if (!enforceAdmins) {
+                  status = '⚠️ Admin bypass enabled';
+                } else if (!checks || checks.contexts.length === 0) {
+                  status = '⚠️ No required checks';
+                }
+                
+                protectionCompliance.push(`- \`${branch}\`: ${status}`);
+                
+              } catch (e) {
+                protectionCompliance.push(`- \`${branch}\`: ❌ Not protected`);
+              }
+            }
+            
+            complianceReport += protectionCompliance.join('\n') + '\n\n';
+            
+            // 4. Dependency Update Compliance
+            complianceReport += '## 4. Dependency Update Compliance\n\n';
+            
+            try {
+              const openAlerts = await github.rest.dependabot.listAlertsForRepo({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                state: 'open'
+              });
+              
+              const oldAlerts = openAlerts.data.filter(alert => {
+                const created = new Date(alert.created_at);
+                const ageInDays = (Date.now() - created.getTime()) / (1000 * 60 * 60 * 24);
+                return ageInDays > 30;
+              });
+              
+              complianceReport += `**Open Security Alerts:** ${openAlerts.data.length}\n`;
+              complianceReport += `**Alerts Open >30 Days:** ${oldAlerts.length}\n\n`;
+              
+              if (oldAlerts.length > 0) {
+                complianceReport += `⚠️ **WARNING:** ${oldAlerts.length} security alert(s) unresolved for over 30 days\n\n`;
+              }
+              
+            } catch (error) {
+              complianceReport += '⚠️ Unable to fetch dependency data\n\n';
+            }
+            
+            // 5. Commit Signing Compliance
+            complianceReport += '## 5. Commit Signing Status\n\n';
+            
+            const recentCommits = await github.rest.repos.listCommits({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              since: thirtyDaysAgo.toISOString(),
+              per_page: 100
+            });
+            
+            const signedCommits = recentCommits.data.filter(c => c.commit.verification?.verified).length;
+            const totalCommits = recentCommits.data.length;
+            const signingRate = totalCommits > 0 ? ((signedCommits / totalCommits) * 100).toFixed(1) : 0;
+            
+            complianceReport += `**Total Commits:** ${totalCommits}\n`;
+            complianceReport += `**Signed Commits:** ${signedCommits}\n`;
+            complianceReport += `**Signing Rate:** ${signingRate}%\n\n`;
+            
+            if (signingRate < 100) {
+              complianceReport += `⚠️ **RECOMMENDATION:** Enable required commit signing\n\n`;
+            }
+            
+            // 6. Access Control Compliance
+            complianceReport += '## 6. Access Control Review\n\n';
+            
+            const collaborators = await github.rest.repos.listCollaborators({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              per_page: 100
+            });
+            
+            const adminUsers = collaborators.data.filter(c => c.permissions.admin).length;
+            const maintainers = collaborators.data.filter(c => c.permissions.maintain && !c.permissions.admin).length;
+            const writers = collaborators.data.filter(c => c.permissions.push && !c.permissions.maintain && !c.permissions.admin).length;
+            const readers = collaborators.data.filter(c => c.permissions.pull && !c.permissions.push).length;
+            
+            complianceReport += `**Total Collaborators:** ${collaborators.data.length}\n`;
+            complianceReport += `- Admins: ${adminUsers}\n`;
+            complianceReport += `- Maintainers: ${maintainers}\n`;
+            complianceReport += `- Writers: ${writers}\n`;
+            complianceReport += `- Readers: ${readers}\n\n`;
+            
+            if (adminUsers > 5) {
+              complianceReport += `⚠️ **RECOMMENDATION:** Review admin access - ${adminUsers} users have admin permissions\n\n`;
+            }
+            
+            // Overall Compliance Score
+            complianceReport += '---\n\n';
+            complianceReport += '## Overall Compliance Summary\n\n';
+            
+            const metrics = [
+              { name: 'Code Review', rate: parseFloat(complianceRate), weight: 30 },
+              { name: 'Security Scans', rate: parseFloat(scanComplianceRate), weight: 25 },
+              { name: 'Commit Signing', rate: parseFloat(signingRate), weight: 20 },
+              { name: 'Branch Protection', rate: (protectionCompliance.filter(p => p.includes('✅')).length / protectedBranches.length) * 100, weight: 25 }
+            ];
+            
+            const overallScore = metrics.reduce((sum, m) => sum + (m.rate * m.weight / 100), 0);
+            
+            let grade = 'F';
+            if (overallScore >= 90) grade = 'A';
+            else if (overallScore >= 80) grade = 'B';
+            else if (overallScore >= 70) grade = 'C';
+            else if (overallScore >= 60) grade = 'D';
+            
+            complianceReport += `### Compliance Score: ${overallScore.toFixed(1)}/100 (Grade: ${grade})\n\n`;
+            
+            complianceReport += '**Breakdown:**\n';
+            metrics.forEach(m => {
+              complianceReport += `- ${m.name}: ${m.rate.toFixed(1)}% (${m.weight}% weight)\n`;
+            });
+            complianceReport += '\n';
+            
+            // Recommendations
+            complianceReport += '## Action Items\n\n';
+            
+            const actions = [];
+            if (unreviewedPRs > 0) actions.push(`Review merge policy - ${unreviewedPRs} PRs merged without review`);
+            if (failedScans > 0) actions.push(`Address ${failedScans} failed security scans`);
+            if (signingRate < 100) actions.push('Enable required commit signing');
+            if (adminUsers > 5) actions.push('Audit admin access permissions');
+            
+            if (actions.length > 0) {
+              actions.forEach((action, index) => {
+                complianceReport += `${index + 1}. ${action}\n`;
+              });
+            } else {
+              complianceReport += '✅ No critical action items. Maintaining excellent compliance!\n';
+            }
+            
+            complianceReport += '\n---\n\n';
+            complianceReport += '*This report is generated automatically every Sunday for compliance tracking.*\n';
+            
+            // Create compliance issue
+            await github.rest.issues.create({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              title: `Compliance Report - Grade ${grade} (${overallScore.toFixed(1)}/100) - ${new Date().toISOString().split('T')[0]}`,
+              body: complianceReport,
+              labels: ['compliance-report', 'automated-report', `grade-${grade.toLowerCase()}`]
+            });
