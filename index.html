@@ -1705,6 +1705,7 @@
                         <li><a href="#" onclick="showPage('experience'); return false;" aria-label="Go to experience page">Experience</a></li>
                         <li><a href="#" onclick="showPage('projects'); return false;" aria-label="Go to projects page">Projects</a></li>
                         <li><a href="#" onclick="showPage('faq'); return false;" aria-label="Go to FAQ page">FAQ</a></li>
+                        <li><a href="#" onclick="showPage('sponsors'); return false;" aria-label="Go to sponsors page">Sponsors</a></li>
                         <li><a href="#" onclick="showPage('contact'); return false;" aria-label="Go to contact page">Contact</a></li>
                     </ul>
                 </div>
@@ -2367,6 +2368,62 @@
             </div>
         </section>
 
+        <section class="page" id="sponsors">
+            <div class="page-header">
+                <h1>💖 Support My Open Source Work</h1>
+                <p class="page-subtitle">Help me build amazing open source projects for developers worldwide</p>
+            </div>
+            
+            <div style="max-width: 900px; margin: 0 auto;">
+                <div style="background: var(--white); padding: 2.5rem; border-radius: 12px; margin-bottom: 2rem; border: 1px solid var(--gray-200);">
+                    <h2 style="margin-bottom: 1.5rem; color: var(--black);">Hey! I'm Sami9889</h2>
+                    <p style="color: var(--gray-700); line-height: 1.8; margin-bottom: 1.5rem;">Building open source projects for developers worldwide.</p>
+                    
+                    <h3 style="margin-bottom: 1rem; color: var(--black); font-size: 1.3rem;">Why Sponsor?</h3>
+                    <p style="color: var(--gray-700); line-height: 1.8; margin-bottom: 1.5rem;">Your support helps me dedicate more time to:</p>
+                    <ul style="color: var(--gray-700); line-height: 2; margin-bottom: 2rem; padding-left: 1.5rem;">
+                        <li>Building features & fixing bugs</li>
+                        <li>Writing documentation</li>
+                        <li>Supporting the community</li>
+                    </ul>
+                    
+                    <h3 style="margin-bottom: 1.5rem; color: var(--black); font-size: 1.3rem;">Sponsorship Tiers</h3>
+                    <div style="display: grid; gap: 1rem; margin-bottom: 2rem;">
+                        <div style="padding: 1.5rem; background: var(--gray-50); border-radius: 8px; border-left: 4px solid var(--accent);">
+                            <strong style="color: var(--black);">☕ $1-5 - Coffee supporter</strong>
+                            <p style="color: var(--gray-600); margin: 0.5rem 0 0 0; font-size: 0.95rem;">Help keep me caffeinated while coding</p>
+                        </div>
+                        <div style="padding: 1.5rem; background: var(--gray-50); border-radius: 8px; border-left: 4px solid var(--accent);">
+                            <strong style="color: var(--black);">🌟 $10 - Backer</strong>
+                            <p style="color: var(--gray-600); margin: 0.5rem 0 0 0; font-size: 0.95rem;">Show your support for open source</p>
+                        </div>
+                        <div style="padding: 1.5rem; background: var(--gray-50); border-radius: 8px; border-left: 4px solid #cd7f32;">
+                            <strong style="color: var(--black);">🥉 $25 - Bronze</strong>
+                            <p style="color: var(--gray-600); margin: 0.5rem 0 0 0; font-size: 0.95rem;">Priority support on issues</p>
+                        </div>
+                        <div style="padding: 1.5rem; background: var(--gray-50); border-radius: 8px; border-left: 4px solid #c0c0c0;">
+                            <strong style="color: var(--black);">🥈 $50 - Silver</strong>
+                            <p style="color: var(--gray-600); margin: 0.5rem 0 0 0; font-size: 0.95rem;">Listed in project READMEs</p>
+                        </div>
+                        <div style="padding: 1.5rem; background: var(--gray-50); border-radius: 8px; border-left: 4px solid #ffd700;">
+                            <strong style="color: var(--black);">🥇 $100 - Gold</strong>
+                            <p style="color: var(--gray-600); margin: 0.5rem 0 0 0; font-size: 0.95rem;">Your logo in documentation</p>
+                        </div>
+                        <div style="padding: 1.5rem; background: var(--gray-50); border-radius: 8px; border-left: 4px solid #e5e4e2;">
+                            <strong style="color: var(--black);">💎 $250+ - Platinum</strong>
+                            <p style="color: var(--gray-600); margin: 0.5rem 0 0 0; font-size: 0.95rem;">Sponsor badge + Prominent logo placement</p>
+                        </div>
+                    </div>
+                    
+                    <p style="color: var(--gray-700); text-align: center; font-size: 1.1rem; margin-top: 2rem;">Thank you for supporting open source! 💚</p>
+                </div>
+                
+                <div style="text-align: center; margin-top: 2rem;">
+                    <iframe src="https://github.com/sponsors/Sami9889/card" title="Sponsor Sami9889" height="225" width="600" style="border: 0; max-width: 100%; border-radius: 8px; box-shadow: 0 4px 12px rgba(0,0,0,0.1);"></iframe>
+                </div>
+            </div>
+        </section>
+
         <section class="page" id="contact">
             <div class="page-header">
                 <h1>Get In Touch</h1>
@@ -2497,6 +2554,7 @@
                 'experience': 'Experience - Samrath Singh',
                 'projects': 'Projects - Samrath Singh',
                 'faq': 'FAQ - Samrath Singh',
+                'sponsors': 'Sponsors - Samrath Singh',
                 'contact': 'Contact - Samrath Singh',
                 'privacy': 'Privacy Policy - Samrath Singh',
                 'terms': 'Terms of Service - Samrath Singh'
@@ -3015,7 +3073,7 @@
             const pageId = path === '/' ? 'home' : path.substring(1);
             
             // Valid page IDs
-            const validPages = ['home', 'about', 'skills', 'services', 'experience', 'projects', 'faq', 'contact', 'privacy', 'terms'];
+            const validPages = ['home', 'about', 'skills', 'services', 'experience', 'projects', 'faq', 'sponsors', 'contact', 'privacy', 'terms'];
             
             if (validPages.includes(pageId)) {
                 // Remove active class from home page
