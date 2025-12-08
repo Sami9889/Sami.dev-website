@@ -2661,13 +2661,14 @@
                     const repoName = formatRepoName(repo.name);
                     const description = repo.description || generateDescription(repo.name, repo.language);
                     
-                    // Use GitHub's OpenGraph image for repository preview
-                    const repoImageUrl = `https://opengraph.githubassets.com/1/${repo.owner.login}/${repo.name}`;
-                    const repoImage = `<img src="${repoImageUrl}" alt="${repoName} preview" style="width: 100%; height: 180px; object-fit: cover; border-radius: 6px; margin-bottom: 1rem;" onerror="this.style.display='none'">`;
+                    // Add placeholder for screenshot/demo visual
+                    const hasVisual = repo.homepage || repo.has_pages;
+                    const visualPlaceholder = hasVisual ? 
+                        `<div style="width: 100%; height: 180px; background: linear-gradient(135deg, var(--gray-200) 0%, var(--gray-100) 100%); border-radius: 6px; margin-bottom: 1rem; display: flex; align-items: center; justify-content: center; color: var(--gray-600); font-size: 3rem;">🖼️</div>` : '';
                     
                     return `
                         <article class="project-card" data-repo="${repo.name}">
-                            ${repoImage}
+                            ${visualPlaceholder}
                             <div class="project-date">Created ${createdDate} • Updated ${updatedDate}</div>
                             <h3>${repoName}</h3>
                             <p>${description}</p>
