@@ -29,6 +29,33 @@
     }
   </script>
   
+  <script>
+    // Handle 404 redirects from static hosting
+    if (sessionStorage.redirect) {
+      const redirect = sessionStorage.redirect;
+      delete sessionStorage.redirect;
+      
+      // Extract the page ID from the redirect path
+      const pageId = redirect === '/' ? 'home' : redirect.substring(1).split('/')[0];
+      
+      // Load that page after DOM is ready
+      if (document.readyState === 'loading') {
+        document.addEventListener('DOMContentLoaded', function() {
+          if (typeof showPage === 'function') {
+            showPage(pageId, false);
+          }
+        });
+      } else {
+        // DOM already loaded, defer to next tick to ensure showPage is defined
+        setTimeout(function() {
+          if (typeof showPage === 'function') {
+            showPage(pageId, false);
+          }
+        }, 0);
+      }
+    }
+  </script>
+  
   <script
   src="https://js-de.sentry-cdn.com/19f914da843ff91848281a5e4be175e8.min.js"
   crossorigin="anonymous"
