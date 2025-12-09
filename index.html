@@ -3104,8 +3104,21 @@
         // INITIALIZE PAGE BASED ON URL ON LOAD
         // ============================================
         window.addEventListener('DOMContentLoaded', function() {
-            const path = window.location.pathname;
-            const pageId = path === '/' ? 'home' : path.substring(1);
+            // Check if we were redirected from 404 page
+            let pageId;
+            
+            if (sessionStorage.redirect) {
+                // Handle 404 redirect
+                const redirect = sessionStorage.redirect;
+                delete sessionStorage.redirect;
+                
+                // Extract the page ID from the redirect path
+                pageId = redirect === '/' ? 'home' : redirect.substring(1).split('/')[0];
+            } else {
+                // Normal URL-based routing
+                const path = window.location.pathname;
+                pageId = path === '/' ? 'home' : path.substring(1);
+            }
             
             // Valid page IDs
             const validPages = ['home', 'about', 'skills', 'services', 'experience', 'projects', 'faq', 'sponsors', 'contact', 'privacy', 'terms'];
@@ -3115,7 +3128,7 @@
                 document.getElementById('home').classList.remove('active');
                 // Show the correct page without updating history
                 showPage(pageId, false);
-            } else if (pageId !== 'home' && path !== '/') {
+            } else if (pageId !== 'home' && pageId !== '') {
                 // Invalid page, redirect to home
                 showPage('home', true);
             }
