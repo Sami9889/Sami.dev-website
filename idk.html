@@ -1,0 +1,116 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>Why Are You Here? 💀</title>
+<style>
+  body{background:#0b0b1e;color:#fff;font-family:system-ui,-apple-system,Segoe UI,Roboto,"Helvetica Neue",Arial;display:flex;justify-content:center;align-items:center;height:100vh;text-align:center;padding:20px;}
+  .box{max-width:600px;padding:30px;border-radius:14px;background:rgba(255,255,255,0.05);border:1px solid #333;}
+  #extra{margin-top:20px;font-style:italic;opacity:0.8;font-size:1.1rem;}
+  .confetti-piece{position:fixed;width:8px;height:12px;background:red;top:-10px;z-index:9999;border-radius:2px;}
+</style>
+</head>
+<body>
+
+<div class="box">
+  <h1>👀 Uhh… hi?</h1>
+  <p>This is a secret page.<br>Why are you even here? No secrets, just chaos.</p>
+  <p id="extra">Loading…</p>
+</div>
+
+<script>
+/* ------------------ Messages ------------------ */
+const messages = [
+"Bro… you lost?", "This page wasn’t even meant for humans.", "You weren’t supposed to find this.", 
+"If you're here looking for secrets, all I have is disappointment.", "Real question: Who even clicks this deep?", 
+"Hey hacker man calm down.", "Congrats, you found absolutely nothing.", "Bro why you HERE??", 
+"This page is literally empty 💀", "Who sent you 💀", "I'm calling security (jk… maybe)", 
+"404: Your life choices not found.", "You exploring my website like it's Minecraft?", 
+"This page is like my sleep schedule: broken.", "You really clicked this? That’s wild.", 
+"Nah be honest… are you lost or snooping?", "Be honest: you clicked this by accident.", 
+"Bro thinks he found the dev room 😭", "You won nothing. Please go home.", 
+"STOP EXPLORING 😭 I'm running out of jokes.", "I hope you didn’t expect lore or something.", 
+"You just unlocked Level 0: The Backrooms.", "This page has the same amount of content as my bank account.", 
+"Why you spying on my website like an FBI agent?", "This is the digital equivalent of opening the fridge for no reason.", 
+"You unlocked absolutely 0 secrets.", "This isn't an ARG bro relax.", "Nah this page has negative content 💀", 
+"Not you clicking the secret page 😭", "What are you doing HERE 💀", 
+"The fact you scrolled this deep is concerning.", "This page has negative rizz.", 
+"NPC detected snooping in hidden files.", "You unlocked the ‘Why are you like this?’ achievement.", 
+"Oh wow, a secret page. So mysterious. So pointless.", "There is 0 lore. 0 secrets. ONLY YOU. AND THIS VOID.", 
+"Touch grass. Please.", "Bro calm down it's not that interesting 😭", "Skibidi explorer detected.", 
+"Ok but WHY are you still reading?", "I see you. Stop it. 💀", "You’ve been chosen… to stare at nothing.", 
+"Achievement unlocked: The Void 👏", "This is your life now.", "Nothing to see here… seriously.", 
+"Welcome to the secret club of disappointment.", "You might regret clicking this.", "Error 666: Fun not found.", 
+"Press Ctrl+Alt+Del to escape your choices.", "The universe questions your decisions.", 
+"Congrats. You are now a page ghost.", "I can see your soul through the screen.", 
+"This page is watching you. Just kidding 😭", "You triggered the infinite loop of shame.", 
+"Random fact: You are reading this.", "All your base are belong to chaos.", "404 fun not found.", 
+"Your cursor looks suspicious.", "Someone alert the portfolio police.", "This is the adult version of hide & seek.", 
+"Too late, you are stuck here forever.", "Send help. Just kidding.", "You’ve reached the bottom of the void.", 
+"Enjoy your stay in purgatory 💀", "Secret unlocked: existential dread.", "Your mom would be proud… maybe not.", 
+"Why am I typing this? You tell me.", "Blink twice if you regret it.", "This is where dreams go to die.", 
+"Nothing personal, just random chaos.", "You are officially cringed.", "Hope your day was better before this.", 
+"Bro… leave. Seriously.", "This message will self-destruct… not really."
+];
+
+/* ------------------ Random Message ------------------ */
+function randomMessage(){ 
+    return messages[Math.floor(Math.random() * messages.length)]; 
+}
+
+/* ------------------ Typing Effect ------------------ */
+function typeEffect(text, el, speed=35){
+    let i=0;
+    el.textContent = '';
+    function type(){ 
+        if(i<text.length){ 
+            el.textContent += text.charAt(i); 
+            i++; 
+            setTimeout(type, speed); 
+        } 
+    }
+    type();
+}
+
+/* ------------------ Confetti ------------------ */
+function spawnConfetti(){
+    for(let i=0;i<50;i++){
+        const c=document.createElement('div');
+        c.className='confetti-piece';
+        c.style.background=['#FFD166','#06D6A0','#118AB2','#EF476F','#9d4edd'][Math.floor(Math.random()*5)];
+        c.style.left=Math.random()*100+'%';
+        document.body.appendChild(c);
+        c.animate([{transform:'translateY(0px) rotate(0deg)', opacity:1},{transform:'translateY(600px) rotate('+Math.random()*720+'deg)', opacity:0}],{duration:1500+Math.random()*1000,easing:'cubic-bezier(.2,.7,.2,1)'}).onfinish=()=>c.remove();
+    }
+}
+
+/* ------------------ Achievement Popup ------------------ */
+function showAchievement(){
+    const a=document.createElement('div');
+    a.textContent='🎉 Achievement unlocked: You clicked a secret page! 🎉';
+    Object.assign(a.style,{position:'fixed',top:'20px',left:'50%',transform:'translateX(-50%)',background:'#4f7bff',color:'#fff',padding:'14px 28px',borderRadius:'14px',fontWeight:'bold',zIndex:9999});
+    document.body.appendChild(a);
+    setTimeout(()=>a.remove(),4000);
+}
+
+/* ------------------ Roast Every 5 Seconds ------------------ */
+function roastLoop(){
+    const elMsg=document.getElementById('extra');
+    setInterval(()=>{
+        typeEffect(randomMessage(), elMsg, 20);
+        spawnConfetti();
+    },5000);
+}
+
+/* ------------------ Run on load ------------------ */
+document.addEventListener('DOMContentLoaded',()=>{
+    const elMsg=document.getElementById('extra');
+    typeEffect(randomMessage(), elMsg, 25);
+    spawnConfetti();
+    showAchievement();
+    roastLoop();
+});
+</script>
+
+</body>
+</html>
