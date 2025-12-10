@@ -33,30 +33,47 @@
   </script>
   
   <script>
-    // Handle 404 redirects from static hosting
-    if (sessionStorage.redirect) {
-      const redirect = sessionStorage.redirect;
-      delete sessionStorage.redirect;
+    // Handle 404 redirects from static hosting and direct navigation
+    (function() {
+      let targetPage = null;
       
-      // Extract the page ID from the redirect path
-      const pageId = redirect === '/' ? 'home' : redirect.substring(1).split('/')[0];
-      
-      // Load that page after DOM is ready
-      if (document.readyState === 'loading') {
-        document.addEventListener('DOMContentLoaded', function() {
-          if (typeof showPage === 'function') {
-            showPage(pageId, false);
-          }
-        });
-      } else {
-        // DOM already loaded, defer to next tick to ensure showPage is defined
-        setTimeout(function() {
-          if (typeof showPage === 'function') {
-            showPage(pageId, false);
-          }
-        }, 0);
+      // Check for sessionStorage redirect (from 404.html)
+      if (sessionStorage.redirect) {
+        const redirect = sessionStorage.redirect;
+        delete sessionStorage.redirect;
+        targetPage = redirect === '/' ? 'home' : redirect.substring(1).split('/')[0];
+      } 
+      // Check if user navigated directly to a page URL (not from 404)
+      else {
+        const currentPath = window.location.pathname;
+        if (currentPath !== '/' && currentPath !== '/index.html') {
+          targetPage = currentPath.substring(1).split('/')[0];
+        }
       }
-    }
+      
+      // If we have a target page, load it after DOM is ready
+      if (targetPage) {
+        const validPages = ['home', 'about', 'skills', 'services', 'experience', 'projects', 'faq', 'sponsors', 'contact', 'privacy', 'terms'];
+        
+        // Only redirect if it's a valid page
+        if (validPages.includes(targetPage)) {
+          if (document.readyState === 'loading') {
+            document.addEventListener('DOMContentLoaded', function() {
+              if (typeof showPage === 'function') {
+                showPage(targetPage, false);
+              }
+            });
+          } else {
+            // DOM already loaded, defer to next tick to ensure showPage is defined
+            setTimeout(function() {
+              if (typeof showPage === 'function') {
+                showPage(targetPage, false);
+              }
+            }, 0);
+          }
+        }
+      }
+    })();
   </script>
   
   <script
@@ -2369,7 +2386,7 @@
                     
                     <h3 style="color: var(--black); margin-bottom: 1.5rem; font-size: 1.4rem;">🔄 Refund & Cancellation Policy</h3>
                     <p style="line-height: 1.8; font-size: 1.05rem; margin-bottom: 1rem; color: var(--gray-800);"><strong>Cancellation by Client:</strong> If you wish to cancel a project after work has commenced, you will be charged for all work completed up to the point of cancellation, plus any non-refundable expenses incurred. Deposits are non-refundable once work has begun. If cancellation occurs before any work has started, a partial refund may be available at our discretion, minus any administrative fees.</p>
-                    <p style="line-height: 1.8; font-size: 1.05rem; margin-bottom: 1rem; color: var(--gray-800);"><strong>Refunds for Services:</strong> Due to the nature of custom software development and IT services, refunds are generally not available once work has been delivered and accepted. If you are dissatisfied with the deliverables, we will work with you to address concerns and make reasonable revisions as outlined in the service agreement.</p>
+                    <p style="line-heightj: 1.8; font-size: 1.05rem; margin-bottom: 1rem; color: var(--gray-800);"><strong>Refunds for Services:</strong> Due to the nature of custom software development and IT services, refunds are generally not available once work has been delivered and accepted. If you are dissatisfied with the deliverables, we will work with you to address concerns and make reasonable revisions as outlined in the service agreement.</p>
                     <p style="line-height: 1.8; font-size: 1.05rem; margin-bottom: 1rem; color: var(--gray-800;"><strong>Australian Consumer Law:</strong> Nothing in this policy limits your rights under Australian Consumer Law. If our services fail to meet consumer guarantees (such as being provided with acceptable care and skill), you may be entitled to a remedy, which could include a refund, credit, or additional service at no extra cost.</p>
                     <p style="line-height: 1.8; font-size: 1.05rem; color: var(--gray-800);">To request a cancellation or refund, please contact us at samisingh988@gmail.com with your project details and reason for the request. We will respond within 5 business days.</p>
                 </div>
