@@ -1,6 +1,9 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
+  <!-- Content Security Policy -->
+  <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'unsafe-inline' 'unsafe-eval' https://js-de.sentry-cdn.com https://api.web3forms.com https://challenges.cloudflare.com https://www.googletagmanager.com https://www.google-analytics.com; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src 'self' https://fonts.gstatic.com; img-src 'self' data: https:; connect-src 'self' https://js-de.sentry-cdn.com https://sentry.io https://api.web3forms.com https://www.google-analytics.com; frame-src 'self' https://github.com https://challenges.cloudflare.com; object-src 'none'; base-uri 'self'; form-action 'self' https://api.web3forms.com;">
+  
   <!-- Prevent Caching & Force Fresh Load -->
   <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
   <meta http-equiv="Pragma" content="no-cache">
@@ -2558,6 +2561,27 @@
                     <input type="hidden" name="access_key" value="4fa555fc-094d-4437-bcaf-579864458244">
                     <input type="hidden" name="redirect" value="?success=true">
                     <input type="checkbox" name="botcheck" style="display: none;">
+                    
+                    <!-- Auto-responder configuration -->
+                    <input type="hidden" name="autoresponse" value="true">
+                    <input type="hidden" name="from_name" value="Samrath Singh">
+                    <input type="hidden" name="replyto" value="samisingh988@gmail.com">
+                    <textarea name="autoresponse_message" style="display: none;">
+Hi there!
+
+Thank you for reaching out to me through my portfolio website. I've received your message and I truly appreciate you taking the time to get in touch.
+
+I will review your message and get back to you as soon as possible, typically within 24-48 hours.
+
+In the meantime, feel free to check out my other projects and connect with me on:
+- GitHub: https://github.com/Sami9889
+- LinkedIn: https://www.linkedin.com/in/samrath-singh-400705297
+
+Best regards,
+Samrath Singh
+Junior Developer
+sami.is-a.dev
+                    </textarea>
                     
                     <div class="form-group">
                         <label for="name">Name *</label>
