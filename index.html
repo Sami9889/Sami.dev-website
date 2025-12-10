@@ -2472,6 +2472,8 @@
                 <form class="contact-form" id="contactForm" action="https://api.web3forms.com/submit" method="POST">
                     <input type="hidden" name="access_key" value="4fa555fc-094d-4437-bcaf-579864458244">
                     <input type="hidden" name="redirect" value="?success=true">
+                    <input type="hidden" name="from_name" value="Sami.dev Contact Form">
+                    <input type="hidden" name="replyto" id="replytoField" value="">
                     <input type="checkbox" name="botcheck" style="display: none;">
                     
                     <div class="form-group">
@@ -2889,6 +2891,13 @@
 
         // Handle form submission
         document.getElementById('contactForm').addEventListener('submit', function(event) {
+            // Set replyto field to user's email so replies go to the right person
+            const emailField = document.getElementById('email');
+            const replytoField = document.getElementById('replytoField');
+            if (emailField && replytoField) {
+                replytoField.value = emailField.value;
+            }
+            
             const submitBtn = document.getElementById('submitBtn');
             submitBtn.disabled = true;
             submitBtn.textContent = 'Sending...';
