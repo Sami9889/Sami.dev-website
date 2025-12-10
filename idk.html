@@ -2,6 +2,7 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8">
+<meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'unsafe-inline'; style-src 'self' 'unsafe-inline'; img-src 'self' data:; connect-src 'self'; object-src 'none'; base-uri 'self'; form-action 'none';">
 <title>Secret Roast Page</title>
 <style>
     body {
@@ -11,7 +12,7 @@
         line-height: 1.5;
         padding: 20px;
     }
-    a { color: #46f; }
+    a { color: #46f !important; }
     #roast { font-size: 22px; margin-bottom: 15px; }
     #fakeInfo { font-size: 15px; }
     hr { border: 0; border-top: 1px solid #333; margin: 15px 0; opacity:0.3;}
