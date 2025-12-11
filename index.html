@@ -5,8 +5,8 @@
   <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
   <meta http-equiv="Pragma" content="no-cache">
   <meta http-equiv="Expires" content="0">
-  <meta name="version" content="1.0.1">
-  <meta name="build-date" content="2024-12-20">
+  <meta name="version" content="2.0.1">
+  <meta name="build-date" content="2025-01-01">
   
   <script>
     // MAINTENANCE MODE
@@ -60,6 +60,9 @@
   src="https://js-de.sentry-cdn.com/19f914da843ff91848281a5e4be175e8.min.js"
   crossorigin="anonymous"
   ></script>
+  
+  <!-- Google reCAPTCHA -->
+  <script src="https://www.google.com/recaptcha/api.js" async defer></script>
   
   <script>
     // Sentry initialization - will be called after consent
@@ -2469,10 +2472,12 @@
                 <h2>Ready to work together?</h2>
                 <p>I'm always interested in hearing about new opportunities and interesting projects. Whether you have a project in mind, want to collaborate, or just want to say hello, feel free to reach out!</p>
                 
-                <form class="contact-form" id="contactForm" action="https://api.web3forms.com/submit" method="POST">
-                    <input type="hidden" name="access_key" value="4fa555fc-094d-4437-bcaf-579864458244">
-                    <input type="hidden" name="redirect" value="?success=true">
-                    <input type="checkbox" name="botcheck" style="display: none;">
+                <form class="contact-form" id="contactForm" action="https://formsubmit.co/samisingh988@gmail.com" method="POST">
+                    <input type="hidden" name="_subject" value="New Contact from Sami.dev">
+                    <input type="hidden" name="_captcha" value="false">
+                    <input type="hidden" name="_template" value="box">
+                    <input type="hidden" name="_autoresponse" value="Thanks for reaching out! I've received your message and will get back to you within 24-48 hours. Looking forward to discussing your project! - Sami">
+                    <input type="text" name="_honey" style="display:none">
                     
                     <div class="form-group">
                         <label for="name">Name *</label>
@@ -2887,28 +2892,17 @@
             }
         }
 
-        // Handle form submission
-        document.getElementById('contactForm').addEventListener('submit', function(event) {
-            const submitBtn = document.getElementById('submitBtn');
-            submitBtn.disabled = true;
-            submitBtn.textContent = 'Sending...';
-        });
-
-        // Check for success message in URL
-        window.addEventListener('load', function() {
-            const urlParams = new URLSearchParams(window.location.search);
-            const formMessage = document.getElementById('formMessage');
-            
-            if (urlParams.get('success') === 'true') {
-                showPage('contact');
-                formMessage.className = 'form-message success';
-                formMessage.textContent = '✅ Thank you! Your message has been sent successfully. I\'ll get back to you soon!';
-                
-                // Reset form
-                document.getElementById('contactForm').reset();
-                
-                // Clean up URL
-                window.history.replaceState({}, document.title, window.location.pathname);
+        // Handle form submission - wait for DOM
+        window.addEventListener('DOMContentLoaded', function() {
+            const contactForm = document.getElementById('contactForm');
+            if (contactForm) {
+                contactForm.addEventListener('submit', function(event) {
+                    const submitBtn = document.getElementById('submitBtn');
+                    if (submitBtn) {
+                        submitBtn.disabled = true;
+                        submitBtn.textContent = 'Sending...';
+                    }
+                });
             }
         });
 
