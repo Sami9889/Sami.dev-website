@@ -1098,7 +1098,7 @@
         }
 
         .form-group textarea {
-            min-height: 150px;
+            min-height: 200px;
             resize: vertical;
         }
 
@@ -1647,6 +1647,9 @@
             }
         }
     </style>
+    
+    <!-- Google reCAPTCHA v2 Script -->
+    <script src="https://www.google.com/recaptcha/api.js" async defer></script>
 </head>
 <body>
     <!-- Cookie Consent Banner -->
@@ -2332,9 +2335,12 @@
                 <p>I'm always interested in hearing about new opportunities and interesting projects. Whether you have a project in mind, want to collaborate, or just want to say hello, feel free to reach out!</p>
                 
                 <form class="contact-form" id="contactForm" action="https://api.web3forms.com/submit" method="POST">
+                    <!-- Web3Forms Configuration with Google reCAPTCHA -->
                     <input type="hidden" name="access_key" value="4fa555fc-094d-4437-bcaf-579864458244">
-                    <input type="hidden" name="redirect" value="?success=true">
-                    <input type="checkbox" name="botcheck" style="display: none;">
+                    <input type="hidden" name="from_name" value="sami.dev Contact Form">
+                    <input type="hidden" name="redirect" value="https://sami.is-a.dev/?success=true">
+                    <input type="hidden" name="replyto" id="replyto">
+                    <input type="hidden" name="botcheck" class="hidden" style="display: none;">
                     
                     <div class="form-group">
                         <label for="name">Name *</label>
@@ -2343,17 +2349,22 @@
                     
                     <div class="form-group">
                         <label for="email">Email *</label>
-                        <input type="email" id="email" name="email" required placeholder="your.email@example.com">
+                        <input type="email" id="email" name="email" required placeholder="your.email@example.com" onchange="document.getElementById('replyto').value=this.value">
                     </div>
                     
                     <div class="form-group">
-                        <label for="subject">Subject *</label>
-                        <input type="text" id="subject" name="subject" required placeholder="What's this about?">
+                        <label for="phone">Phone Number (Optional)</label>
+                        <input type="tel" id="phone" name="phone" placeholder="+61 XXX XXX XXX">
                     </div>
                     
                     <div class="form-group">
                         <label for="message">Message *</label>
-                        <textarea id="message" name="message" required placeholder="Tell me more about your project..."></textarea>
+                        <textarea id="message" name="message" required placeholder="Tell me more about your project... Please include any relevant details, timeline, budget, and technical requirements."></textarea>
+                    </div>
+                    
+                    <!-- Google reCAPTCHA Widget -->
+                    <div style="margin: 1.5rem 0; display: flex; justify-content: center;">
+                        <div class="g-recaptcha" data-sitekey="6LcRBhAsAAAAACatryubAg_7jPQPb5i_tcAIoCa-"></div>
                     </div>
                     
                     <button type="submit" class="submit-btn" id="submitBtn">Send Message</button>
@@ -2427,11 +2438,10 @@
 
         // Declare global variables for page navigation and project loading
         let projectsLoaded = false;
-        let updateHistory = true;
         let loadingAttempts = 0;
         const maxRetries = 3;
 
-        function showPage(pageId) {
+        function showPage(pageId, updateHistory = true) {
             const pages = document.querySelectorAll('.page');
             pages.forEach(page => page.classList.remove('active'));
             
@@ -2730,30 +2740,8 @@
             }
         }
 
-        // Handle form submission
-        document.getElementById('contactForm').addEventListener('submit', function(event) {
-            const submitBtn = document.getElementById('submitBtn');
-            submitBtn.disabled = true;
-            submitBtn.textContent = 'Sending...';
-        });
-
-        // Check for success message in URL
-        window.addEventListener('load', function() {
-            const urlParams = new URLSearchParams(window.location.search);
-            const formMessage = document.getElementById('formMessage');
-            
-            if (urlParams.get('success') === 'true') {
-                showPage('contact');
-                formMessage.className = 'form-message success';
-                formMessage.textContent = '✅ Thank you! Your message has been sent successfully. I\'ll get back to you soon!';
-                
-                // Reset form
-                document.getElementById('contactForm').reset();
-                
-                // Clean up URL
-                window.history.replaceState({}, document.title, window.location.pathname);
-            }
-        });
+        // NO JavaScript interference - let form submit naturally
+        // Web3Forms will handle reCAPTCHA validation automatically
 
         createParticles();
         
