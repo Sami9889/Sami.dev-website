@@ -15,24 +15,8 @@
   <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'unsafe-inline' https://js-de.sentry-cdn.com https://api.web3forms.com https://www.google.com https://www.gstatic.com https://cdn.jsdelivr.net; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com https://cdn.jsdelivr.net; font-src 'self' https://fonts.gstatic.com https://cdn.jsdelivr.net; img-src 'self' data: https:; frame-src 'self' https://github.com https://www.google.com; connect-src 'self' https://api.web3forms.com https://js-de.sentry-cdn.com https://sentry.io; object-src 'none'; base-uri 'self';">
   
   <script>
-    // MAINTENANCE MODE
+    // MAINTENANCE MODE - DISABLED
     const MAINTENANCE_MODE = false;
-    
-    // Check if maintenance has completed (bypass flag)
-    const maintenanceComplete = localStorage.getItem('maintenanceComplete');
-    const completedAt = localStorage.getItem('maintenanceCompletedAt');
-    
-    // Clear bypass flag if it's older than 1 hour (prevents permanent bypass)
-    if (completedAt && (Date.now() - parseInt(completedAt)) > 3600000) {
-      localStorage.removeItem('maintenanceComplete');
-      localStorage.removeItem('maintenanceCompletedAt');
-    }
-    
-    // Redirect to maintenance only if mode is enabled AND no valid bypass
-    if (MAINTENANCE_MODE && maintenanceComplete !== 'true') {
-      window.location.replace('/maintenance.html');
-      throw new Error('Maintenance mode active');
-    }
   </script>
   
   <script>
