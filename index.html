@@ -188,7 +188,6 @@
   const COOKIE_NAME = 'sami_verified';
   const params = new URLSearchParams(window.location.search);
   
-  // Check if user is verified via cookie, localStorage, or URL param
   const hasCookie = getCookie(COOKIE_NAME) === 'true';
   const hasLocalStorage = localStorage.getItem(COOKIE_NAME) === 'true';
   const hasUrlParam = params.get('verified') === '1';
@@ -196,17 +195,12 @@
   const isVerified = hasCookie || hasLocalStorage || hasUrlParam;
   
   if (!isVerified) {
-    // Not verified - redirect to recaptcha page
     window.location.replace('/recaptcha.html');
   } else {
-    // Verified! Set cookie and localStorage if coming from URL param
     if (hasUrlParam) {
-      // Set cookie
       const d = new Date();
-      d.setTime(d.getTime() + (7*24*60*60*1000)); // 7 days
+      d.setTime(d.getTime() + (7*24*60*60*1000));
       document.cookie = `${COOKIE_NAME}=true;expires=${d.toUTCString()};path=/;SameSite=Lax`;
-      
-      // Set localStorage (with try-catch for incognito mode)
       try {
         localStorage.setItem(COOKIE_NAME, 'true');
       } catch(e) {
@@ -2791,6 +2785,8 @@ sami.is-a.dev
                     <div class="form-group" style="display: flex; justify-content: center; margin-top: 1.5rem;">
                         <div class="g-recaptcha" data-sitekey="6LdYourSiteKeyHere"></div>
                     </div>
+                    
+                    <div class="g-recaptcha" data-sitekey="6LcRBhAsAAAAACatryubAg_7jPQPb5i_tcAIoCa-" style="margin: 1.5rem auto; width: fit-content;"></div>
                     
                     <button type="submit" class="submit-btn" id="submitBtn">Send Message</button>
                     
