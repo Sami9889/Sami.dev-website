@@ -163,6 +163,15 @@
   <script>
 /* index HEAD snippet — paste at top of <head> */
 (function(){
+  // Allow search engine bots to access site content
+  const userAgent = navigator.userAgent.toLowerCase();
+  const isBot = /bot|crawler|spider|crawling|googlebot|bingbot|slurp|duckduckbot|baiduspider|yandexbot|facebookexternalhit|twitterbot|whatsapp|linkedinbot/i.test(userAgent);
+  
+  // Skip verification for search engine bots
+  if (isBot) {
+    return; // Allow bots to access content
+  }
+  
   function getCookie(name){
     const pairs=document.cookie.split(';').map(s=>s.trim());
     for(const p of pairs) if(p.startsWith(name + '=')) return p.split('=')[1];
