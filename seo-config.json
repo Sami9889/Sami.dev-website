@@ -1,0 +1,158 @@
+{
+  "site": {
+    "name": "Sami Singh Portfolio",
+    "url": "https://sami.is-a.dev",
+    "domain": "sami.is-a.dev",
+    "logo": "https://sami.is-a.dev/logo.png",
+    "language": "en-AU"
+  },
+  "owner": {
+    "name": "Samrath Singh",
+    "nickname": "Sami",
+    "username": "Sami9889",
+    "email": "samisingh988@gmail.com",
+    "jobTitle": "Full-Stack Developer & Software Engineer",
+    "location": {
+      "city": "Point Cook",
+      "state": "VIC",
+      "country": "Australia",
+      "postalCode": "3030"
+    },
+    "abn": "72 925 087 373",
+    "education": "Point Cook College"
+  },
+  "social": {
+    "github": "https://github.com/Sami9889",
+    "linkedin": "https://www.linkedin.com/in/samrath-singh-400705297",
+    "discord": "https://discord.gg/fhvGABfw",
+    "email": "mailto:samisingh988@gmail.com"
+  },
+  "skills": [
+    "HTML",
+    "CSS",
+    "JavaScript",
+    "Python",
+    "PHP",
+    "Web Development",
+    "Minecraft Plugin Development",
+    "Shopify",
+    "eCommerce",
+    "API Integration",
+    "REST APIs",
+    "Technical Support"
+  ],
+  "businesses": [
+    {
+      "name": "3DPrintzAU",
+      "description": "3D Printing Services",
+      "year": "2022"
+    },
+    {
+      "name": "Procoders Coding Service",
+      "description": "Custom Software Development",
+      "year": "2023"
+    },
+    {
+      "name": "Bad to the Bone",
+      "description": "eCommerce Store",
+      "year": "2024"
+    }
+  ],
+  "seo": {
+    "title": "Sami Singh - Full-Stack Developer Portfolio | Samrath Singh | sami.dev",
+    "description": "Sami Singh (Samrath) - Full-Stack Developer & Software Engineer. Portfolio website showcasing web development projects, Minecraft plugins, and eCommerce work. Available for hire. Contact: samisingh988@gmail.com | GitHub: Sami9889",
+    "keywords": [
+      "Sami Singh",
+      "Samrath Singh",
+      "Sami dev",
+      "sami.dev",
+      "Sami developer",
+      "Sami9889",
+      "samisingh988",
+      "full-stack developer",
+      "web developer",
+      "software engineer",
+      "JavaScript",
+      "Python",
+      "PHP",
+      "Minecraft plugins",
+      "Shopify",
+      "eCommerce",
+      "portfolio",
+      "Point Cook",
+      "Victoria",
+      "Australia",
+      "GitHub Sami9889"
+    ]
+  },
+  "pages": [
+    {
+      "id": "home",
+      "path": "/",
+      "title": "Home - Sami Singh",
+      "description": "Full-Stack Developer portfolio and contact information"
+    },
+    {
+      "id": "about",
+      "path": "/about",
+      "title": "About - Sami Singh",
+      "description": "Learn about Samrath 'Sami' Singh's background and experience"
+    },
+    {
+      "id": "skills",
+      "path": "/skills",
+      "title": "Skills - Sami Singh",
+      "description": "Technical skills and expertise in web development"
+    },
+    {
+      "id": "services",
+      "path": "/services",
+      "title": "Services - Sami Singh",
+      "description": "Development services offered including web dev and plugins"
+    },
+    {
+      "id": "experience",
+      "path": "/experience",
+      "title": "Experience - Sami Singh",
+      "description": "Work experience and business ventures"
+    },
+    {
+      "id": "projects",
+      "path": "/projects",
+      "title": "Projects - Sami Singh",
+      "description": "Portfolio of development projects and GitHub repositories"
+    },
+    {
+      "id": "faq",
+      "path": "/faq",
+      "title": "FAQ - Sami Singh",
+      "description": "Frequently asked questions about services and process"
+    },
+    {
+      "id": "contact",
+      "path": "/contact",
+      "title": "Contact - Sami Singh",
+      "description": "Get in touch for project inquiries and collaborations"
+    },
+    {
+      "id": "privacy",
+      "path": "/privacy",
+      "title": "Privacy Policy - Sami Singh",
+      "description": "Privacy policy and data protection information"
+    },
+    {
+      "id": "terms",
+      "path": "/terms",
+      "title": "Terms of Service - Sami Singh",
+      "description": "Terms and conditions for services"
+    }
+  ],
+  "searchEngines": {
+    "googleSearchConsole": "https://search.google.com/search-console",
+    "bingWebmasterTools": "https://www.bing.com/webmasters",
+    "submit": [
+      "https://www.google.com/ping?sitemap=https://sami.is-a.dev/sitemap.xml",
+      "https://www.bing.com/ping?sitemap=https://sami.is-a.dev/sitemap.xml"
+    ]
+  }
+}
