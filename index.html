@@ -137,10 +137,34 @@
         });
       }
     }
+    </script>
     
-    // Initialize Sentry if cookies already accepted
-    if (localStorage.getItem('cookieConsent') === 'accepted') {
-      initSentry();
+    <!-- BreadcrumbList Schema -->
+    <script type="application/ld+json">
+    {
+      "@context": "https://schema.org",
+      "@type": "BreadcrumbList",
+      "itemListElement": [{
+        "@type": "ListItem",
+        "position": 1,
+        "name": "Home",
+        "item": "https://sami.is-a.dev/"
+      },{
+        "@type": "ListItem",
+        "position": 2,
+        "name": "About",
+        "item": "https://sami.is-a.dev/about"
+      },{
+        "@type": "ListItem",
+        "position": 3,
+        "name": "Projects",
+        "item": "https://sami.is-a.dev/projects"
+      },{
+        "@type": "ListItem",
+        "position": 4,
+        "name": "Contact",
+        "item": "https://sami.is-a.dev/contact"
+      }]
     }
   </script>
   
@@ -188,53 +212,27 @@
       } catch(e) {
         console.log('localStorage not available');
       }
-      
-      // Clean URL - remove verification params
-      const u = new URL(window.location);
-      u.searchParams.delete('verified');
-      u.searchParams.delete('ts');
-      history.replaceState(null, '', u.toString());
     }
-  }
-})();
-</script>
+    </script>
     
-    <!-- Custom Cookie Consent (loads Analytics only after consent) -->
-    <script>
-      // Check if user already gave consent
-      const cookieConsent = localStorage.getItem('cookieConsent');
-      
-      // Function to load Google Analytics & Tag Manager
-      function loadAnalytics() {
-        // Google Analytics
-        const gaScript = document.createElement('script');
-        gaScript.src = 'https://www.googletagmanager.com/gtag/js?id=G-N56LK2Y7B9';
-        gaScript.async = true;
-        gaScript.crossOrigin = 'anonymous';
-        document.head.appendChild(gaScript);
-        
-        gaScript.onload = function() {
-          window.dataLayer = window.dataLayer || [];
-          function gtag(){dataLayer.push(arguments);}
-          gtag('js', new Date());
-          gtag('config', 'G-N56LK2Y7B9', {
-            'anonymize_ip': true,
-            'cookie_flags': 'SameSite=Lax;Secure'
-          });
-        };
-        
-        // Google Tag Manager
-        (function(w,d,s,l,i){w[l]=w[l]||[];w[l].push({'gtm.start':
-        new Date().getTime(),event:'gtm.js'});var f=d.getElementsByTagName(s)[0],
-        j=d.createElement(s),dl=l!='dataLayer'?'&l='+l:'';j.async=true;j.src=
-        'https://www.googletagmanager.com/gtm.js?id='+i+dl;j.crossOrigin='anonymous';f.parentNode.insertBefore(j,f);
-        })(window,document,'script','dataLayer','GTM-W3LFMLDQ');
+    <!-- ProfilePage Schema -->
+    <script type="application/ld+json">
+    {
+      "@context": "https://schema.org",
+      "@type": "ProfilePage",
+      "mainEntity": {
+        "@type": "Person",
+        "name": "Samrath Singh",
+        "alternateName": "Sami Singh",
+        "identifier": "Sami9889",
+        "email": "samisingh988@gmail.com",
+        "url": "https://sami.is-a.dev",
+        "sameAs": [
+          "https://github.com/Sami9889",
+          "https://www.linkedin.com/in/samrath-singh-400705297"
+        ]
       }
-      
-      // If already accepted, load immediately
-      if (cookieConsent === 'accepted') {
-        loadAnalytics();
-      }
+    }
     </script>
     
     <script>
@@ -1906,6 +1904,7 @@
     <!-- Google Tag Manager (noscript) -->
     <noscript><iframe src="https://www.googletagmanager.com/ns.html?id=GTM-W3LFMLDQ"
     height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
+    <!-- End Google Tag Manager (noscript) -->
     
     <!-- Scroll Progress Bar -->
     <div id="scroll-progress" style="position: fixed; top: 0; left: 0; width: 0%; height: 4px; background: linear-gradient(90deg, var(--accent), var(--success)); z-index: 9999; transition: width 0.1s ease;"></div>
@@ -3368,17 +3367,11 @@ sami.is-a.dev
             localStorage.setItem('cookieConsent', 'accepted');
             document.getElementById('cookieBanner').classList.remove('show');
             loadAnalytics(); // Load analytics after consent
-            
-            // Initialize Sentry Session Replay after consent
-            if (typeof initSentry === 'function') {
-                initSentry();
-            }
         }
         
         function declineCookies() {
             localStorage.setItem('cookieConsent', 'declined');
             document.getElementById('cookieBanner').classList.remove('show');
-            // Don't load analytics or Sentry
         }
         
         // Show banner if user hasn't made a choice
