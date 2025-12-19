@@ -1,113 +1,23 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <!-- Prevent Caching -->
-  <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
-  <meta http-equiv="Pragma" content="no-cache">
-  <meta http-equiv="Expires" content="0">
+  <meta name="robots" content="index, follow">
+  <meta name="googlebot" content="index, follow">
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
   <script>
-    // MAINTENANCE MODE
-    const MAINTENANCE_MODE = false;
-    
-    // Check if maintenance has completed (bypass flag)
-    const maintenanceComplete = localStorage.getItem('maintenanceComplete');
-    const completedAt = localStorage.getItem('maintenanceCompletedAt');
-    
-    // Clear bypass flag if it's older than 1 hour (prevents permanent bypass)
-    if (completedAt && (Date.now() - parseInt(completedAt)) > 3600000) {
-      localStorage.removeItem('maintenanceComplete');
-      localStorage.removeItem('maintenanceCompletedAt');
-    }
-    
-    // Redirect to maintenance only if mode is enabled AND no valid bypass
-    if (MAINTENANCE_MODE && maintenanceComplete !== 'true') {
-      window.location.replace('/maintenance.html');
-      throw new Error('Maintenance mode active');
-    }
-  </script>
-  
-  <script
-  src="https://js-de.sentry-cdn.com/19f914da843ff91848281a5e4be175e8.min.js"
-  crossorigin="anonymous"
-  ></script>
-  
-  <script>
-    // Sentry initialization - will be called after consent
-    function initSentry() {
-      if (typeof Sentry !== 'undefined') {
-        Sentry.onLoad(function() {
-          Sentry.init({
-            // Basic error tracking only - no replay integration
-            integrations: [],
-            
-            // Filter out browser extension errors
-            ignoreErrors: [
-              // Chrome/Safari extension errors
-              'Invalid call to runtime.sendMessage()',
-              /runtime\.sendMessage/i,
-              /chrome-extension:/i,
-              /safari-extension:/i,
-              /moz-extension:/i,
-              // Common extension-related errors
-              'Extension context invalidated',
-              'Extension manifest must request permission',
-              /extensions\//i,
-              // Other common extension errors
-              'ResizeObserver loop limit exceeded',
-              'Non-Error promise rejection captured',
-            ],
-            
-            // Additional filtering via beforeSend hook
-            beforeSend(event, hint) {
-              // Filter errors from browser extensions
-              const error = hint.originalException;
-              const errorMessage = event.exception?.values?.[0]?.value || '';
-              
-              // Check if error message contains extension-related keywords
-              const extensionKeywords = [
-                'runtime.sendMessage',
-                'chrome-extension',
-                'safari-extension',
-                'moz-extension',
-                'Extension context',
-                'Tab not found'
-              ];
-              
-              for (const keyword of extensionKeywords) {
-                if (errorMessage.includes(keyword)) {
-                  return null; // Drop the event
-                }
-              }
-              
-              // Check stack trace for extension origins
-              const frames = event.exception?.values?.[0]?.stacktrace?.frames || [];
-              for (const frame of frames) {
-                const filename = frame.filename || '';
-                if (filename.includes('chrome-extension://') || 
-                    filename.includes('safari-extension://') ||
-                    filename.includes('moz-extension://') ||
-                    filename.includes('extensions/')) {
-                  return null; // Drop the event
-                }
-              }
-              
-              return event;
-            }
-          });
-        });
-      }
-    }
-    
-    // Initialize Sentry if cookies already accepted
-    if (localStorage.getItem('cookieConsent') === 'accepted') {
-      initSentry();
-    }
-  </script>
-  
-  <script>
-/* index HEAD snippet — paste at top of <head> */
+/* Recaptcha Verification - Bypassed for Search Engine Bots */
 (function(){
+  // Detect search engine bots
+  const userAgent = navigator.userAgent.toLowerCase();
+  const isBot = /googlebot|bingbot|slurp|duckduckbot|baiduspider|yandexbot|facebookexternalhit|twitterbot|linkedinbot|whatsapp|crawler|spider/i.test(userAgent);
+  
+  // Skip verification for bots
+  if (isBot) {
+    return;
+  }
+  
   function getCookie(name){
     const pairs=document.cookie.split(';').map(s=>s.trim());
     for(const p of pairs) if(p.startsWith(name + '=')) return p.split('=')[1];
@@ -116,7 +26,6 @@
   const COOKIE_NAME = 'sami_verified';
   const params = new URLSearchParams(window.location.search);
   
-  // Check if user is verified via cookie, localStorage, or URL param
   const hasCookie = getCookie(COOKIE_NAME) === 'true';
   const hasLocalStorage = localStorage.getItem(COOKIE_NAME) === 'true';
   const hasUrlParam = params.get('verified') === '1';
@@ -124,24 +33,15 @@
   const isVerified = hasCookie || hasLocalStorage || hasUrlParam;
   
   if (!isVerified) {
-    // Not verified - redirect to recaptcha page
     window.location.replace('/recaptcha.html');
   } else {
-    // Verified! Set cookie and localStorage if coming from URL param
     if (hasUrlParam) {
-      // Set cookie
       const d = new Date();
-      d.setTime(d.getTime() + (7*24*60*60*1000)); // 7 days
+      d.setTime(d.getTime() + (7*24*60*60*1000));
       document.cookie = `${COOKIE_NAME}=true;expires=${d.toUTCString()};path=/;SameSite=Lax`;
-      
-      // Set localStorage (with try-catch for incognito mode)
       try {
         localStorage.setItem(COOKIE_NAME, 'true');
-      } catch(e) {
-        console.log('localStorage not available');
-      }
-      
-      // Clean URL - remove verification params
+      } catch(e) {}
       const u = new URL(window.location);
       u.searchParams.delete('verified');
       u.searchParams.delete('ts');
@@ -150,52 +50,200 @@
   }
 })();
 </script>
+  
+  <!-- Google Tag Manager -->
+  <script>(function(w,d,s,l,i){w[l]=w[l]||[];w[l].push({'gtm.start':
+  new Date().getTime(),event:'gtm.js'});var f=d.getElementsByTagName(s)[0],
+  j=d.createElement(s),dl=l!='dataLayer'?'&l='+l:'';j.async=true;j.src=
+  'https://www.googletagmanager.com/gtm.js?id='+i+dl;j.crossOrigin='anonymous';f.parentNode.insertBefore(j,f);
+  })(window,document,'script','dataLayer','GTM-W3LFMLDQ');</script>
+  <!-- End Google Tag Manager -->
     
-    <!-- Custom Cookie Consent (loads Analytics only after consent) -->
-    <script>
-      // Check if user already gave consent
-      const cookieConsent = localStorage.getItem('cookieConsent');
-      
-      // Function to load Google Analytics & Tag Manager
-      function loadAnalytics() {
-        // Google Analytics
-        const gaScript = document.createElement('script');
-        gaScript.src = 'https://www.googletagmanager.com/gtag/js?id=G-N56LK2Y7B9';
-        gaScript.async = true;
-        gaScript.crossOrigin = 'anonymous';
-        document.head.appendChild(gaScript);
-        
-        gaScript.onload = function() {
-          window.dataLayer = window.dataLayer || [];
-          function gtag(){dataLayer.push(arguments);}
-          gtag('js', new Date());
-          gtag('config', 'G-N56LK2Y7B9', {
-            'anonymize_ip': true,
-            'cookie_flags': 'SameSite=Lax;Secure'
-          });
-        };
-        
-        // Google Tag Manager
-        (function(w,d,s,l,i){w[l]=w[l]||[];w[l].push({'gtm.start':
-        new Date().getTime(),event:'gtm.js'});var f=d.getElementsByTagName(s)[0],
-        j=d.createElement(s),dl=l!='dataLayer'?'&l='+l:'';j.async=true;j.src=
-        'https://www.googletagmanager.com/gtm.js?id='+i+dl;j.crossOrigin='anonymous';f.parentNode.insertBefore(j,f);
-        })(window,document,'script','dataLayer','GTM-W3LFMLDQ');
-      }
-      
-      // If already accepted, load immediately
-      if (cookieConsent === 'accepted') {
-        loadAnalytics();
-      }
+    <!-- SEO Meta Tags -->
+    <meta name="description" content="Sami Singh - Full-Stack Developer & Software Engineer from Point Cook, VIC, Australia. Expert in JavaScript, Python, PHP web development, Minecraft plugins, Shopify eCommerce. 2+ years experience. Instagram: @sami9889 | GitHub: Sami9889 | LinkedIn | Email: samisingh988@gmail.com | Available for hire | ABN: 72 925 087 373">
+    <meta name="keywords" content="Sami Singh, Samrath Singh, Sami, Sami9889, @sami9889, samisingh988, Instagram Sami9889, GitHub Sami9889, LinkedIn Samrath Singh, Point Cook developer, VIC developer, Australian developer, Melbourne developer, full-stack developer, web developer, software engineer, JavaScript developer, Python developer, PHP developer, HTML CSS, React, Node.js, Vue, Angular, TypeScript, MongoDB, MySQL, PostgreSQL, Git, GitHub, REST API, GraphQL, Minecraft plugin developer, Minecraft server developer, Bukkit, Spigot, Paper, PaperMC, Minecraft coding, Shopify developer, Shopify expert, Shopify customization, Shopify theme, Liquid, eCommerce developer, WooCommerce, online store, web design, UI/UX design, responsive design, mobile-first, frontend developer, backend developer, fullstack, MERN stack, MEAN stack, API integration, webhook, automation, 3D printing, 3DPrintzAU, Procoders, Bad to the Bone, freelance developer, hire developer, contract developer, remote developer, junior developer, student developer, portfolio, coding projects, GitHub projects, open source, web hosting, DNS, SSL, HTTPS, Cloudflare, NGINX, Apache, Linux, Ubuntu, server setup, deployment, CI/CD, DevOps, technical support, troubleshooting, debugging, code review, agile, scrum, project management, client support, documentation, testing, QA, quality assurance, performance optimization, SEO optimization, Google Analytics, Google Tag Manager, accessibility, WCAG, responsive, cross-browser, modern web, clean code, best practices, professional, reliable, affordable, budget-friendly, competitive pricing, fast delivery, Point Cook VIC 3030, Victoria Australia, Australian freelancer, local developer, nearby developer, hire Sami Singh, contact Sami Singh, Sami Singh email, Sami Singh phone, Sami Singh website, Sami Singh portfolio, samisingh988@gmail.com, ABN 72 925 087 373, Point Cook College, teen entrepreneur, young entrepreneur, business owner, startup founder, 3DPrintzAU founder, Procoders founder, eCommerce store owner, multi-business owner">
+    <meta name="author" content="Samrath Singh">
+    <link rel="canonical" href="https://sami.is-a.dev/">
+    
+    <!-- Content Security Policy - Updated to allow reCAPTCHA and Sentry -->
+    <meta http-equiv="Content-Security-Policy" content="script-src 'self' 'unsafe-inline' 'unsafe-eval' https://js-de.sentry-cdn.com https://browser.sentry-cdn.com https://cdn.jsdelivr.net https://api.web3forms.com https://challenges.cloudflare.com https://www.googletagmanager.com https://www.google-analytics.com https://www.google.com https://www.gstatic.com https://formsubmit.co; frame-src https://www.google.com https://formsubmit.co; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src 'self' https://fonts.gstatic.com; img-src 'self' data: https:; connect-src 'self' https://api.web3forms.com https://formsubmit.co https://api.github.com;">
+    
+    <!-- Open Graph / Social Media -->
+    <meta property="og:type" content="profile">
+    <meta property="og:url" content="https://sami.is-a.dev/">
+    <meta property="og:title" content="Samrath 'Sami' Singh (@sami9889) - Full-Stack Developer | Instagram | GitHub | LinkedIn">
+    <meta property="og:description" content="Sami Singh (@sami9889) - Full-Stack Developer from Point Cook, VIC. Instagram: @sami9889 | GitHub: Sami9889 | LinkedIn: samrath-singh-400705297 | Email: samisingh988@gmail.com | Discord">
+    <meta property="og:site_name" content="sami.dev">
+    <meta property="og:locale" content="en_AU">
+    <meta property="profile:first_name" content="Samrath">
+    <meta property="profile:last_name" content="Singh">
+    <meta property="profile:username" content="Sami9889">
+    <meta property="profile:gender" content="male">
+    
+    <!-- Twitter Card -->
+    <meta name="twitter:card" content="summary">
+    <meta name="twitter:title" content="Samrath 'Sami' Singh (@sami9889) - Full-Stack Developer Portfolio">
+    <meta name="twitter:description" content="Full-Stack Developer from Point Cook, VIC. Instagram: @sami9889 | GitHub: Sami9889 | LinkedIn | Email: samisingh988@gmail.com | Web dev, Minecraft plugins, Shopify">
+    <meta name="twitter:site" content="@sami9889">
+    <meta name="twitter:creator" content="@sami9889">
+    
+    <title>Sami Singh - Full-Stack Developer | Point Cook VIC | Web Dev | Minecraft | Shopify | GitHub Sami9889 | Instagram @sami9889</title>
+    <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>💻</text></svg>">
+    
+    <!-- Structured Data / Schema.org for Rich Search Results -->
+    <script type="application/ld+json">
+    {
+      "@context": "https://schema.org",
+      "@type": "Person",
+      "name": "Samrath Singh",
+      "givenName": "Samrath",
+      "familyName": "Singh",
+      "additionalName": "Sami",
+      "alternateName": ["Sami Singh", "Samrath Sami Singh", "Sami9889"],
+      "url": "https://sami.is-a.dev",
+      "sameAs": [
+        "https://github.com/Sami9889",
+        "https://www.linkedin.com/in/samrath-singh-400705297",
+        "https://discord.gg/fhvGABfw",
+        "https://www.instagram.com/sami9889",
+        "https://twitter.com/Sami9889",
+        "https://facebook.com/sami9889"
+      ],
+      "jobTitle": "Full-Stack Developer & Software Engineer",
+      "worksFor": {
+        "@type": "Organization",
+        "name": "Freelance Developer"
+      },
+      "address": {
+        "@type": "PostalAddress",
+        "addressLocality": "Point Cook",
+        "addressRegion": "VIC",
+        "postalCode": "3030",
+        "addressCountry": "AU"
+      },
+      "email": "samisingh988@gmail.com",
+      "telephone": "+61",
+      "knowsAbout": [
+        "Web Development",
+        "JavaScript",
+        "Python", 
+        "PHP",
+        "HTML",
+        "CSS",
+        "Minecraft Plugin Development",
+        "eCommerce",
+        "Shopify",
+        "API Integration",
+        "REST APIs",
+        "3D Printing",
+        "Technical Support",
+        "Cloudflare",
+        "NGINX"
+      ],
+      "knowsLanguage": ["en-AU", "en-US"],
+      "alumniOf": {
+        "@type": "EducationalOrganization",
+        "name": "Point Cook College"
+      },
+      "description": "Full-Stack Developer from Point Cook, VIC specializing in web development, Minecraft plugins, eCommerce solutions, and API integration. ABN: 72 925 087 373. Contact: samisingh988@gmail.com | GitHub: Sami9889 | LinkedIn: samrath-singh-400705297",
+      "identifier": {
+        "@type": "PropertyValue",
+        "name": "ABN",
+        "value": "72 925 087 373"
+      },
+      "owns": [
+        {
+          "@type": "Organization",
+          "name": "3DPrintzAU",
+          "description": "3D Printing Services"
+        },
+        {
+          "@type": "Organization",
+          "name": "Procoders Coding Service",
+          "description": "Custom Software Development"
+        },
+        {
+          "@type": "Organization",
+          "name": "Bad to the Bone",
+          "description": "eCommerce Store"
+        }
+      ]
+    }
     </script>
     
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <meta name="description" content="Samrath 'Sami' Singh - Full-Stack Developer & Software Engineer Portfolio">
-    <meta name="keywords" content="full-stack developer, software engineer, web development, JavaScript, Python, React">
-    <meta name="author" content="Samrath Singh">
-    <title>Samrath "Sami" Singh - Full-Stack Developer</title>
-    <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>💻</text></svg>">
+    <!-- BreadcrumbList Schema -->
+    <script type="application/ld+json">
+    {
+      "@context": "https://schema.org",
+      "@type": "BreadcrumbList",
+      "itemListElement": [{
+        "@type": "ListItem",
+        "position": 1,
+        "name": "Home",
+        "item": "https://sami.is-a.dev/"
+      },{
+        "@type": "ListItem",
+        "position": 2,
+        "name": "About",
+        "item": "https://sami.is-a.dev/about"
+      },{
+        "@type": "ListItem",
+        "position": 3,
+        "name": "Projects",
+        "item": "https://sami.is-a.dev/projects"
+      },{
+        "@type": "ListItem",
+        "position": 4,
+        "name": "Contact",
+        "item": "https://sami.is-a.dev/contact"
+      }]
+    }
+    </script>
+    
+    <!-- WebSite Schema -->
+    <script type="application/ld+json">
+    {
+      "@context": "https://schema.org",
+      "@type": "WebSite",
+      "name": "Samrath Singh Portfolio",
+      "alternateName": "sami.dev",
+      "url": "https://sami.is-a.dev",
+      "description": "Portfolio and contact website for Samrath 'Sami' Singh, Full-Stack Developer from Point Cook, VIC",
+      "author": {
+        "@type": "Person",
+        "name": "Samrath Singh",
+        "email": "samisingh988@gmail.com"
+      },
+      "potentialAction": {
+        "@type": "SearchAction",
+        "target": "https://sami.is-a.dev/?search={search_term_string}",
+        "query-input": "required name=search_term_string"
+      }
+    }
+    </script>
+    
+    <!-- ProfilePage Schema -->
+    <script type="application/ld+json">
+    {
+      "@context": "https://schema.org",
+      "@type": "ProfilePage",
+      "mainEntity": {
+        "@type": "Person",
+        "name": "Samrath Singh",
+        "alternateName": "Sami Singh",
+        "identifier": "Sami9889",
+        "email": "samisingh988@gmail.com",
+        "url": "https://sami.is-a.dev",
+        "sameAs": [
+          "https://github.com/Sami9889",
+          "https://www.linkedin.com/in/samrath-singh-400705297",
+          "https://www.instagram.com/sami9889",
+          "https://discord.gg/fhvGABfw",
+          "https://twitter.com/Sami9889"
+        ]
+      }
+    }
+    </script>
     
     <!-- Google Fonts -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -1098,7 +1146,7 @@
         }
 
         .form-group textarea {
-            min-height: 150px;
+            min-height: 200px;
             resize: vertical;
         }
 
@@ -1647,6 +1695,9 @@
             }
         }
     </style>
+    
+    <!-- Google reCAPTCHA v2 Script -->
+    <script src="https://www.google.com/recaptcha/api.js" async defer></script>
 </head>
 <body>
     <!-- Cookie Consent Banner -->
@@ -1665,6 +1716,7 @@
     <!-- Google Tag Manager (noscript) -->
     <noscript><iframe src="https://www.googletagmanager.com/ns.html?id=GTM-W3LFMLDQ"
     height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
+    <!-- End Google Tag Manager (noscript) -->
     
     <!-- Scroll Progress Bar -->
     <div id="scroll-progress" style="position: fixed; top: 0; left: 0; width: 0%; height: 4px; background: linear-gradient(90deg, var(--accent), var(--success)); z-index: 9999; transition: width 0.1s ease;"></div>
@@ -2331,10 +2383,11 @@
                 <h2>Ready to work together?</h2>
                 <p>I'm always interested in hearing about new opportunities and interesting projects. Whether you have a project in mind, want to collaborate, or just want to say hello, feel free to reach out!</p>
                 
-                <form class="contact-form" id="contactForm" action="https://api.web3forms.com/submit" method="POST">
-                    <input type="hidden" name="access_key" value="4fa555fc-094d-4437-bcaf-579864458244">
-                    <input type="hidden" name="redirect" value="?success=true">
-                    <input type="checkbox" name="botcheck" style="display: none;">
+                <form class="contact-form" id="contactForm" action="https://formsubmit.co/samisingh988@gmail.com" method="POST">
+                    <input type="hidden" name="_subject" value="New Contact - sami.dev">
+                    <input type="hidden" name="_template" value="table">
+                    <input type="hidden" name="_autoresponse" value="Thank you for contacting Samrath Singh! I have received your message and will get back to you within 24-48 hours. Best regards, Sami">
+                    <input type="text" name="_honey" style="display:none">
                     
                     <div class="form-group">
                         <label for="name">Name *</label>
@@ -2347,14 +2400,11 @@
                     </div>
                     
                     <div class="form-group">
-                        <label for="subject">Subject *</label>
-                        <input type="text" id="subject" name="subject" required placeholder="What's this about?">
+                        <label for="message">Message *</label>
+                        <textarea id="message" name="message" required placeholder="Tell me about your project..."></textarea>
                     </div>
                     
-                    <div class="form-group">
-                        <label for="message">Message *</label>
-                        <textarea id="message" name="message" required placeholder="Tell me more about your project..."></textarea>
-                    </div>
+                    <div class="g-recaptcha" data-sitekey="6LcRBhAsAAAAACatryubAg_7jPQPb5i_tcAIoCa-" style="margin: 1.5rem auto; width: fit-content;"></div>
                     
                     <button type="submit" class="submit-btn" id="submitBtn">Send Message</button>
                     
@@ -2427,11 +2477,10 @@
 
         // Declare global variables for page navigation and project loading
         let projectsLoaded = false;
-        let updateHistory = true;
         let loadingAttempts = 0;
         const maxRetries = 3;
 
-        function showPage(pageId) {
+        function showPage(pageId, updateHistory = true) {
             const pages = document.querySelectorAll('.page');
             pages.forEach(page => page.classList.remove('active'));
             
@@ -2730,30 +2779,7 @@
             }
         }
 
-        // Handle form submission
-        document.getElementById('contactForm').addEventListener('submit', function(event) {
-            const submitBtn = document.getElementById('submitBtn');
-            submitBtn.disabled = true;
-            submitBtn.textContent = 'Sending...';
-        });
-
-        // Check for success message in URL
-        window.addEventListener('load', function() {
-            const urlParams = new URLSearchParams(window.location.search);
-            const formMessage = document.getElementById('formMessage');
-            
-            if (urlParams.get('success') === 'true') {
-                showPage('contact');
-                formMessage.className = 'form-message success';
-                formMessage.textContent = '✅ Thank you! Your message has been sent successfully. I\'ll get back to you soon!';
-                
-                // Reset form
-                document.getElementById('contactForm').reset();
-                
-                // Clean up URL
-                window.history.replaceState({}, document.title, window.location.pathname);
-            }
-        });
+        // Contact form - Let it submit naturally without JavaScript interference
 
         createParticles();
         
@@ -2929,17 +2955,11 @@
             localStorage.setItem('cookieConsent', 'accepted');
             document.getElementById('cookieBanner').classList.remove('show');
             loadAnalytics(); // Load analytics after consent
-            
-            // Initialize Sentry Session Replay after consent
-            if (typeof initSentry === 'function') {
-                initSentry();
-            }
         }
         
         function declineCookies() {
             localStorage.setItem('cookieConsent', 'declined');
             document.getElementById('cookieBanner').classList.remove('show');
-            // Don't load analytics or Sentry
         }
         
         // Show banner if user hasn't made a choice
