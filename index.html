@@ -46,7 +46,10 @@
       document.cookie = `${COOKIE_NAME}=true;expires=${d.toUTCString()};path=/;SameSite=Lax`;
       try {
         localStorage.setItem(COOKIE_NAME, 'true');
-      } catch(e) {}
+      }
+      catch(e) {
+        void(0);
+      }
       const u = new URL(window.location);
       u.searchParams.delete('verified');
       u.searchParams.delete('ts');
@@ -3057,17 +3060,21 @@ The more details you provide, the better I can understand your needs and provide
                 projectsLoaded = true;
                 loadingAttempts = 0;
                 
-            } catch (err) {
+            }
+            catch (err) {
                 loading.style.display = 'none';
                 error.style.display = 'block';
                 
-                const errorElement = error.querySelector('p');
-                if (err.name === 'AbortError') errorElement.textContent = 'Request timed out. Please check your connection and try again.';
-                else if (err.message.includes('rate limit')) errorElement.textContent = err.message;
-                else errorElement.textContent = `Failed to load projects: ${err.message}`;
-                
-                // Silently handle error - don't spam console
-                // console.error('Error loading GitHub projects:', err);
+                var errorElement = error.querySelector('p');
+                if (err.name === 'AbortError') { 
+                    errorElement.textContent = 'Request timed out. Please check your connection and try again.';
+                }
+                else if (err.message.includes('rate limit')) { 
+                    errorElement.textContent = err.message;
+                }
+                else { 
+                    errorElement.textContent = 'Failed to load projects: ' + err.message;
+                }
             }
         }
 
