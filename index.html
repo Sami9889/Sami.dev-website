@@ -2693,7 +2693,6 @@
                     <div class="form-group">
                         <label for="email">Email *</label>
                         <input type="email" id="email" name="email" required placeholder="your.email@example.com">
-                        <input type="hidden" name="_replyto" id="replyto">
                     </div>
                     
                     <div class="form-group">
@@ -2794,63 +2793,59 @@
         const maxRetries = 3;
 
         function showPage(pageId, updateHistory = true) {
-            const pages = document.querySelectorAll('.page');
-            pages.forEach(page => page.classList.remove('active'));
-            
-            const targetPage = document.getElementById(pageId);
-            if (targetPage) targetPage.classList.add('active');
-
-            const navLinks = document.querySelectorAll('.nav-links a');
-            navLinks.forEach(link => link.classList.remove('active'));
-            
-            const activeLink = document.querySelector(`.nav-links a[onclick*="${pageId}"]`);
-            if (activeLink) activeLink.classList.add('active');
-
-            document.getElementById('nav-links').classList.remove('open');
-
-            if (pageId === 'projects' && !projectsLoaded) {
-                loadGitHubProjects();
-                projectsLoaded = true;
-            }
-
-            const pageTitles = {
-                'home': 'Samrath "Sami" Singh - Full-Stack Developer',
-                'about': 'About - Samrath Singh',
-                'skills': 'Skills - Samrath Singh',
-                'services': 'Services - Samrath Singh',
-                'experience': 'Experience - Samrath Singh',
-                'projects': 'Projects - Samrath Singh',
-                'faq': 'FAQ - Samrath Singh',
-                'sponsors': 'Sponsors - Samrath Singh',
-                'contact': 'Contact - Samrath Singh',
-                'privacy': 'Privacy Policy - Samrath Singh',
-                'terms': 'Terms of Service - Samrath Singh'
-            };
-            document.title = pageTitles[pageId] || 'Samrath Singh';
-            
-            // Update URL with history.pushState
-            if (shouldUpdateHistory) {
-                const path = pageId === 'home' ? '/' : '/' + pageId;
-                history.pushState({ page: pageId }, document.title, path);
-            }
-            
-            window.scrollTo({ top: 0, behavior: 'smooth' });
-            
-            // Add scroll-reveal class to main content sections
-            setTimeout(() => {
-                const sections = document.querySelectorAll('.skill-category, .project-card, .timeline-item, .faq-item');
-                sections.forEach((section, index) => {
-                    section.classList.add('scroll-reveal');
-                    section.style.transitionDelay = `${index * 0.1}s`;
-                });
-                if (typeof revealOnScroll === 'function') {
-                    revealOnScroll();
+            try {
+                console.log('showPage called with:', pageId);
+                
+                const pages = document.querySelectorAll('.page');
+                console.log('Found pages:', pages.length);
+                pages.forEach(page => page.classList.remove('active'));
+                
+                const targetPage = document.getElementById(pageId);
+                console.log('Target page:', targetPage);
+                if (targetPage) {
+                    targetPage.classList.add('active');
+                    console.log('Added active class to:', pageId);
+                } else {
+                    console.error('Page not found:', pageId);
                 }
-            }, 100);
-            
-            // Trigger skill bar animation when Skills page is shown
-            if (pageId === 'skills') {
-                setTimeout(animateSkillBars, 100);
+
+                const navLinks = document.querySelectorAll('.nav-links a');
+                navLinks.forEach(link => link.classList.remove('active'));
+                
+                const activeLink = document.querySelector(`.nav-links a[onclick*="${pageId}"]`);
+                if (activeLink) activeLink.classList.add('active');
+
+                const navLinksEl = document.getElementById('nav-links');
+                if (navLinksEl) navLinksEl.classList.remove('open');
+
+                if (pageId === 'projects' && !projectsLoaded) {
+                    loadGitHubProjects();
+                    projectsLoaded = true;
+                }
+
+                const pageTitles = {
+                    'home': 'Samrath "Sami" Singh - Full-Stack Developer',
+                    'about': 'About - Samrath Singh',
+                    'skills': 'Skills - Samrath Singh',
+                    'services': 'Services - Samrath Singh',
+                    'experience': 'Experience - Samrath Singh',
+                    'projects': 'Projects - Samrath Singh',
+                    'faq': 'FAQ - Samrath Singh',
+                    'contact': 'Contact - Samrath Singh',
+                    'privacy': 'Privacy Policy - Samrath Singh',
+                    'terms': 'Terms of Service - Samrath Singh'
+                };
+                document.title = pageTitles[pageId] || 'Samrath Singh';
+                
+                // Update URL with history.pushState
+                if (updateHistory) {
+                    const path = pageId === 'home' ? '/' : '/' + pageId;
+                    history.pushState({ page: pageId }, document.title, path);
+                }
+                
+                window.scrollTo({ top: 0, behavior: 'smooth' });
+            } catch (error) {
+                console.error('Error in showPage:', error);
             }
         }
 
@@ -3264,6 +3259,31 @@
         
         window.addEventListener('scroll', revealOnScroll);
         revealOnScroll(); // Initial check
+        
+        // Extend showPage function for scroll-reveal animations
+        const baseShowPage = showPage;
+        function showPageWithAnimations(pageId, updateHistory = true) {
+            // Call the original showPage function
+            baseShowPage(pageId, updateHistory);
+            
+            // Add scroll-reveal class to main content sections
+            setTimeout(() => {
+                const sections = document.querySelectorAll('.skill-category, .project-card, .timeline-item, .faq-item');
+                sections.forEach((section, index) => {
+                    section.classList.add('scroll-reveal');
+                    section.style.transitionDelay = `${index * 0.1}s`;
+                });
+                revealOnScroll();
+            }, 100);
+            
+            // Trigger skill bar animation when Skills page is shown
+            if (pageId === 'skills') {
+                setTimeout(animateSkillBars, 100);
+            }
+        }
+        
+        // Replace showPage with the enhanced version
+        showPage = showPageWithAnimations;
         
         // ============================================
         // COOKIE CONSENT BANNER
