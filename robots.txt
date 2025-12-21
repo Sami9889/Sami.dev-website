@@ -1,0 +1,27 @@
+# robots.txt for sami.is-a.dev
+# Allow all search engines to crawl the entire site
+
+User-agent: *
+Allow: /
+Disallow: /recaptcha.html
+Disallow: /maintenance.html
+Disallow: /maintenance-simple.html
+
+# Sitemap location
+Sitemap: https://sami.is-a.dev/sitemap.xml
+
+# Specific rules for major search engines
+User-agent: Googlebot
+Allow: /
+Disallow: /recaptcha.html
+
+User-agent: Bingbot
+Allow: /
+Disallow: /recaptcha.html
+
+User-agent: Slurp
+Allow: /
+Disallow: /recaptcha.html
+
+# Crawl-delay for polite crawling
+Crawl-delay: 1
