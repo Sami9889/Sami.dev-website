@@ -1,0 +1,150 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'unsafe-inline'; style-src 'self' 'unsafe-inline'; img-src 'self' data:; connect-src 'self'; object-src 'none'; base-uri 'self'; form-action 'none';">
+<title>Secret Roast Page</title>
+
+<!-- Content Security Policy -->
+<meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'unsafe-inline'; style-src 'self' 'unsafe-inline'; img-src 'self' data:; connect-src 'self'; object-src 'none'; base-uri 'self';">
+<style>
+    body {
+        background: #111;
+        color: #eee;
+        font-family: monospace;
+        line-height: 1.5;
+        padding: 20px;
+    }
+    a { color: #46f; }
+    
+    /* Ensure link visibility in both light and dark mode */
+    @media (prefers-color-scheme: light) {
+        a { color: #0066cc; }
+    }
+    #roast { font-size: 22px; margin-bottom: 15px; }
+    #fakeInfo { font-size: 15px; }
+    hr { border: 0; border-top: 1px solid #333; margin: 15px 0; opacity:0.3;}
+</style>
+</head>
+<body>
+
+<div id="roast"></div>
+<div id="fakeInfo"></div>
+
+<p id="note" style="font-size:12px; color:#777; margin-top:20px;">
+*All info on this page is randomly generated for jokes.  
+I <b>could</b> collect your real IP like any website, but I’m not cooked.  
+Read my <a href="https://sami.is-a.dev/privacy">Privacy Policy</a> before crying.*
+</p>
+
+<script>
+/* ------------------ Roast Messages ------------------ */
+const messages = [
+"Bro… you lost?", "This page wasn’t even meant for humans.", "You weren’t supposed to find this.",
+"If you're here looking for secrets, all I have is disappointment.", "Real question: Who even clicks this deep?",
+"Hey hacker man calm down.", "Congrats, you found absolutely nothing.", "Bro why you HERE??",
+"This page is literally empty 💀", "Who sent you 💀", "I'm calling security (jk… maybe)",
+"404: Your life choices not found.", "You exploring my website like it's Minecraft?",
+"This page is like my sleep schedule: broken.", "You really clicked this? That’s wild.",
+"Nah be honest… are you lost or snooping?", "Be honest: you clicked this by accident.",
+"Bro thinks he found the dev room 😭", "You won nothing. Please go home.",
+"STOP EXPLORING 😭 I'm running out of jokes.", "I hope you didn’t expect lore or something.",
+"You just unlocked Level 0: The Backrooms.", "This page has the same amount of content as my bank account.",
+"Why you spying on my website like an FBI agent?", "This is the digital equivalent of opening the fridge for no reason.",
+"You unlocked absolutely 0 secrets.", "This isn't an ARG bro relax.", "Nah this page has negative content 💀",
+"Not you clicking the secret page 😭", "What are you doing HERE 💀", "The fact you scrolled this deep is concerning.",
+"This page has negative rizz.", "NPC detected snooping in hidden files.",
+"You unlocked the ‘Why are you like this?’ achievement.", "Oh wow, a secret page. So mysterious. So pointless.",
+"There is 0 lore. 0 secrets. ONLY YOU. AND THIS VOID.", "Touch grass. Please.",
+"Bro calm down it's not that interesting 😭", "Skibidi explorer detected.",
+"Ok but WHY are you still reading?", "I see you. Stop it. 💀", "You’ve been chosen… to stare at nothing.",
+"Achievement unlocked: The Void 👏", "This is your life now.", "Nothing to see here… seriously.",
+"Welcome to the secret club of disappointment.", "You might regret clicking this.", "Error 666: Fun not found.",
+"Press Ctrl+Alt+Del to escape your choices.", "The universe questions your decisions.",
+"Congrats. You are now a page ghost.", "I can see your soul through the screen.",
+"This page is watching you. Just kidding 😭", "You triggered the infinite loop of shame.",
+"Random fact: You are reading this.", "All your base are belong to chaos.", "404 fun not found.",
+"Your cursor looks suspicious.", "Someone alert the portfolio police.", "This is the adult version of hide & seek.",
+"Too late, you are stuck here forever.", "Send help. Just kidding.", "You’ve reached the bottom of the void.",
+"Enjoy your stay in purgatory 💀", "Secret unlocked: existential dread.",
+"Your mom would be proud… maybe not.", "Why am I typing this? You tell me.",
+"Blink twice if you regret it.", "This is where dreams go to die.",
+"Nothing personal, just random chaos.", "You are officially cringed.",
+"Hope your day was better before this.", "Bro… leave. Seriously.",
+"This message will self-destruct… not really.",
+/* NEW chaotic Gen-Z roast lines 50+ added */
+"Bro entered the secret page like it was Narnia.", "You exploring my site like you're looking for your dad.",
+"Not you digging through my pages like a raccoon.", "This page has the same energy as stale bread.",
+"Why are you here? Genuine question.", "You REALLY thought this page had lore? 😭",
+"I hope you didn't expect anything useful.", "You're clicking around like you're speedrunning boredom.",
+"Your curiosity level is concerning.", "Bro thinks he's in a hacker movie.", "This page has 0 content and somehow you're still here.",
+"You unlocked the 'I have nothing better to do' badge.", "You're browsing like the WiFi bill is due.",
+"I promise the rest of the website is better than this.", "You’re acting like this page owes you money.",
+"You found the least important page on the entire server.", "Bro browsing like he’s undercover.",
+"You're navigating like you lost a bet.", "This page is basically a digital alleyway.",
+"You’re wandering around like an NPC off script.", "Your devotion to nonsense is admirable.",
+"Even Google didn’t expect you to be here.", "This is a skill issue at this point.", "You've discovered the basement of my website.",
+"You're exploring like this is a side quest.", "This page is literally a dead end. Congrats.",
+"The only mystery here is why you're still reading.", "Bro exploring my site like it's an abandoned mall.",
+"You clicked so deep you hit bedrock.", "You ever touch grass or is this it?", "Your browser history must be wild.",
+"Bro really said 'let me check EVERYTHING.'", "You're investigating this page like a crime scene.",
+"You scrolled here on purpose? That's crazy.", "I hope you're proud of yourself.", "You have the energy of someone who checks behind curtains.",
+"Bro hunting for secrets like it's Fortnite.", "This page is emptier than a group chat at 3AM.", "You click around like you heard rumors.",
+"You’re navigating like there's loot hidden here.", "You got here by accident, don't lie.", "I’d roast you more but this page is tired.",
+"Bro typed in this URL like he had a mission.", "You're exploring websites like you lost your passport.",
+"You have main character curiosity with side character luck.", "This page is 99% disappointment and 1% you.",
+"You’re still here?? That’s crazy honestly.", "You discovered the void. Enjoy staying here forever.",
+"You click links like you're turning over rocks.", "Bro thinks he's hacking when he's just snooping."
+];
+
+/* ------------------ Fake Info ------------------ */
+function randomIP(){ const r = ()=>Math.floor(Math.random()*256); return `${r()}.${r()}.${r()}.${r()}`; }
+
+const fakeLocations=[
+"probably Australia ngl", "somewhere near your WiFi router", "close to the nearest Maccas",
+"inside a laggy NBN node", "behind you (don’t turn too fast)", "in a low‑ping zone",
+"somewhere with questionable reception", "your suburb… probably", "near a tower that barely works",
+"inside your iPad battery"];
+
+const fakeDevices=[
+"Suspicious iPad", "Certified Clown Device", "Laggy Government Tablet",
+"Unknown AI Surveillance Object", "Browser powered by 2 braincells",
+"Very Australian iPad", "NPC Mobile Device", navigator.userAgent];
+
+/* ------------------ Funny AI guesses ------------------ */
+function randomGuess(){
+const genders=["male-ish?","female… maybe?","idk ahh","NPC","Goofy aura detected"];
+const moods=["bored","confused","chaotic","hungry","tired","overthinking","vibing"];
+const personalities=[
+"professional procrastinator","certified goofy","background character","main character (rare)",
+"WiFi dependent organism","NPC with side quests"];
+const activities=[
+"scrolling instead of doing homework","avoiding responsibilities","just being nosy",
+"exploring random pages","trying to look techy","seeing what happens if you click everything"];
+const emojis=["😭💀🔥","💀💀💀","🤨📱","🤖😹","😵‍💫😎","🧍‍♂️🧍‍♀️➡️💻"];
+
+return `<p><b>AI Gender Guess:</b> ${genders[Math.floor(Math.random()*genders.length)]}</p>
+<p><b>Current Mood:</b> ${moods[Math.floor(Math.random()*moods.length)]}</p>
+<p><b>Type of Person:</b> ${personalities[Math.floor(Math.random()*personalities.length)]}</p>
+<p><b>What You're Probably Doing:</b> ${activities[Math.floor(Math.random()*activities.length)]}</p>
+<p><b>Emoji Vibe Rating:</b> ${emojis[Math.floor(Math.random()*emojis.length)]}</p>
+<p><b>Timezone Guess:</b> probably +10 or smth idk</p>`;
+}
+
+/* ------------------ Update Page ------------------ */
+function updatePage(){
+document.getElementById("roast").textContent = messages[Math.floor(Math.random()*messages.length)];
+const info=`<p><b>IP Address:</b> ${randomIP()}</p>
+<p><b>Location Guess:</b> ${fakeLocations[Math.floor(Math.random()*fakeLocations.length)]}</p>
+<p><b>Device:</b> ${fakeDevices[Math.floor(Math.random()*fakeDevices.length)]}</p>`;
+document.getElementById("fakeInfo").innerHTML = info + randomGuess();
+}
+
+document.addEventListener("DOMContentLoaded",()=>{
+updatePage();
+setInterval(updatePage,5000);
+});
+</script>
+
+</body>
+</html>
