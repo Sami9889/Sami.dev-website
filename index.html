@@ -2840,63 +2840,57 @@ The more details you provide, the better I can understand your needs and provide
     </a>
 
     <script>
-        // GLOBAL SCOPE - Ensure showPage is accessible from onclick handlers
+        // Define showPage IMMEDIATELY in global scope
         window.showPage = function(pageId, updateHistory) {
-            if (typeof updateHistory === 'undefined') updateHistory = true;
-            const pages = document.querySelectorAll('.page');
-            pages.forEach(page => page.classList.remove('active'));
+            updateHistory = (typeof updateHistory === 'undefined') ? true : updateHistory;
+            var pages = document.querySelectorAll('.page');
+            pages.forEach(function(page){ page.classList.remove('active'); });
             
-            const targetPage = document.getElementById(pageId);
+            var targetPage = document.getElementById(pageId);
             if (targetPage) targetPage.classList.add('active');
 
-                const navLinks = document.querySelectorAll('.nav-links a');
-                navLinks.forEach(link => link.classList.remove('active'));
-                
-                const activeLink = document.querySelector(`.nav-links a[onclick*="${pageId}"]`);
-                if (activeLink) activeLink.classList.add('active');
+            var navLinks = document.querySelectorAll('.nav-links a');
+            navLinks.forEach(function(link){ link.classList.remove('active'); });
+            
+            var activeLink = document.querySelector('.nav-links a[onclick*="' + pageId + '"]');
+            if (activeLink) activeLink.classList.add('active');
 
                 const navLinksEl = document.getElementById('nav-links');
                 if (navLinksEl) navLinksEl.classList.remove('open');
 
-                if (pageId === 'projects' && !projectsLoaded) {
-                    loadGitHubProjects();
-                    projectsLoaded = true;
-                }
+            if (pageId === 'projects' && !window.projectsLoaded) {
+                loadGitHubProjects();
+                window.projectsLoaded = true;
+            }
 
-                const pageTitles = {
-                    'home': 'Samrath "Sami" Singh - Full-Stack Developer',
-                    'about': 'About - Samrath Singh',
-                    'skills': 'Skills - Samrath Singh',
-                    'services': 'Services - Samrath Singh',
-                    'experience': 'Experience - Samrath Singh',
-                    'projects': 'Projects - Samrath Singh',
-                    'faq': 'FAQ - Samrath Singh',
-                    'contact': 'Contact - Samrath Singh',
-                    'privacy': 'Privacy Policy - Samrath Singh',
-                    'terms': 'Terms of Service - Samrath Singh'
-                };
-                document.title = pageTitles[pageId] || 'Samrath Singh';
-                
-                // Update URL with history.pushState
-                if (updateHistory) {
-                    const path = pageId === 'home' ? '/' : '/' + pageId;
-                    history.pushState({ page: pageId }, document.title, path);
-                }
-                
-                window.scrollTo({ top: 0, behavior: 'smooth' });
-            } catch (error) {
-                console.error('Error in showPage:', error);
+            var pageTitles = {
+                'home': 'Samrath "Sami" Singh - Full-Stack Developer',
+                'about': 'About - Samrath Singh',
+                'skills': 'Skills - Samrath Singh',
+                'services': 'Services - Samrath Singh',
+                'experience': 'Experience - Samrath Singh',
+                'projects': 'Projects - Samrath Singh',
+                'faq': 'FAQ - Samrath Singh',
+                'contact': 'Contact - Samrath Singh',
+                'privacy': 'Privacy Policy - Samrath Singh',
+                'terms': 'Terms of Service - Samrath Singh'
+            };
+            document.title = pageTitles[pageId] || 'Samrath Singh';
+            
+            if (updateHistory) {
+                var path = (pageId === 'home') ? '/' : '/' + pageId;
+                history.pushState({ page: pageId }, document.title, path);
             }
             
             window.scrollTo({ top: 0, behavior: 'smooth' });
         };
 
-        // Declare other global variables
-        var dot = null;
-        var outline = null;
-        var projectsLoaded = false;
-        var loadingAttempts = 0;
-        var maxRetries = 3;
+        // Global variables
+        window.dot = null;
+        window.outline = null;
+        window.projectsLoaded = false;
+        window.loadingAttempts = 0;
+        window.maxRetries = 3;
 
         window.toggleMobileMenu = function() {
             document.getElementById('nav-links').classList.toggle('open');
