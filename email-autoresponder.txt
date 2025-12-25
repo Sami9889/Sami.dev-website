@@ -1,0 +1,47 @@
+📧 AUTO-RESPONDER EMAIL TEMPLATE
+=================================
+
+Subject: Thank you for contacting Sami Singh - Ticket #{TICKET_NUMBER}
+
+Dear {NAME},
+
+Thank you for reaching out through my portfolio website at sami.is-a.dev!
+
+I have successfully received your inquiry and it has been assigned the tracking number: {TICKET_NUMBER}
+
+Your submission details:
+- Name: {NAME}
+- Email: {EMAIL}
+- Phone: {PHONE}
+- Inquiry Type: {INQUIRY_TYPE}
+- Budget Range: {BUDGET}
+- Timeline: {TIMELINE}
+- Submission Date: {DATE}
+- Submission Time: {TIME}
+
+I will carefully review your project details and get back to you within 24-48 hours. If your inquiry is urgent or time-sensitive, please feel free to email me directly at samisingh988@gmail.com.
+
+What happens next:
+1. I will review your requirements thoroughly
+2. I'll prepare a detailed response or quote
+3. You'll receive my reply within 24-48 hours
+4. We can then schedule a call if needed
+
+Thank you for considering me for your project. I look forward to potentially working together!
+
+Best regards,
+Samrath "Sami" Singh
+Full-Stack Developer & Software Engineer
+
+📧 samisingh988@gmail.com
+🔗 GitHub: github.com/Sami9889
+🔗 LinkedIn: linkedin.com/in/samrath-singh-400705297
+🔗 Instagram: @sami9889
+🌐 Portfolio: sami.is-a.dev
+
+ABN: 72 925 087 373
+Location: Point Cook, VIC, Australia
+
+---
+This is an automated response. Please do not reply to this email directly.
+For immediate assistance, email samisingh988@gmail.com
