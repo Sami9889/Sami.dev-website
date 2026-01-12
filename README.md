@@ -72,3 +72,27 @@ See the [License file](LICENSE.md) for full details.
 ## Contact
 
 For questions, reach out: **samisingh988@gmail.com**  
+
+---
+
+## Merch (local)
+
+A simple Merch page is available at `/merch.html`.
+
+Quick start:
+1. Install: `npm install`
+2. Set env vars: `export PRINTIFY_TOKEN=YOUR_TOKEN` and `export SHOP_ID=12345`
+   - Optional: `export BACKGROUND_IMAGE=https://example.com/your-background.jpg`
+   - Optional: `export SAFE_MODE=1` to bypass the real-order confirmation (useful for tests)
+3. Start: `npm start`
+4. Open: `http://localhost:3000/merch.html`
+
+Test your token (read-only):
+
+curl http://localhost:3000/api/printify/test
+
+Run a quick local smoke test (after starting the server):
+
+npm run smoke
+
+> The server reads the `PRINTIFY_TOKEN` from environment variables. Do not commit it to the repository; rotate the token after testing.
