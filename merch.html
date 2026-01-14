@@ -19,15 +19,19 @@
     @keyframes float { 0%,100%{transform:translate(0,0) rotate(0deg);} 25%{transform:translate(30px,-30px) rotate(90deg);} 50%{transform:translate(-20px,20px) rotate(180deg);} 75%{transform:translate(40px,10px) rotate(270deg);} }
 
     .grid { display:grid; grid-template-columns: repeat(auto-fill,minmax(200px,1fr)); gap:1rem; position: relative; z-index: 1 }
-    .card { border:1px solid rgba(0,0,0,0.06); padding:1rem; border-radius:6px; background: rgba(255,255,255,0.8); }
-    .card img { width:100%; height:150px; object-fit:cover }
-    .cart-btn { position:fixed; right:1rem; bottom:1rem; background:#000;color:#fff;padding:.75rem 1rem;border-radius:999px;cursor:pointer }
-    #cartModal { display:none; position:fixed; left:0; top:0; right:0; bottom:0; background:rgba(0,0,0,.6); align-items:center; justify-content:center }
+    .card { border:1px solid rgba(0,0,0,0.06); padding:1rem; border-radius:6px; background: rgba(255,255,255,0.9); transition:transform .15s ease, box-shadow .15s ease }
+    .card:hover{ transform: translateY(-4px); box-shadow: 0 8px 24px rgba(0,0,0,0.08) }
+    .card img { width:100%; height:150px; object-fit:cover; border-radius:4px }
+    .cart-btn { position:fixed; right:1rem; bottom:1rem; background:#000;color:#fff;padding:.75rem 1rem;border-radius:999px;cursor:pointer; box-shadow: 0 6px 18px rgba(0,0,0,0.12) }
+    #cartModal { display:none; opacity:0; transition:opacity .18s ease; position:fixed; left:0; top:0; right:0; bottom:0; background:rgba(0,0,0,.6); align-items:center; justify-content:center }
+    #cartModal.open { display:flex; opacity:1 }
     #cartModal .panel { background:#fff; max-width:720px; width:100%; padding:1rem; border-radius:8px }
     .cart-list { max-height:300px; overflow:auto }
     .row { display:flex; gap:1rem; align-items:center }
     .muted { color:#666 }
     .btn { background:#0070f3;color:#fff;padding:.5rem .75rem;border-radius:6px;border:0;cursor:pointer }
+    .btn.secondary { background:#6c757d }
+    #toastContainer .toast { background: #111; color:#fff; padding:.6rem .8rem; border-radius:6px; margin-top:.5rem; box-shadow: 0 8px 20px rgba(0,0,0,0.12) }
 
     /* custom cursor elements */
     .cursor-dot { width: 18px; height: 18px; background: radial-gradient(circle, #ff0080, #7928ca, #0070f3); border-radius: 50%; position: fixed; pointer-events: none; transform: translate(-50%, -50%); transition: transform 0.15s ease; z-index: 10000; box-shadow: 0 0 30px rgba(255,0,128,0.6); }
@@ -46,7 +50,7 @@
 
   <h1>Merch Store</h1>
   <div id="shopStatus" class="muted" style="margin-bottom:1rem">Checking Printify status…</div>
-  <div style="margin-bottom:1rem">
+  <div style="display:flex; gap:1rem; align-items:center; margin-bottom:1rem">
     <label style="font-size:0.95rem">Currency: 
       <select id="currencySelector" aria-label="Choose currency">
         <option value="USD">USD</option>
@@ -56,6 +60,8 @@
         <option value="GBP">GBP</option>
       </select>
     </label>
+    <label style="font-size:0.95rem">Show: <select id="productFilter" aria-label="Product filter"><option value="all">All</option><option value="shirt">T-Shirts</option></select></label>
+    <div style="margin-left:auto"><button id="clearCartBtn" class="btn">Clear cart</button></div>
   </div>
   <div id="productGrid" class="grid">Loading…</div>
 
@@ -86,7 +92,26 @@
         <h3>Checkout</h3>
         <form id="form">
           <div>
-            <label>Full name<br><input name="first_name" required></label>
+            <label for="first_name">First name</label><br>
+            <input id="first_name" name="first_name" required>
+          </div>
+          <div>
+            <label for="last_name">Last name</label><br>
+            <input id="last_name" name="last_name" required>
+          </div>
+          <div>
+            <label for="country">Country<br>
+              <select id="country" name="country" required>
+                <option value="US">United States</option>
+                <option value="CA">Canada</option>
+                <option value="GB">United Kingdom</option>
+                <option value="AU">Australia</option>
+                <option value="">Other</option>
+              </select>
+            </label>
+          </div>
+          <div style="margin-top:.5rem">
+            <label><input type="checkbox" name="send_confirmation_email" checked> Send confirmation email</label>
           </div>
           <div>
             <label>Email<br><input name="email" type="email" required></label>
@@ -112,6 +137,8 @@
 
     </div>
   </div>
+
+  <div id="toastContainer" aria-live="polite" style="position:fixed; right:1rem; bottom:4rem; z-index:10001"></div>
 
   <div id="productModal" style="display:none; position:fixed; left:0; top:0; right:0; bottom:0; background:rgba(0,0,0,.6); align-items:center; justify-content:center;">
     <div class="panel" id="productPanel" style="max-width:720px; position:relative;">

@@ -1117,9 +1117,15 @@
       // Initialize Sentry on the main site (index page) only
       try{
         if(window.Sentry){
-          Sentry.init({ dsn: "https://19f914da843ff91848281a5e4be175e8@o4510440292220928.ingest.de.sentry.io/4510440295563344" });
-          window.__sentry_inited = true;
-          console.info('Sentry initialized on index.html');
+          // Do not hardcode DSNs in source. Prefer injecting via server-side config (e.g., window.SENTRY_DSN or window.CONFIG.sentryDsn).
+          const sentryDsn = (window.SENTRY_DSN || (window.CONFIG && window.CONFIG.sentryDsn) || '');
+          if(sentryDsn) {
+            Sentry.init({ dsn: sentryDsn });
+            window.__sentry_inited = true;
+            console.info('Sentry initialized on index.html');
+          } else {
+            console.info('Sentry present but no DSN provided; initialization skipped');
+          }
         }
       }catch(e){ console.warn('Sentry init failed on index', e); }
     </script>

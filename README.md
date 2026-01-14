@@ -79,20 +79,22 @@ For questions, reach out: **samisingh988@gmail.com**
 
 A simple Merch page is available at `/merch.html`.
 
-Quick start:
+Quick start (local-only mode):
 1. Install: `npm install`
-2. Set env vars: `export PRINTIFY_TOKEN=YOUR_TOKEN` and `export SHOP_ID=12345`
-   - Optional: `export BACKGROUND_IMAGE=https://example.com/your-background.jpg`
-   - Optional: `export SAFE_MODE=1` to bypass the real-order confirmation (useful for tests)
-3. Start: `npm start`
-4. Open: `http://localhost:3000/merch.html`
+2. Start: `npm start`
+3. Open: `http://localhost:3000/merch.html`
 
-Test your token (read-only):
+Notes:
+- Products are served locally from `assets/products.json` and no external Printify calls are made by default (privacy-focused).
+- Orders are stored locally in `orders/` and are only viewable via the admin endpoints when `ADMIN_TOKEN` is set (see `.env.example`).
+- Optional: configure `SENDGRID_API_KEY` and `EMAIL_FROM` to enable confirmation emails (only sent if the buyer requests a confirmation). See `.env.example` for variable names.
 
-curl http://localhost:3000/api/printify/test
+Admin endpoints (protected):
+- GET /admin/orders (requires header `Authorization: Bearer <ADMIN_TOKEN>`)
+- GET /admin/orders/:id (requires header `Authorization: Bearer <ADMIN_TOKEN>`)
 
 Run a quick local smoke test (after starting the server):
 
 npm run smoke
 
-> The server reads the `PRINTIFY_TOKEN` from environment variables. Do not commit it to the repository; rotate the token after testing.
+> Private keys and tokens should never be committed to the repo. If you set an admin token, keep it secret and rotate if it is exposed.
