@@ -93,6 +93,9 @@ Admin endpoints (protected):
 - GET /admin/orders (requires header `Authorization: Bearer <ADMIN_TOKEN>`)
 - GET /admin/orders/:id (requires header `Authorization: Bearer <ADMIN_TOKEN>`)
 
+Admin UI:
+- Visit `/admin.html` and enter the `ADMIN_TOKEN` (kept in the browser session) to list and view orders.
+- The UI is simple and stored only in the browser session (does not persist tokens to disk).
 Run a quick local smoke test (after starting the server):
 
 npm run smoke

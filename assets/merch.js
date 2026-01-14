@@ -120,9 +120,13 @@
 
   // UI
   async function render(){
-    // cache products so UI actions don't trigger repeated network calls
-    cachedProducts = await fetchProducts();
-    const products = cachedProducts;
+    // Ensure products are cached and apply UI filter
+    if(!cachedProducts) cachedProducts = await fetchProducts();
+    let products = (cachedProducts || []).slice();
+    const filterEl = document.getElementById('productFilter');
+    const filterVal = filterEl ? filterEl.value : 'all';
+    if(filterVal === 'shirt') products = products.filter(p => /shirt|tee/i.test(p.title || ''));
+
     const grid = document.getElementById('productGrid');
     grid.innerHTML = '';
     products.forEach(p => {
@@ -156,19 +160,25 @@
       }catch(e){/* ignore */}
     });
 
-    // Add to cart handlers
+    // Add to cart handlers (disable briefly to avoid accidental double-adds)
     grid.querySelectorAll('button.add').forEach(btn => {
       btn.addEventListener('click', (e)=>{
+        const button = e.currentTarget;
+        if(button.disabled) return;
+        button.disabled = true; const orig = button.textContent; button.textContent = 'Added ✓';
+        setTimeout(()=>{ button.disabled = false; button.textContent = orig; }, 700);
+
         sendMetric('count', 'button_click', 1);
         sendMetric('count', 'add_to_cart', 1);
         const id = e.currentTarget.dataset.id;
         const product = (cachedProducts || []).find(x=>x.id===id);
-        if(!product) return alert('Product not found');
+        if(!product){ alert('Product not found'); button.disabled = false; button.textContent = orig; return; }
         const cart = readCart();
         const found = cart.find(i=>i.id===product.id);
         if(found) found.quantity += 1; else cart.push({ id: product.id, title: product.title, price: product.price, product_id: product.product_id, variant_id: product.variant_id, quantity: 1 });
         writeCart(cart);
         updateCartBadge();
+        showToast('Added to cart');
       });
     });
 
@@ -209,9 +219,9 @@
 
   function openCart(){
     renderCart();
-    cartModal.style.display = 'flex';
+    cartModal.classList.add('open');
   }
-  function closeCart(){ cartModal.style.display = 'none'; document.getElementById('checkoutForm').style.display = 'none'; }
+  function closeCart(){ cartModal.classList.remove('open'); document.getElementById('checkoutForm').style.display = 'none'; }
 
   function renderCart(){
     const list = document.getElementById('cartList'); list.innerHTML = '';
@@ -237,9 +247,9 @@
       row.appendChild(left); row.appendChild(right);
       list.appendChild(row);
 
-      dec.addEventListener('click', ()=>{ const id = dec.dataset.id; const cart = readCart(); const it = cart.find(i=>i.id===id); if(!it) return; if(it.quantity>1) it.quantity--; else { const idx = cart.findIndex(i=>i.id===id); cart.splice(idx,1); } writeCart(cart); renderCart(); updateCartBadge(); });
-      inc.addEventListener('click', ()=>{ const id = inc.dataset.id; const cart = readCart(); const it = cart.find(i=>i.id===id); if(!it) return; it.quantity++; writeCart(cart); renderCart(); updateCartBadge(); });
-      rm.addEventListener('click', ()=>{ const id = rm.dataset.id; const cart = readCart(); const idx = cart.findIndex(i=>i.id===id); if(idx>-1) cart.splice(idx,1); writeCart(cart); renderCart(); updateCartBadge(); });
+      dec.addEventListener('click', ()=>{ const id = dec.dataset.id; const cart = readCart(); const it = cart.find(i=>i.id===id); if(!it) return; if(it.quantity>1){ it.quantity--; showToast('Quantity decreased'); } else { const idx = cart.findIndex(i=>i.id===id); cart.splice(idx,1); showToast('Item removed'); } writeCart(cart); renderCart(); updateCartBadge(); });
+      inc.addEventListener('click', ()=>{ const id = inc.dataset.id; const cart = readCart(); const it = cart.find(i=>i.id===id); if(!it) return; it.quantity++; writeCart(cart); renderCart(); updateCartBadge(); showToast('Quantity increased'); });
+      rm.addEventListener('click', ()=>{ const id = rm.dataset.id; const cart = readCart(); const idx = cart.findIndex(i=>i.id===id); if(idx>-1) cart.splice(idx,1); writeCart(cart); renderCart(); updateCartBadge(); showToast('Item removed'); });
     });
 
     const subtotal = cart.reduce((s,i)=>s + i.price * i.quantity, 0);
@@ -259,7 +269,7 @@
     titleEl.textContent = 'Loading…';
     descEl.textContent = '';
     shipEl.textContent = '';
-    modal.style.display = 'flex';
+    modal.classList.add('open');
 
     try{
       const start = Date.now();
@@ -308,7 +318,7 @@
     }
   }
 
-  document.getElementById('closeProduct').addEventListener('click', ()=>{ document.getElementById('productModal').style.display = 'none'; });
+  document.getElementById('closeProduct').addEventListener('click', ()=>{ document.getElementById('productModal').classList.remove('open'); });
 
   // Load config (background, safeMode, printifyConfigured)
   let CONFIG = {};
@@ -353,6 +363,25 @@
     }catch(e){ console.warn('Could not load config', e); }
   }
   loadConfig();
+
+  // UI initialization (one-time)
+  let uiInitialized = false;
+  function initUI(){
+    if(uiInitialized) return; uiInitialized = true;
+    const filter = document.getElementById('productFilter'); if(filter) filter.addEventListener('change', ()=>{ render(); });
+    const clearBtn = document.getElementById('clearCartBtn'); if(clearBtn) clearBtn.addEventListener('click', ()=>{ if(confirm('Clear cart?')){ localStorage.removeItem(CART_KEY); updateCartBadge(); renderCart(); showToast('Cart cleared'); } });
+
+    // overlay click to close modals
+    if(cartModal) cartModal.addEventListener('click', (e)=>{ if(e.target === cartModal) closeCart(); });
+    const pModal = document.getElementById('productModal'); if(pModal) pModal.addEventListener('click', (e)=>{ if(e.target === pModal) pModal.classList.remove('open'); });
+
+    // ESC to close
+    document.addEventListener('keydown', (e)=>{ if(e.key === 'Escape'){ closeCart(); const pm = document.getElementById('productModal'); if(pm) pm.classList.remove('open'); } });
+
+    // ensure cart badge correct
+    updateCartBadge();
+  }
+  initUI();
 
   // Checkout submission
   document.getElementById('form').addEventListener('submit', async (ev)=>{

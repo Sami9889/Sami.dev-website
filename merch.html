@@ -26,6 +26,9 @@
     #cartModal { display:none; opacity:0; transition:opacity .18s ease; position:fixed; left:0; top:0; right:0; bottom:0; background:rgba(0,0,0,.6); align-items:center; justify-content:center }
     #cartModal.open { display:flex; opacity:1 }
     #cartModal .panel { background:#fff; max-width:720px; width:100%; padding:1rem; border-radius:8px }
+    #productModal .panel { background:#fff; max-width:720px; width:100%; padding:1rem; border-radius:8px }
+    #productModal { display:none; opacity:0; transition:opacity .18s ease; position:fixed; left:0; top:0; right:0; bottom:0; background:rgba(0,0,0,.6); align-items:center; justify-content:center }
+    #productModal.open { display:flex; opacity:1 }
     .cart-list { max-height:300px; overflow:auto }
     .row { display:flex; gap:1rem; align-items:center }
     .muted { color:#666 }
@@ -140,7 +143,7 @@
 
   <div id="toastContainer" aria-live="polite" style="position:fixed; right:1rem; bottom:4rem; z-index:10001"></div>
 
-  <div id="productModal" style="display:none; position:fixed; left:0; top:0; right:0; bottom:0; background:rgba(0,0,0,.6); align-items:center; justify-content:center;">
+  <div id="productModal">
     <div class="panel" id="productPanel" style="max-width:720px; position:relative;">
       <button id="closeProduct" class="btn" style="position:absolute; right:1rem; top:1rem;">Close</button>
       <h2 id="productTitle"></h2>
