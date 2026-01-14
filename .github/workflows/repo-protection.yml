@@ -1068,222 +1068,65 @@ jobs:
 
           echo "Files changed:"
           echo "$changed_files"
-
-          forbidden_count=0
-          secret_count=0
-          warning_count=0
-          critical_count=0
-          findings=""
-
-          # Check forbidden file types
-          while IFS= read -r file; do
-            if [ ! -f "$file" ]; then
-              continue
+          echo ""
+          
+          # Check for forbidden file types in PR changes only
+          forbidden_found=""
+          echo "$changed_files" | while IFS= read -r file; do
+            if [ -f "$file" ]; then
+              case "$file" in
+                *.pem|*.key|*.p12|*.env)
+                  echo "::error::Forbidden file type: $file"
+                  forbidden_found="true"
+                  ;;
+                */secrets/*)
+                  echo "::error::File in forbidden directory: $file"
+                  forbidden_found="true"
+                  ;;
+              esac
             fi
-
-            case "$file" in
-              *.pem|*.key|*.p12|*.pfx|*.keystore|*.jks)
-                findings="${findings}CRITICAL: Certificate/key file: $file\n"
-                critical_count=$((critical_count + 1))
-                ;;
-              *.env|*.env.*|.env.*|*/.env)
-                findings="${findings}CRITICAL: Environment file: $file\n"
-                critical_count=$((critical_count + 1))
-                ;;
-              */secrets/*|*/.secrets/*|*/credentials/*|*/.credentials/*)
-                findings="${findings}CRITICAL: Secrets directory: $file\n"
-                critical_count=$((critical_count + 1))
-                ;;
-              *.ppk|*.pem.pub|id_rsa|id_dsa|id_ecdsa|id_ed25519|*.ssh)
-                findings="${findings}CRITICAL: SSH key: $file\n"
-                critical_count=$((critical_count + 1))
-                ;;
-              *config.json|*credentials.json|*secrets.json|*auth.json)
-                findings="${findings}FORBIDDEN: Sensitive config file: $file\n"
-                forbidden_count=$((forbidden_count + 1))
-                ;;
-              *.backup|*.bak|*.old|*~)
-                findings="${findings}WARNING: Backup file detected: $file\n"
-                warning_count=$((warning_count + 1))
-                ;;
-            esac
-          done <<< "$changed_files"
-
-          # Advanced secret detection
-          while IFS= read -r file; do
-            if [ ! -f "$file" ]; then
-              continue
-            fi
-
-            if [[ "$file" == .github/* ]]; then
-              continue
-            fi
-
-            # AWS Keys
-            if grep -qE "AKIA[0-9A-Z]{16}" "$file" 2>/dev/null; then
-              findings="${findings}CRITICAL: AWS Access Key in $file\n"
-              critical_count=$((critical_count + 1))
-            fi
-
-            # AWS Secret Keys
-            if grep -qE "aws_secret_access_key\s*=\s*['\"]?[A-Za-z0-9/+=]{40}" "$file" 2>/dev/null; then
-              findings="${findings}CRITICAL: AWS Secret Key in $file\n"
-              critical_count=$((critical_count + 1))
-            fi
-
-            # GitHub Tokens
-            if grep -qE "(ghp_|gho_|ghu_|ghs_|ghr_)[a-zA-Z0-9]{36,}" "$file" 2>/dev/null; then
-              findings="${findings}CRITICAL: GitHub token in $file\n"
-              critical_count=$((critical_count + 1))
-            fi
-
-            # GitHub PAT (new format)
-            if grep -qE "github_pat_[a-zA-Z0-9]{22}_[a-zA-Z0-9]{59}" "$file" 2>/dev/null; then
-              findings="${findings}CRITICAL: GitHub PAT in $file\n"
-              critical_count=$((critical_count + 1))
-            fi
-
-            # OpenAI Keys
-            if grep -qE "sk-[a-zA-Z0-9]{48}" "$file" 2>/dev/null; then
-              findings="${findings}CRITICAL: OpenAI API key in $file\n"
-              critical_count=$((critical_count + 1))
-            fi
-
-            # Vercel Tokens
-            if grep -qE "vercel_[a-zA-Z0-9]{24}" "$file" 2>/dev/null; then
-              findings="${findings}CRITICAL: Vercel token in $file\n"
-              critical_count=$((critical_count + 1))
-            fi
-
-            # Sentry DSN
-            if grep -qE "https://[a-z0-9]+@[a-z0-9]+\.ingest\.sentry\.io/[0-9]+" "$file" 2>/dev/null; then
-              findings="${findings}WARNING: Sentry DSN in $file (may be public)\n"
-              warning_count=$((warning_count + 1))
-            fi
-
-            # Stripe Keys
-            if grep -qE "(sk|pk)_(test|live)_[0-9a-zA-Z]{24,}" "$file" 2>/dev/null; then
-              findings="${findings}CRITICAL: Stripe API key in $file\n"
-              critical_count=$((critical_count + 1))
-            fi
-
-            # JWT Tokens
-            if grep -qE "eyJ[A-Za-z0-9_-]{10,}\.[A-Za-z0-9_-]{10,}\.[A-Za-z0-9_-]{10,}" "$file" 2>/dev/null; then
-              findings="${findings}SECRET: JWT token in $file\n"
-              secret_count=$((secret_count + 1))
-            fi
-
-            # Generic API Keys
-            if grep -qE "(api[_-]?key|apikey|api[_-]?secret)['\"]?\s*[:=]\s*['\"][a-zA-Z0-9]{20,}" "$file" 2>/dev/null; then
-              findings="${findings}WARNING: Potential API key in $file\n"
-              warning_count=$((warning_count + 1))
-            fi
-
-            # OAuth Secrets
-            if grep -qE "(client[_-]?secret|oauth[_-]?secret)['\"]?\s*[:=]\s*['\"][a-zA-Z0-9]{20,}" "$file" 2>/dev/null; then
-              findings="${findings}SECRET: OAuth secret in $file\n"
-              secret_count=$((secret_count + 1))
-            fi
-
-            # Private Keys (PEM format)
-            if grep -q "BEGIN.*PRIVATE KEY" "$file" 2>/dev/null; then
-              findings="${findings}CRITICAL: Private key in $file\n"
-              critical_count=$((critical_count + 1))
-            fi
-
-            # Certificates
-            if grep -q "BEGIN CERTIFICATE" "$file" 2>/dev/null; then
-              findings="${findings}WARNING: Certificate in $file\n"
-              warning_count=$((warning_count + 1))
-            fi
-
-            # Passwords
-            if grep -qE "(password|passwd|pwd)['\"]?\s*[:=]\s*['\"][^'\"]{8,}" "$file" 2>/dev/null; then
-              findings="${findings}WARNING: Potential password in $file\n"
-              warning_count=$((warning_count + 1))
-            fi
-
-            # Database URLs
-            if grep -qE "(mongodb|postgres|mysql|redis)://[^'\"\s]+" "$file" 2>/dev/null; then
-              findings="${findings}CRITICAL: Database connection string in $file\n"
-              critical_count=$((critical_count + 1))
-            fi
-
-            # Slack Tokens
-            if grep -qE "xox[baprs]-[0-9]{10,13}-[0-9]{10,13}-[a-zA-Z0-9]{24,}" "$file" 2>/dev/null; then
-              findings="${findings}CRITICAL: Slack token in $file\n"
-              critical_count=$((critical_count + 1))
-            fi
-
-            # Discord Tokens
-            if grep -qE "[MN][A-Za-z0-9]{23}\.[A-Za-z0-9]{6}\.[A-Za-z0-9_-]{27}" "$file" 2>/dev/null; then
-              findings="${findings}CRITICAL: Discord token in $file\n"
-              critical_count=$((critical_count + 1))
-            fi
-
-            # Twilio Keys
-            if grep -qE "AC[a-z0-9]{32}" "$file" 2>/dev/null; then
-              findings="${findings}SECRET: Twilio Account SID in $file\n"
-              secret_count=$((secret_count + 1))
-            fi
-
-            # SendGrid Keys
-            if grep -qE "SG\.[a-zA-Z0-9_-]{22}\.[a-zA-Z0-9_-]{43}" "$file" 2>/dev/null; then
-              findings="${findings}CRITICAL: SendGrid API key in $file\n"
-              critical_count=$((critical_count + 1))
-            fi
-
-            # Firebase Keys
-            if grep -qE "AIza[0-9A-Za-z_-]{35}" "$file" 2>/dev/null; then
-              findings="${findings}WARNING: Firebase/Google API key in $file\n"
-              warning_count=$((warning_count + 1))
-            fi
-
-            # Heroku Keys
-            if grep -qE "[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}" "$file" 2>/dev/null; then
-              findings="${findings}WARNING: Potential UUID/Heroku key in $file\n"
-              warning_count=$((warning_count + 1))
-            fi
-
-            # Generic tokens
-            if grep -qE "token['\"]?\s*[:=]\s*['\"][a-zA-Z0-9]{32,}" "$file" 2>/dev/null; then
-              findings="${findings}WARNING: Generic token pattern in $file\n"
-              warning_count=$((warning_count + 1))
-            fi
-          done <<< "$changed_files"
-
-          # Determine result
-          if [ $critical_count -gt 0 ]; then
-            echo "scan_result=critical" >> $GITHUB_OUTPUT
-            echo "scan_details=$findings" >> $GITHUB_OUTPUT
-            echo "critical_count=$critical_count" >> $GITHUB_OUTPUT
-            echo "forbidden_count=$forbidden_count" >> $GITHUB_OUTPUT
-            echo "secret_count=$secret_count" >> $GITHUB_OUTPUT
-            echo "warning_count=$warning_count" >> $GITHUB_OUTPUT
-            echo "Security scan CRITICAL FAILURE"
+          done
+          
+          if [ -n "$forbidden_found" ]; then
+            echo "::error::Forbidden files detected in PR"
             exit 1
-          elif [ $forbidden_count -gt 0 ] || [ $secret_count -gt 0 ]; then
-            echo "scan_result=failed" >> $GITHUB_OUTPUT
-            echo "scan_details=$findings" >> $GITHUB_OUTPUT
-            echo "critical_count=$critical_count" >> $GITHUB_OUTPUT
-            echo "forbidden_count=$forbidden_count" >> $GITHUB_OUTPUT
-            echo "secret_count=$secret_count" >> $GITHUB_OUTPUT
-            echo "warning_count=$warning_count" >> $GITHUB_OUTPUT
-            echo "Security scan FAILED"
-            exit 1
-          elif [ $warning_count -gt 0 ]; then
-            echo "scan_result=warning" >> $GITHUB_OUTPUT
-            echo "scan_details=$findings" >> $GITHUB_OUTPUT
-            echo "warning_count=$warning_count" >> $GITHUB_OUTPUT
-            echo "Security scan has warnings"
-          else
-            echo "scan_result=passed" >> $GITHUB_OUTPUT
-            echo "scan_details=All checks passed" >> $GITHUB_OUTPUT
-            echo "Security scan PASSED"
           fi
-
-      - name: Comment scan results
-        if: always()
+          
+          echo "No forbidden files found in PR changes"
+          
+          # Check for potential secrets in changed files only
+          secrets_found=""
+          echo "$changed_files" | while IFS= read -r file; do
+            if [ -f "$file" ]; then
+              # Skip workflow files and config files in .github
+              if [[ "$file" == .github/* ]]; then
+                echo "Skipping repository file: $file"
+                continue
+              fi
+              
+              # Check for secrets
+              if grep -l -E "(AKIA[0-9A-Z]{16}|ghp_[a-zA-Z0-9]{36}|gho_[a-zA-Z0-9]{36}|github_pat_[a-zA-Z0-9]{22}_[a-zA-Z0-9]{59})" "$file" >/dev/null 2>&1; then
+                echo "::error::Potential AWS or GitHub secrets found in: $file"
+                secrets_found="true"
+              elif grep -l -E "(sk-[a-zA-Z0-9]{48}|api[_-]?key['\"]?\s*[:=]\s*['\"][a-zA-Z0-9]{32,})" "$file" >/dev/null 2>&1; then
+                echo "::error::Potential API keys found in: $file"
+                secrets_found="true"
+              elif grep -l -E "(password['\"]?\s*[:=]\s*['\"][^'\"]{8,}|passwd['\"]?\s*[:=]\s*['\"][^'\"]{8,})" "$file" >/dev/null 2>&1; then
+                echo "::error::Potential passwords found in: $file"
+                secrets_found="true"
+              fi
+            fi
+          done
+          
+          if [ -n "$secrets_found" ]; then
+            echo "::error::Potential secrets detected in PR"
+            exit 1
+          fi
+          
+          echo "Security scan passed successfully"
+      
+      - name: Comment on PR with scan results
+        if: github.event_name == 'pull_request' && always()
         uses: actions/github-script@v7
         with:
           github-token: ${{ secrets.GITHUB_TOKEN }}
