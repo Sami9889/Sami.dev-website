@@ -32,3 +32,11 @@ Notes
 - For safety, the checkout will require checking the confirmation box before placing a real order unless `SAFE_MODE=1` is set.
 - The current flow assumes existing Printify products (product_id + variant_id). If you'd like on-the-fly product creation via order, tell me and I will add support for sending `print_areas` and blueprints.
 - Do NOT commit your `PRINTIFY_TOKEN` to the repository. After testing, consider rotating the token for security.
+
+## Notes added by automation
+- Sentry metrics are enabled on the client-side for the merch page (counts and distributions for actions like `add_to_cart`, `view_product`, `checkout_started`, `order_placed`, and `response_time`). The DSN is initialized in `/assets/merch.js`. If you prefer to use a different DSN or disable metrics, update the file accordingly.
+- Upload your product images to `assets/images/` if you prefer local storage. The merch page currently uses remote image URLs for the Sami tee (https://imagesami.is-a.dev/sIMG_2231.jpeg, https://sami.is-a.dev/IMG_2230.jpeg, https://sami.is-a.dev/IMG_2229.jpeg) and will fall back to local files if those hosts are unavailable.
+
+### Currency & navigation
+- The merch page now includes a currency selector (USD, AUD, JPY, EUR, GBP). Prices are converted client-side using simple static rates and displayed with a currency symbol. The base product prices remain in USD cents (for consistency with the server), but the UI shows converted values. If you want live FX rates, I can wire an external API.
+- To get to the merch page: use the "Shop" link in the navigation bar on the site or open `/merch.html` directly.

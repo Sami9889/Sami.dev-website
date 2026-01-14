@@ -129,17 +129,31 @@ app.get('/api/printify/products/:productId', async (req, res) => {
 });
 
 // Checkout — places an order via Printify if PRINTIFY_TOKEN & SHOP_ID are set.
+// If credentials are missing, simulate an order so developers can test checkout & shipping locally.
 app.post('/api/checkout', async (req, res)=>{
   const token = process.env.PRINTIFY_TOKEN;
   const shopId = process.env.SHOP_ID;
   const safeMode = process.env.SAFE_MODE === '1';
 
-  if(!token) return res.status(400).json({ message: 'PRINTIFY_TOKEN not set on server.' });
-  if(!shopId) return res.status(400).json({ message: 'SHOP_ID not set on server.' });
-
-  const payload = req.body;
+  const payload = req.body || {};
   // Minimal validation
   if(!payload.address_to || !payload.line_items || !Array.isArray(payload.line_items) || payload.line_items.length===0) return res.status(400).json({ message: 'Invalid payload' });
+
+  // If Printify credentials are missing: simulate order (for local/dev).
+  if(!token || !shopId){
+    const subtotal = Number(payload.order_subtotal_cents || 0);
+    const shipping = Number(payload.shipping_cost_usd_cents || 0);
+    const total = subtotal + shipping;
+    const simulatedOrder = {
+      id: `sim-${Date.now()}`,
+      status: 'simulated',
+      subtotal_cents: subtotal,
+      shipping_cents: shipping,
+      total_cents: total,
+      message: 'This is a simulated order because PRINTIFY_TOKEN or SHOP_ID is not set on the server.'
+    };
+    return res.json(simulatedOrder);
+  }
 
   // If not in safe mode, require confirmation flag from client to avoid accidental charges
   if(!safeMode && !payload.confirm_real){
@@ -148,10 +162,19 @@ app.post('/api/checkout', async (req, res)=>{
 
   const endpoint = `https://api.printify.com/v1/shops/${shopId}/orders.json`;
   try{
+    // Attach shipping information as metadata to help trace costs (Printify accepts arbitrary fields as part of order payload in most cases)
+    const toSend = Object.assign({}, payload, {
+      metadata: Object.assign({}, payload.metadata || {}, {
+        client_display_currency: payload.display_currency || 'USD',
+        client_order_subtotal_cents: payload.order_subtotal_cents || 0,
+        client_shipping_cost_usd_cents: payload.shipping_cost_usd_cents || 0,
+      })
+    });
+
     const response = await fetch(endpoint, {
       method: 'POST',
       headers: { 'Authorization': `Bearer ${token}`, 'Content-Type': 'application/json' },
-      body: JSON.stringify(payload)
+      body: JSON.stringify(toSend)
     });
     const json = await response.json();
     if(!response.ok) return res.status(response.status).json(json);

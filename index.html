@@ -1112,6 +1112,18 @@
         </div>
     </nav>
 
+    <script src="https://browser.sentry-cdn.com/10.30.0/bundle.min.js" crossorigin="anonymous"></script>
+    <script>
+      // Initialize Sentry on the main site (index page) only
+      try{
+        if(window.Sentry){
+          Sentry.init({ dsn: "https://19f914da843ff91848281a5e4be175e8@o4510440292220928.ingest.de.sentry.io/4510440295563344" });
+          window.__sentry_inited = true;
+          console.info('Sentry initialized on index.html');
+        }
+      }catch(e){ console.warn('Sentry init failed on index', e); }
+    </script>
+
     <div class="container">
         <!-- Home Page -->
         <main class="page active" id="home">
@@ -1126,6 +1138,9 @@
                         <a href="https://www.linkedin.com/in/samrath-singh-400705297" target="_blank" rel="noopener noreferrer" aria-label="Visit LinkedIn profile">LinkedIn</a>
                         <a href="https://discord.gg/fhvGABfw" target="_blank" rel="noopener noreferrer" aria-label="Join Discord server">Discord</a>
                         <a href="/merch.html" aria-label="Shop">Shop</a>
+                    </div>
+                    <div style="margin-top:1.5rem">
+                      <a href="/merch.html" class="btn" style="background:var(--accent); color:#fff; padding:.75rem 1rem; border-radius:6px; text-decoration:none">Shop Sami Merch</a>
                     </div>
                 </div>
                 <aside class="hero-stats">

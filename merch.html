@@ -46,6 +46,17 @@
 
   <h1>Merch Store</h1>
   <div id="shopStatus" class="muted" style="margin-bottom:1rem">Checking Printify status…</div>
+  <div style="margin-bottom:1rem">
+    <label style="font-size:0.95rem">Currency: 
+      <select id="currencySelector" aria-label="Choose currency">
+        <option value="USD">USD</option>
+        <option value="AUD">AUD</option>
+        <option value="JPY">JPY</option>
+        <option value="EUR">EUR</option>
+        <option value="GBP">GBP</option>
+      </select>
+    </label>
+  </div>
   <div id="productGrid" class="grid">Loading…</div>
 
   <button id="viewCart" class="cart-btn">View cart (<span id="cartCount">0</span>)</button>
@@ -55,7 +66,16 @@
       <h2>Your cart</h2>
       <div id="cartList" class="cart-list"></div>
       <div class="row" style="justify-content:space-between;margin-top:1rem">
-        <div><strong>Total:</strong> $<span id="cartTotal">0.00</span></div>
+        <div>
+          <div style="margin-bottom:.5rem">Shipping: 
+            <select id="shippingSelector" aria-label="Select shipping method">
+              <option value="standard">Standard</option>
+              <option value="express">Express</option>
+            </select>
+            <span id="shippingCost" class="muted" style="margin-left:.5rem">—</span>
+          </div>
+          <div><strong>Total:</strong> <span id="cartTotal">0.00</span></div>
+        </div>
         <div>
           <button id="closeCart" class="btn">Close</button>
           <button id="checkoutBtn" class="btn">Checkout</button>
