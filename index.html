@@ -1634,223 +1634,10 @@
                 --gray-700: #3a3a3a;
             }
         }
-        
-        /* Timeline Styles */
-        .timeline {
-            position: relative;
-            padding: 2rem 0;
-        }
-        
-        .timeline::before {
-            content: '';
-            position: absolute;
-            left: 20px;
-            top: 0;
-            bottom: 0;
-            width: 3px;
-            background: linear-gradient(180deg, var(--accent), var(--success));
-        }
-        
-        .timeline-item {
-            position: relative;
-            padding-left: 60px;
-            margin-bottom: 3rem;
-        }
-        
-        .timeline-dot {
-            position: absolute;
-            left: 9px;
-            top: 0;
-            width: 25px;
-            height: 25px;
-            background: white;
-            border: 4px solid var(--accent);
-            border-radius: 50%;
-            z-index: 1;
-        }
-        
-        .timeline-dot.active {
-            background: var(--accent);
-            box-shadow: 0 0 0 4px rgba(0, 123, 255, 0.2);
-            animation: pulse 2s infinite;
-        }
-        
-        @keyframes pulse {
-            0%, 100% { box-shadow: 0 0 0 4px rgba(0, 123, 255, 0.2); }
-            50% { box-shadow: 0 0 0 8px rgba(0, 123, 255, 0.4); }
-        }
-        
-        .timeline-content {
-            background: var(--white);
-            border: 1px solid var(--gray-200);
-            border-radius: 8px;
-            padding: 2rem;
-            transition: var(--transition);
-        }
-        
-        .timeline-content:hover {
-            transform: translateX(10px);
-            box-shadow: var(--shadow);
-            border-color: var(--accent);
-        }
-        
-        .timeline-date {
-            font-size: 0.85rem;
-            color: var(--accent);
-            font-weight: 600;
-            text-transform: uppercase;
-            letter-spacing: 0.05em;
-            margin-bottom: 0.5rem;
-        }
-        
-        .timeline-content h3 {
-            font-size: 1.5rem;
-            color: var(--black);
-            margin-bottom: 1rem;
-        }
-        
-        .timeline-content p {
-            color: var(--gray-700);
-            line-height: 1.6;
-            margin-bottom: 1rem;
-        }
-        
-        .timeline-tags {
-            display: flex;
-            gap: 0.5rem;
-            flex-wrap: wrap;
-        }
-        
-        /* Cookie Consent Banner */
-        .cookie-banner {
-            position: fixed;
-            bottom: 0;
-            left: 0;
-            right: 0;
-            background: rgba(0, 0, 0, 0.95);
-            backdrop-filter: blur(10px);
-            color: white;
-            padding: 20px;
-            z-index: 10001;
-            opacity: 0;
-            visibility: hidden;
-            transform: translateY(100%);
-            transition: all 0.4s ease;
-        }
-        
-        .cookie-banner.show {
-            opacity: 1;
-            visibility: visible;
-            transform: translateY(0);
-        }
-        
-        .cookie-content {
-            max-width: 1200px;
-            margin: 0 auto;
-            display: flex;
-            align-items: center;
-            justify-content: space-between;
-            gap: 20px;
-            flex-wrap: wrap;
-        }
-        
-        .cookie-text {
-            flex: 1;
-            min-width: 300px;
-        }
-        
-        .cookie-text h3 {
-            margin: 0 0 8px 0;
-            font-size: 1.1rem;
-            font-weight: 600;
-        }
-        
-        .cookie-text p {
-            margin: 0;
-            font-size: 0.9rem;
-            opacity: 0.9;
-            line-height: 1.5;
-        }
-        
-        .cookie-buttons {
-            display: flex;
-            gap: 12px;
-            flex-wrap: wrap;
-        }
-        
-        .cookie-btn {
-            padding: 12px 24px;
-            border: none;
-            border-radius: 6px;
-            font-weight: 600;
-            font-size: 0.95rem;
-            cursor: pointer;
-            transition: all 0.3s ease;
-            font-family: var(--primary-font);
-        }
-        
-        .cookie-btn.accept {
-            background: linear-gradient(135deg, #667eea, #764ba2);
-            color: white;
-        }
-        
-        .cookie-btn.accept:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 4px 12px rgba(102, 126, 234, 0.4);
-        }
-        
-        .cookie-btn.decline {
-            background: transparent;
-            color: white;
-            border: 2px solid rgba(255, 255, 255, 0.3);
-        }
-        
-        .cookie-btn.decline:hover {
-            background: rgba(255, 255, 255, 0.1);
-            border-color: white;
-        }
-        
-        @media (max-width: 768px) {
-            .cookie-content {
-                flex-direction: column;
-                align-items: flex-start;
-            }
-            
-            .cookie-buttons {
-                width: 100%;
-            }
-            
-            .cookie-btn {
-                flex: 1;
-            }
-        }
     </style>
-    
-    <!-- Google reCAPTCHA v2 Script -->
-    <script src="https://www.google.com/recaptcha/api.js" async defer></script>
 </head>
 <body>
-    <!-- Cookie Consent Banner -->
-    <div class="cookie-banner" id="cookieBanner">
-        <div class="cookie-content">
-            <div class="cookie-text">
-                <h3>🍪 We value your privacy</h3>
-                <p>We use cookies and analytics to improve your experience. By clicking "Accept", you consent to our use of cookies and Google Analytics.</p>
-            </div>
-            <div class="cookie-buttons">
-                <button class="cookie-btn decline" onclick="declineCookies()">Decline</button>
-                <button class="cookie-btn accept" onclick="acceptCookies()">Accept All</button>
-            </div>
-        </div>
-    </div>
-    <!-- Google Tag Manager (noscript) -->
-    <noscript><iframe src="https://www.googletagmanager.com/ns.html?id=GTM-W3LFMLDQ"
-    height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
-    <!-- End Google Tag Manager (noscript) -->
-    
-    <!-- Scroll Progress Bar -->
-    <div id="scroll-progress" style="position: fixed; top: 0; left: 0; width: 0%; height: 4px; background: linear-gradient(90deg, var(--accent), var(--success)); z-index: 9999; transition: width 0.1s ease;"></div>
-    
+    <!-- Floating Background Shapes -->
     <div class="floating-shapes">
         <div class="shape"></div>
         <div class="shape"></div>
@@ -1858,68 +1645,70 @@
         <div class="shape"></div>
     </div>
 
+    <!-- Particle Effects -->
     <div class="particles" id="particles"></div>
 
+    <!-- Navigation -->
     <nav id="navbar">
         <div class="container">
             <div class="nav-container">
-                <div class="logo" onclick="showPage('home')">sami.dev</div>
-                <div style="display: flex; align-items: center; gap: 1rem;">
-                    <button id="theme-toggle" onclick="toggleTheme()" aria-label="Toggle dark mode" style="background: none; border: none; font-size: 1.5rem; cursor: pointer; padding: 0.5rem; transition: transform 0.3s;">
-                        <span id="theme-icon">🌙</span>
-                    </button>
-                    <button class="mobile-menu-toggle" onclick="toggleMobileMenu()" aria-label="Toggle navigation menu">☰</button>
-                    <ul class="nav-links" id="nav-links">
-                        <li><a href="#" onclick="showPage('home'); return false;" class="active" aria-label="Go to home page">Home</a></li>
-                        <li><a href="#" onclick="showPage('about'); return false;" aria-label="Go to about page">About</a></li>
-                        <li><a href="#" onclick="showPage('services'); return false;" aria-label="Go to services page">Services</a></li>
-                        <li><a href="#" onclick="showPage('skills'); return false;" aria-label="Go to skills page">Skills</a></li>
-                        <li><a href="#" onclick="showPage('experience'); return false;" aria-label="Go to experience page">Experience</a></li>
-                        <li><a href="#" onclick="showPage('projects'); return false;" aria-label="Go to projects page">Projects</a></li>
-                        <li><a href="#" onclick="showPage('faq'); return false;" aria-label="Go to FAQ page">FAQ</a></li>
-                        <li><a href="#" onclick="showPage('sponsors'); return false;" aria-label="Go to sponsors page">Sponsors</a></li>
-                        <li><a href="#" onclick="showPage('contact'); return false;" aria-label="Go to contact page">Contact</a></li>
-                    </ul>
-                </div>
+                <div class="logo" onclick="showPage('home')" style="cursor: pointer;">sami.dev</div>
+                <button class="mobile-menu-toggle" onclick="toggleMobileMenu()" aria-label="Toggle navigation menu">☰</button>
+                <ul class="nav-links" id="nav-links">
+                    <li><a href="#" onclick="showPage('home'); return false;" class="active" aria-label="Go to home page">Home</a></li>
+                    <li><a href="#" onclick="showPage('about'); return false;" aria-label="Go to about page">About</a></li>
+                    <li><a href="#" onclick="showPage('skills'); return false;" aria-label="Go to skills page">Skills</a></li>
+                    <li><a href="#" onclick="showPage('projects'); return false;" aria-label="Go to projects page">Projects</a></li>
+                    <li><a href="#" onclick="showPage('contact'); return false;" aria-label="Go to contact page">Contact</a></li>
+                    <li><a href="/merch.html" aria-label="Visit shop">Shop</a></li>
+                </ul>
             </div>
         </div>
     </nav>
 
+    <script src="https://browser.sentry-cdn.com/10.30.0/bundle.min.js" crossorigin="anonymous"></script>
+    <script>
+      // Initialize Sentry on the main site (index page) only
+      try{
+        if(window.Sentry){
+          Sentry.init({ dsn: "https://19f914da843ff91848281a5e4be175e8@o4510440292220928.ingest.de.sentry.io/4510440295563344" });
+          window.__sentry_inited = true;
+          console.info('Sentry initialized on index.html');
+        }
+      }catch(e){ console.warn('Sentry init failed on index', e); }
+    </script>
+
     <div class="container">
+        <!-- Home Page -->
         <main class="page active" id="home">
             <div class="hero">
                 <div class="hero-content">
                     <h1>Samrath "Sami" Singh</h1>
                     <p class="tagline">Full-Stack Developer & Software Engineer</p>
-                    <em id="typing-text">// Building the web, one line of code at a time</em>
-                    
+                    <em>// Building the web, one line of code at a time</em>
                     <div class="social-links">
                         <a href="mailto:samisingh988@gmail.com" aria-label="Send email">Email</a>
                         <a href="https://github.com/Sami9889" target="_blank" rel="noopener noreferrer" aria-label="Visit GitHub profile">GitHub</a>
                         <a href="https://www.linkedin.com/in/samrath-singh-400705297" target="_blank" rel="noopener noreferrer" aria-label="Visit LinkedIn profile">LinkedIn</a>
                         <a href="https://discord.gg/fhvGABfw" target="_blank" rel="noopener noreferrer" aria-label="Join Discord server">Discord</a>
+                        <a href="/merch.html" aria-label="Shop">Shop</a>
                     </div>
-                    
-                    <div style="margin-top: 2rem; padding: 1.5rem; background: rgba(0, 0, 0, 0.03); border-radius: 8px; display: inline-block;">
-                        <p style="margin: 0; font-size: 0.9rem; color: var(--gray-700);">
-                            <strong>Based in:</strong> Point Cook, VIC, Australia<br>
-                            <strong>ABN:</strong> 72 925 087 373<br>
-                            <strong>Education:</strong> Point Cook College
-                        </p>
+                    <div style="margin-top:1.5rem">
+                      <a href="/merch.html" class="btn" style="background:var(--accent); color:#fff; padding:.75rem 1rem; border-radius:6px; text-decoration:none">Shop Sami Merch</a>
                     </div>
                 </div>
                 <aside class="hero-stats">
                     <h3>Quick Stats</h3>
                     <div class="stat-item">
-                        <span class="stat-number" data-count="2">0</span><span>+</span>
+                        <span class="stat-number">2+</span>
                         <span class="stat-label">Years Coding</span>
                     </div>
                     <div class="stat-item">
-                        <span class="stat-number" data-count="15">0</span><span>+</span>
+                        <span class="stat-number">15+</span>
                         <span class="stat-label">Projects Built</span>
                     </div>
                     <div class="stat-item">
-                        <span class="stat-number" data-count="10">0</span><span>+</span>
+                        <span class="stat-number">8+</span>
                         <span class="stat-label">Technologies</span>
                     </div>
                     <div class="stat-item">

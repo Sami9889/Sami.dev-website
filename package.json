@@ -1,6 +1,17 @@
 {
+  "name": "sami.dev-website",
+  "version": "1.0.0",
+  "private": true,
+  "scripts": {
+    "start": "node server.js",
+    "dev": "node server.js",
+    "smoke": "node smoke.js"
+  },
   "dependencies": {
     "@sentry/browser": "^10.30.0",
-    "@statuspage/status-widget": "^1.0.5"
+    "@statuspage/status-widget": "^1.0.5",
+    "express": "^4.18.2",
+    "node-fetch": "^2.6.12",
+    "body-parser": "^1.20.2"
   }
 }
