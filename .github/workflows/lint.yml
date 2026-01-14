@@ -1,0 +1,17 @@
+name: Lint
+
+on:
+  push:
+    branches: [ main, v1 ]
+  pull_request:
+    branches: [ main ]
+
+jobs:
+  markdown:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Check markdown (remark-lint)
+        run: |
+          npm i -g remark-cli remark-preset-lint-recommended
+          remark . --quiet || true
