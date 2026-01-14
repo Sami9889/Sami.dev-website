@@ -1,50 +1,328 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-<meta charset="UTF-8">
-<title>Maintenance</title>
-<style>
-body { text-align: center; font-family: system-ui, -apple-system, 'Segoe UI', Roboto, Helvetica, Arial; margin-top: 3rem; }
-#maintenance-countdown { font-size:1.6rem; margin-top:1rem; }
-</style>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Site Maintenance - Sami.dev</title>
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body {
+      font-family: 'Space Grotesk', system-ui, Arial, sans-serif;
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      min-height: 100vh;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 20px;
+    }
+
+    .maintenance-container {
+      background: white;
+      border-radius: 20px;
+      padding: 60px 40px;
+      text-align: center;
+      max-width: 600px;
+      box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+      animation: fadeIn 0.6s ease;
+    }
+
+    @keyframes fadeIn {
+      from {
+        opacity: 0;
+        transform: translateY(20px);
+      }
+      to {
+        opacity: 1;
+        transform: translateY(0);
+      }
+    }
+
+    .icon {
+      font-size: 80px;
+      margin-bottom: 20px;
+      animation: rotate 3s linear infinite;
+    }
+
+    @keyframes rotate {
+      from { transform: rotate(0deg); }
+      to { transform: rotate(360deg); }
+    }
+
+    h1 {
+      font-size: 2.5rem;
+      color: #333;
+      margin-bottom: 15px;
+      font-weight: 700;
+    }
+
+    p {
+      font-size: 1.2rem;
+      color: #666;
+      margin-bottom: 30px;
+      line-height: 1.6;
+    }
+
+    .status-badge {
+      display: inline-block;
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      color: white;
+      padding: 12px 24px;
+      border-radius: 25px;
+      font-weight: 600;
+      font-size: 1rem;
+      margin: 20px 0;
+    }
+
+    .info-box {
+      background: #f8f9fa;
+      border-radius: 10px;
+      padding: 20px;
+      margin: 20px 0;
+      text-align: left;
+    }
+
+    .info-box h3 {
+      font-size: 1.1rem;
+      color: #333;
+      margin-bottom: 10px;
+      font-weight: 600;
+    }
+
+    .info-box p {
+      font-size: 1rem;
+      color: #666;
+      margin: 0;
+    }
+
+    .subtext {
+      font-size: 1rem;
+      color: #999;
+      margin-top: 30px;
+      margin-bottom: 0;
+    }
+
+    .link {
+      color: #667eea;
+      text-decoration: none;
+      font-weight: 600;
+    }
+
+    .link:hover {
+      text-decoration: underline;
+    }
+
+    @media (max-width: 600px) {
+      .maintenance-container {
+        padding: 40px 25px;
+      }
+      
+      h1 {
+        font-size: 2rem;
+      }
+      
+      .icon {
+        font-size: 60px;
+      }
+    }
+  </style>
 </head>
 <body>
+  <div class="maintenance-container">
+    <div class="icon">🔧</div>
+    <h1>We'll Be Right Back</h1>
+    <p>We're currently performing scheduled maintenance to improve your experience.</p>
+    
+    <div class="status-badge">🔄 Maintenance in Progress</div>
+    
+    <!-- Live countdown timer will be inserted here by JavaScript -->
+    
+    <div class="info-box">
+      <h3>What's happening?</h3>
+      <p>We're performing updates and improvements to make the site better for you. This should only take a short while.</p>
+    </div>
+    
+    <div class="info-box">
+      <h3>Need help?</h3>
+      <p>For urgent matters, please email <a href="mailto:samisingh988@gmail.com" class="link">samisingh988@gmail.com</a></p>
+    </div>
+    
+    <p class="subtext">Thank you for your patience!</p>
+  </div>
 
-<h1>Site is under maintenance</h1>
-<p>Please check back soon.</p>
-<div id="maintenance-countdown"></div>
-
-<script>
-document.addEventListener('DOMContentLoaded', function() {
-  const maintenanceDurationHours = 5;
-  const mainPageURL = 'index.html';
-  const STORAGE_KEY = 'maintEndTime';
-
-  let endTime = Number(sessionStorage.getItem(STORAGE_KEY));
-  if (!endTime || isNaN(endTime) || endTime <= Date.now()) {
-    endTime = Date.now() + maintenanceDurationHours * 60 * 60 * 1000;
-    sessionStorage.setItem(STORAGE_KEY, endTime);
-  }
-
-  const countdownEl = document.getElementById('maintenance-countdown');
-
-  function updateCountdown() {
-    const remaining = endTime - Date.now();
-    if (remaining <= 0) {
-      sessionStorage.removeItem(STORAGE_KEY);
-      window.location.assign(mainPageURL);
-      return;
+  <script>
+    // ============================================
+    // MAINTENANCE SETTINGS - EASY TO CONFIGURE
+    // ============================================
+    const MAINTENANCE_SETTINGS = {
+      // Enable/disable maintenance mode
+      enabled: true,
+      
+      // Set end time (null = no auto-redirect, or use ISO date string)
+      // Example: '2024-12-31T23:59:59Z' or null
+      // Current setting: 2 hours from page load for testing
+      endTime: new Date(Date.now() + (2 * 60 * 60 * 1000)).toISOString(), // 2 hours from now
+      
+      // Estimated duration in hours (for display only)
+      estimatedDuration: 2,
+      
+      // Auto-redirect URL when maintenance ends
+      redirectUrl: '/',
+      
+      // Check interval in seconds (how often to check if maintenance is over)
+      checkInterval: 30,
+      
+      // Display settings
+      display: {
+        title: "We'll Be Right Back",
+        message: "We're currently performing scheduled maintenance to improve your experience.",
+        statusText: "🔄 Maintenance in Progress",
+        showEstimate: true
+      }
+    };
+    
+    // ============================================
+    // AUTO-GENERATED MAINTENANCE LOGIC
+    // ============================================
+    
+    // Update display based on settings
+    if (MAINTENANCE_SETTINGS.display.title) {
+      document.querySelector('h1').textContent = MAINTENANCE_SETTINGS.display.title;
     }
-    const hours = Math.floor(remaining / 3600000);
-    const minutes = Math.floor((remaining % 3600000) / 60000);
-    const seconds = Math.floor((remaining % 60000) / 1000);
-    countdownEl.textContent = `Maintenance ends in: ${hours}h ${minutes}m ${seconds}s`;
-  }
-
-  updateCountdown();
-  setInterval(updateCountdown, 1000);
-});
-</script>
-
+    
+    if (MAINTENANCE_SETTINGS.display.message) {
+      document.querySelector('p').textContent = MAINTENANCE_SETTINGS.display.message;
+    }
+    
+    if (MAINTENANCE_SETTINGS.display.statusText) {
+      document.querySelector('.status-badge').textContent = MAINTENANCE_SETTINGS.display.statusText;
+    }
+    
+    // Show estimated duration if enabled
+    if (MAINTENANCE_SETTINGS.display.showEstimate && MAINTENANCE_SETTINGS.estimatedDuration) {
+      const duration = MAINTENANCE_SETTINGS.estimatedDuration;
+      const durationText = duration === 1 ? '1 hour' : `${duration} hours`;
+      const estimateBox = document.createElement('div');
+      estimateBox.className = 'info-box';
+      estimateBox.innerHTML = `
+        <h3>Estimated Duration</h3>
+        <p>Expected to complete in approximately ${durationText}. We'll be back online shortly!</p>
+      `;
+      document.querySelector('.info-box').insertAdjacentElement('beforebegin', estimateBox);
+    }
+    
+    // Handle auto-redirect
+    if (MAINTENANCE_SETTINGS.enabled && MAINTENANCE_SETTINGS.endTime) {
+      // Get or set persistent end time from localStorage
+      let endTime = localStorage.getItem('maintenanceEndTime');
+      
+      if (!endTime) {
+        // First calculation - store as numeric timestamp
+        endTime = new Date(MAINTENANCE_SETTINGS.endTime).getTime();
+        localStorage.setItem('maintenanceEndTime', endTime);
+      } else {
+        // Use existing timestamp (numeric value)
+        endTime = parseInt(endTime);
+      }
+      
+      // Show countdown
+      const countdownDiv = document.createElement('div');
+      countdownDiv.className = 'info-box';
+      countdownDiv.id = 'countdown-box';
+      countdownDiv.innerHTML = `
+        <h3>⏰ Live Countdown Timer</h3>
+        <p id="countdown-text" style="font-size: 1.8rem; font-weight: 700; color: #667eea; font-family: 'Courier New', monospace; letter-spacing: 0.05em;">Calculating...</p>
+        <p style="font-size: 0.85rem; color: #999; margin-top: 0.5rem;">🔄 Auto-synced every 5 minutes • Real-time updates</p>
+      `;
+      document.querySelector('.status-badge').insertAdjacentElement('afterend', countdownDiv);
+      
+      function updateCountdown() {
+        // Use Date.now() for better precision and sync
+        const now = Date.now();
+        const remaining = endTime - now;
+        
+        if (remaining <= 0) {
+          document.getElementById('countdown-text').innerHTML = '✅ <strong>Maintenance complete!</strong> Redirecting...';
+          clearInterval(countdownTimer);
+          
+          // Set bypass flag so user won't be redirected back to maintenance
+          localStorage.setItem('maintenanceComplete', 'true');
+          localStorage.setItem('maintenanceCompletedAt', Date.now().toString());
+          localStorage.removeItem('maintenanceEndTime');
+          
+          setTimeout(() => {
+            window.location.href = MAINTENANCE_SETTINGS.redirectUrl;
+          }, 2000);
+          return;
+        }
+        
+        const hours = Math.floor(remaining / 3600000);
+        const minutes = Math.floor((remaining % 3600000) / 60000);
+        const seconds = Math.floor((remaining % 60000) / 1000);
+        
+        // Format with leading zeros for better display
+        const hoursStr = String(hours).padStart(2, '0');
+        const minutesStr = String(minutes).padStart(2, '0');
+        const secondsStr = String(seconds).padStart(2, '0');
+        
+        document.getElementById('countdown-text').innerHTML = 
+          `⏱️ <strong>${hoursStr}h ${minutesStr}m ${secondsStr}s</strong>`;
+        
+        // Update page title with countdown
+        document.title = `Maintenance - ${hoursStr}:${minutesStr}:${secondsStr} remaining`;
+      }
+      
+      // Initial update
+      updateCountdown();
+      
+      // Update every second with precise timing
+      const countdownTimer = setInterval(updateCountdown, 1000);
+      
+      // Check for completion
+      const checkInterval = setInterval(() => {
+        if (Date.now() > endTime) {
+          clearInterval(checkInterval);
+          clearInterval(countdownTimer);
+          
+          // Set bypass flag and clean up maintenance end time
+          localStorage.setItem('maintenanceComplete', 'true');
+          localStorage.setItem('maintenanceCompletedAt', Date.now().toString());
+          localStorage.removeItem('maintenanceEndTime');
+          
+          window.location.href = MAINTENANCE_SETTINGS.redirectUrl;
+        }
+      }, MAINTENANCE_SETTINGS.checkInterval * 1000);
+      
+      // Auto-refresh page every 5 minutes to stay synced and get updates
+      setTimeout(() => {
+        console.log('Auto-refreshing page to sync with server...');
+        location.reload();
+      }, 5 * 60 * 1000); // 5 minutes
+      
+      // Show last refresh time
+      const lastRefresh = new Date().toLocaleTimeString();
+      const refreshInfo = document.createElement('p');
+      refreshInfo.style.cssText = 'font-size: 0.75rem; color: #999; margin-top: 1rem; text-align: center;';
+      refreshInfo.innerHTML = `Last sync: ${lastRefresh} • Auto-refresh in 5 minutes`;
+      document.querySelector('.maintenance-container').appendChild(refreshInfo);
+      
+      // Update "next refresh" countdown
+      let refreshCountdown = 5 * 60; // 5 minutes in seconds
+      setInterval(() => {
+        refreshCountdown--;
+        const mins = Math.floor(refreshCountdown / 60);
+        const secs = refreshCountdown % 60;
+        refreshInfo.innerHTML = `Last sync: ${lastRefresh} • Auto-refresh in ${mins}m ${secs}s`;
+        
+        if (refreshCountdown <= 0) {
+          refreshInfo.innerHTML = `Refreshing now...`;
+        }
+      }, 1000);
+    }
+    
+    // If maintenance is disabled, redirect immediately
+    if (!MAINTENANCE_SETTINGS.enabled) {
+      window.location.href = MAINTENANCE_SETTINGS.redirectUrl;
+    }
+  </script>
 </body>
 </html>

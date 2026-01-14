@@ -1,18 +1,379 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <meta name="description" content="Samrath 'Sami' Singh - Full-Stack Developer & Software Engineer Portfolio">
-    <meta name="keywords" content="full-stack developer, software engineer, web development, JavaScript, Python, React">
+  <meta name="robots" content="index, follow, max-snippet:-1, max-image-preview:large, max-video-preview:-1">
+  <meta name="googlebot" content="index, follow, max-snippet:-1, max-image-preview:large, max-video-preview:-1">
+  <meta name="googlebot-news" content="index, follow">
+  <meta name="bingbot" content="index, follow">
+  <meta name="slurp" content="index, follow">
+  <meta name="rating" content="General">
+  <meta name="referrer" content="origin-when-cross-origin">
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  
+  <script>
+/* Recaptcha Verification - Bypassed for Search Engine Bots */
+(function(){
+  // Detect search engine bots
+  const userAgent = navigator.userAgent.toLowerCase();
+  const isBot = /googlebot|bingbot|slurp|duckduckbot|baiduspider|yandexbot|facebookexternalhit|twitterbot|linkedinbot|whatsapp|crawler|spider/i.test(userAgent);
+  
+  // Skip verification for bots
+  if (isBot) {
+    return;
+  }
+  
+  function getCookie(name){
+    const pairs=document.cookie.split(';').map(s=>s.trim());
+    for(const p of pairs) if(p.startsWith(name + '=')) return p.split('=')[1];
+    return null;
+  }
+  const COOKIE_NAME = 'sami_verified';
+  const params = new URLSearchParams(window.location.search);
+  
+  const hasCookie = getCookie(COOKIE_NAME) === 'true';
+  const hasLocalStorage = localStorage.getItem(COOKIE_NAME) === 'true';
+  const hasUrlParam = params.get('verified') === '1';
+  
+  const isVerified = hasCookie || hasLocalStorage || hasUrlParam;
+  
+  if (!isVerified) {
+    window.location.replace('/recaptcha.html');
+  } else {
+    if (hasUrlParam) {
+      const d = new Date();
+      d.setTime(d.getTime() + (7*24*60*60*1000));
+      document.cookie = `${COOKIE_NAME}=true;expires=${d.toUTCString()};path=/;SameSite=Lax`;
+      try {
+        localStorage.setItem(COOKIE_NAME, 'true');
+      }
+      catch(e) {
+        void(0);
+      }
+      const u = new URL(window.location);
+      u.searchParams.delete('verified');
+      u.searchParams.delete('ts');
+      history.replaceState(null, '', u.toString());
+    }
+  }
+})();
+</script>
+  
+  <!-- Google Tag Manager -->
+  <script>(function(w,d,s,l,i){w[l]=w[l]||[];w[l].push({'gtm.start':
+  new Date().getTime(),event:'gtm.js'});var f=d.getElementsByTagName(s)[0],
+  j=d.createElement(s),dl=l!='dataLayer'?'&l='+l:'';j.async=true;j.src=
+  'https://www.googletagmanager.com/gtm.js?id='+i+dl;j.crossOrigin='anonymous';f.parentNode.insertBefore(j,f);
+  })(window,document,'script','dataLayer','GTM-W3LFMLDQ');</script>
+  <!-- End Google Tag Manager -->
+    
+    <!-- SEO Meta Tags -->
+    <meta name="description" content="Sami Singh - Full-Stack Developer & Software Engineer from Point Cook, VIC, Australia. Expert in JavaScript, Python, PHP web development, Minecraft plugins, Shopify eCommerce. 2+ years experience. Instagram: @sami9889 | GitHub: Sami9889 | LinkedIn | Email: samisingh988@gmail.com | Available for hire | ABN: 72 925 087 373">
+    <meta name="keywords" content="Sami Singh, Samrath Singh, Sami, Sami9889, @sami9889, samisingh988, Instagram Sami9889, GitHub Sami9889, LinkedIn Samrath Singh, Point Cook developer, VIC developer, Australian developer, Melbourne developer, full-stack developer, web developer, software engineer, JavaScript developer, Python developer, PHP developer, HTML CSS, React, Node.js, Vue, Angular, TypeScript, MongoDB, MySQL, PostgreSQL, Git, GitHub, REST API, GraphQL, Minecraft plugin developer, Minecraft server developer, Bukkit, Spigot, Paper, PaperMC, Minecraft coding, Shopify developer, Shopify expert, Shopify customization, Shopify theme, Liquid, eCommerce developer, WooCommerce, online store, web design, UI/UX design, responsive design, mobile-first, frontend developer, backend developer, fullstack, MERN stack, MEAN stack, API integration, webhook, automation, 3D printing, 3DPrintzAU, Procoders, Bad to the Bone, freelance developer, hire developer, contract developer, remote developer, junior developer, student developer, portfolio, coding projects, GitHub projects, open source, web hosting, DNS, SSL, HTTPS, Cloudflare, NGINX, Apache, Linux, Ubuntu, server setup, deployment, CI/CD, DevOps, technical support, troubleshooting, debugging, code review, agile, scrum, project management, client support, documentation, testing, QA, quality assurance, performance optimization, SEO optimization, Google Analytics, Google Tag Manager, accessibility, WCAG, responsive, cross-browser, modern web, clean code, best practices, professional, reliable, affordable, budget-friendly, competitive pricing, fast delivery, Point Cook VIC 3030, Victoria Australia, Australian freelancer, local developer, nearby developer, hire Sami Singh, contact Sami Singh, Sami Singh email, Sami Singh phone, Sami Singh website, Sami Singh portfolio, samisingh988@gmail.com, ABN 72 925 087 373, Point Cook College, teen entrepreneur, young entrepreneur, business owner, startup founder, 3DPrintzAU founder, Procoders founder, eCommerce store owner, multi-business owner">
     <meta name="author" content="Samrath Singh">
-    <title>Samrath "Sami" Singh - Full-Stack Developer</title>
+    <link rel="canonical" href="https://sami.is-a.dev/">
+    
+    <!-- Prevent "is-a.dev" branding from showing in search results -->
+    <meta property="og:determiner" content="">
+    <meta name="application-name" content="Samrath Singh Portfolio">
+    <meta name="apple-mobile-web-app-title" content="Sami Singh">
+    <meta name="format-detection" content="telephone=no">
+    
+    <!-- Content Security Policy - Updated to allow reCAPTCHA and Sentry -->
+    <meta http-equiv="Content-Security-Policy" content="script-src 'self' 'unsafe-inline' 'unsafe-eval' https://js-de.sentry-cdn.com https://browser.sentry-cdn.com https://cdn.jsdelivr.net https://api.web3forms.com https://challenges.cloudflare.com https://www.googletagmanager.com https://www.google-analytics.com https://www.google.com https://www.gstatic.com https://formsubmit.co; frame-src https://www.google.com https://formsubmit.co; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src 'self' https://fonts.gstatic.com; img-src 'self' data: https:; connect-src 'self' https://api.web3forms.com https://formsubmit.co https://api.github.com;">
+    
+    <!-- Open Graph / Social Media -->
+    <meta property="og:type" content="profile">
+    <meta property="og:url" content="https://sami.is-a.dev/">
+    <meta property="og:title" content="Samrath 'Sami' Singh (@sami9889) - Full-Stack Developer | Instagram | GitHub | LinkedIn">
+    <meta property="og:description" content="Sami Singh (@sami9889) - Full-Stack Developer from Point Cook, VIC. Instagram: @sami9889 | GitHub: Sami9889 | LinkedIn: samrath-singh-400705297 | Email: samisingh988@gmail.com | Discord">
+    <meta property="og:site_name" content="Samrath Singh Portfolio">
+    <meta property="og:locale" content="en_AU">
+    <meta property="profile:first_name" content="Samrath">
+    <meta property="profile:last_name" content="Singh">
+    <meta property="profile:username" content="Sami9889">
+    <meta property="profile:gender" content="male">
+    
+    <!-- Twitter Card -->
+    <meta name="twitter:card" content="summary">
+    <meta name="twitter:title" content="Samrath 'Sami' Singh (@sami9889) - Full-Stack Developer Portfolio">
+    <meta name="twitter:description" content="Full-Stack Developer from Point Cook, VIC. Instagram: @sami9889 | GitHub: Sami9889 | LinkedIn | Email: samisingh988@gmail.com | Web dev, Minecraft plugins, Shopify">
+    <meta name="twitter:site" content="@sami9889">
+    <meta name="twitter:creator" content="@sami9889">
+    
+    <title>Samrath "Sami" Singh - Full-Stack Developer | Web Development, Minecraft Plugins, Shopify eCommerce | Point Cook VIC Australia</title>
     <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>💻</text></svg>">
+    
+    <!-- GOOGLE KNOWLEDGE PANEL - Complete Person Schema -->
+    <script type="application/ld+json">
+    {
+      "@context": "https://schema.org",
+      "@type": "Person",
+      "@id": "https://sami.is-a.dev/#person",
+      "name": "Samrath Singh",
+      "givenName": "Samrath",
+      "familyName": "Singh",
+      "additionalName": "Sami",
+      "alternateName": ["Sami Singh", "Samrath Sami Singh", "Sami9889", "@sami9889"],
+      "url": "https://sami.is-a.dev",
+      "mainEntityOfPage": "https://sami.is-a.dev",
+      "image": "https://avatars.githubusercontent.com/Sami9889",
+      "sameAs": [
+        "https://github.com/Sami9889",
+        "https://www.linkedin.com/in/samrath-singh-400705297",
+        "https://discord.gg/fhvGABfw",
+        "https://www.instagram.com/sami9889",
+        "https://twitter.com/Sami9889",
+        "https://facebook.com/sami9889",
+        "https://sami.is-a.dev"
+      ],
+      "jobTitle": "Full-Stack Developer & Software Engineer",
+      "hasOccupation": {
+        "@type": "Occupation",
+        "name": "Full-Stack Developer",
+        "occupationLocation": {
+          "@type": "City",
+          "name": "Point Cook"
+        },
+        "skills": "JavaScript, Python, PHP, HTML, CSS, Web Development, Minecraft Plugin Development, Shopify, eCommerce, API Integration"
+      },
+      "worksFor": [
+        {
+          "@type": "Organization",
+          "name": "Self-Employed",
+          "url": "https://sami.is-a.dev"
+        }
+      ],
+      "founder": [
+        {
+          "@type": "Organization",
+          "name": "3DPrintzAU",
+          "description": "3D Printing Services",
+          "foundingDate": "2022"
+        },
+        {
+          "@type": "Organization",
+          "name": "Procoders Coding Service",
+          "description": "Custom Software Development",
+          "foundingDate": "2023"
+        },
+        {
+          "@type": "Organization",
+          "name": "Bad to the Bone",
+          "description": "eCommerce Store",
+          "foundingDate": "2024"
+        }
+      ],
+      "owns": [
+        {
+          "@type": "Organization",
+          "name": "3DPrintzAU",
+          "url": "https://sami.is-a.dev/#3dprintzau"
+        },
+        {
+          "@type": "Organization",
+          "name": "Procoders Coding Service",
+          "url": "https://sami.is-a.dev/#procoders"
+        },
+        {
+          "@type": "Organization",
+          "name": "Bad to the Bone",
+          "url": "https://sami.is-a.dev/#badtothebone"
+        }
+      ],
+      "address": {
+        "@type": "PostalAddress",
+        "addressLocality": "Point Cook",
+        "addressRegion": "VIC",
+        "postalCode": "3030",
+        "addressCountry": "AU"
+      },
+      "email": "samisingh988@gmail.com",
+      "contactPoint": {
+        "@type": "ContactPoint",
+        "email": "samisingh988@gmail.com",
+        "contactType": "Business Inquiries",
+        "availableLanguage": ["English"]
+      },
+      "knowsAbout": [
+        "Web Development",
+        "Software Development",
+        "JavaScript",
+        "Python",
+        "PHP",
+        "HTML",
+        "CSS",
+        "React",
+        "Node.js",
+        "Full-Stack Development",
+        "Frontend Development",
+        "Backend Development",
+        "Minecraft Plugin Development",
+        "Game Development",
+        "eCommerce",
+        "Shopify Development",
+        "Online Retail",
+        "API Integration",
+        "REST APIs",
+        "Web Services",
+        "3D Printing",
+        "3D Design",
+        "Technical Support",
+        "IT Support",
+        "System Administration",
+        "Cloudflare",
+        "NGINX",
+        "Web Hosting",
+        "Domain Management"
+      ],
+      "knowsLanguage": ["en-AU", "en-US"],
+      "nationality": {
+        "@type": "Country",
+        "name": "Australia"
+      },
+      "homeLocation": {
+        "@type": "Place",
+        "address": {
+          "@type": "PostalAddress",
+          "addressLocality": "Point Cook",
+          "addressRegion": "Victoria",
+          "addressCountry": "Australia"
+        }
+      },
+      "alumniOf": {
+        "@type": "EducationalOrganization",
+        "name": "Point Cook College",
+        "address": {
+          "@type": "PostalAddress",
+          "addressLocality": "Point Cook",
+          "addressRegion": "Victoria",
+          "addressCountry": "Australia"
+        }
+      },
+      "description": "Samrath 'Sami' Singh (also known as Sami9889) is a full-stack developer and software engineer from Point Cook, Victoria, Australia. Specializing in web development, Minecraft plugin development, Shopify eCommerce solutions, and API integration. Founder of 3DPrintzAU, Procoders Coding Service, and Bad to the Bone. Available for freelance development projects. Contact: samisingh988@gmail.com | Instagram: @sami9889 | GitHub: Sami9889 | ABN: 72 925 087 373",
+      "identifier": [
+        {
+          "@type": "PropertyValue",
+          "name": "ABN",
+          "value": "72 925 087 373"
+        },
+        {
+          "@type": "PropertyValue",
+          "name": "GitHub Username",
+          "value": "Sami9889"
+        },
+        {
+          "@type": "PropertyValue",
+          "name": "Instagram Handle",
+          "value": "@sami9889"
+        }
+      ],
+      "memberOf": [
+        {
+          "@type": "Organization",
+          "name": "GitHub",
+          "url": "https://github.com"
+        },
+        {
+          "@type": "Organization",
+          "name": "LinkedIn",
+          "url": "https://linkedin.com"
+        }
+      ],
+      "award": [
+        "Registered ABN at age 14",
+        "Founded 3 successful businesses",
+        "2+ years professional development experience"
+      ],
+      "birthPlace": "Australia",
+      "gender": "Male",
+      "interactionStatistic": {
+        "@type": "InteractionCounter",
+        "interactionType": "https://schema.org/FollowAction",
+        "userInteractionCount": "Multiple platforms"
+      }
+    }
+    </script>
+    
+    <!-- BreadcrumbList Schema -->
+    <script type="application/ld+json">
+    {
+      "@context": "https://schema.org",
+      "@type": "BreadcrumbList",
+      "itemListElement": [{
+        "@type": "ListItem",
+        "position": 1,
+        "name": "Home",
+        "item": "https://sami.is-a.dev/"
+      },{
+        "@type": "ListItem",
+        "position": 2,
+        "name": "About",
+        "item": "https://sami.is-a.dev/about"
+      },{
+        "@type": "ListItem",
+        "position": 3,
+        "name": "Projects",
+        "item": "https://sami.is-a.dev/projects"
+      },{
+        "@type": "ListItem",
+        "position": 4,
+        "name": "Contact",
+        "item": "https://sami.is-a.dev/contact"
+      }]
+    }
+    </script>
+    
+    <!-- WebSite Schema -->
+    <script type="application/ld+json">
+    {
+      "@context": "https://schema.org",
+      "@type": "WebSite",
+      "name": "Samrath Singh Portfolio",
+      "alternateName": "sami.dev",
+      "url": "https://sami.is-a.dev",
+      "description": "Portfolio and contact website for Samrath 'Sami' Singh, Full-Stack Developer from Point Cook, VIC",
+      "author": {
+        "@type": "Person",
+        "name": "Samrath Singh",
+        "email": "samisingh988@gmail.com"
+      },
+      "potentialAction": {
+        "@type": "SearchAction",
+        "target": "https://sami.is-a.dev/?search={search_term_string}",
+        "query-input": "required name=search_term_string"
+      }
+    }
+    </script>
+    
+    <!-- ProfilePage Schema -->
+    <script type="application/ld+json">
+    {
+      "@context": "https://schema.org",
+      "@type": "ProfilePage",
+      "mainEntity": {
+        "@type": "Person",
+        "name": "Samrath Singh",
+        "alternateName": "Sami Singh",
+        "identifier": "Sami9889",
+        "email": "samisingh988@gmail.com",
+        "url": "https://sami.is-a.dev",
+        "sameAs": [
+          "https://github.com/Sami9889",
+          "https://www.linkedin.com/in/samrath-singh-400705297",
+          "https://www.instagram.com/sami9889",
+          "https://discord.gg/fhvGABfw",
+          "https://twitter.com/Sami9889"
+        ]
+      }
+    }
+    </script>
     
     <!-- Google Fonts -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+    
     <style>
         * {
             margin: 0;
@@ -39,20 +400,45 @@
             --danger: #dc3545;
             --shadow: 0 4px 20px rgba(0,0,0,0.1);
             --transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            --bg-gradient-1: #f8f9fa;
+            --bg-gradient-2: #e3f2fd;
+            --bg-gradient-3: #f3e5f5;
+        }
+
+        [data-theme="dark"] {
+            --black: #ffffff;
+            --white: #1a1a1a;
+            --gray-100: #2a2a2a;
+            --gray-200: #3a3a3a;
+            --gray-300: #4a4a4a;
+            --gray-400: #5a5a5a;
+            --gray-600: #b0b0b0;
+            --gray-700: #d0d0d0;
+            --gray-800: #e0e0e0;
+            --gray-900: #f0f0f0;
+            --accent: #4da3ff;
+            --success: #5fdb7f;
+            --warning: #ffd54f;
+            --danger: #ff6b6b;
+            --shadow: 0 4px 20px rgba(0,0,0,0.5);
+            --bg-gradient-1: #1a1a2e;
+            --bg-gradient-2: #16213e;
+            --bg-gradient-3: #0f3460;
         }
 
         body {
             font-family: var(--primary-font);
-            background: linear-gradient(135deg, #f8f9fa 0%, #e3f2fd 50%, #f3e5f5 100%);
+            background: linear-gradient(135deg, var(--bg-gradient-1) 0%, var(--bg-gradient-2) 50%, var(--bg-gradient-3) 100%);
             background-size: 400% 400%;
             animation: gradientShift 15s ease infinite;
             color: var(--black);
             overflow-x: hidden;
-            cursor: none;
+            cursor: auto;
             line-height: 1.6;
             font-weight: 400;
             scroll-behavior: smooth;
             position: relative;
+            transition: background 0.3s ease, color 0.3s ease;
         }
 
         @keyframes gradientShift {
@@ -137,78 +523,46 @@
             }
         }
 
-        /* Super Visible Enhanced Cursor */
+        /* Optimized Custom Cursor - Ultra Fast & Smooth */
         .cursor-dot {
-            width: 20px;
-            height: 20px;
-            background: radial-gradient(circle, #ff0080, #7928ca, #0070f3);
+            width: 10px;
+            height: 10px;
+            background: linear-gradient(135deg, #00d4ff, #0070f3);
             border-radius: 50%;
             position: fixed;
             pointer-events: none;
-            transform: translate(-50%, -50%);
-            transition: all 0.15s cubic-bezier(0.4, 0, 0.2, 1);
             z-index: 10000;
-            box-shadow: 0 0 40px rgba(255, 0, 128, 0.8), 0 0 80px rgba(0, 112, 243, 0.5);
-            animation: cursorPulse 2s ease-in-out infinite;
-        }
-
-        @keyframes cursorPulse {
-            0%, 100% {
-                box-shadow: 0 0 40px rgba(255, 0, 128, 0.8), 0 0 80px rgba(0, 112, 243, 0.5);
-            }
-            50% {
-                box-shadow: 0 0 60px rgba(255, 0, 128, 1), 0 0 100px rgba(0, 112, 243, 0.8);
-            }
+            will-change: transform;
+            transform: translate(-50%, -50%);
+            transition: width 0.15s ease, height 0.15s ease, background 0.15s ease;
+            box-shadow: 0 0 20px rgba(0, 112, 243, 0.5);
         }
 
         .cursor-outline {
-            width: 60px;
-            height: 60px;
-            border: 3px solid #ff0080;
+            width: 35px;
+            height: 35px;
+            border: 2px solid rgba(0, 212, 255, 0.4);
             border-radius: 50%;
             position: fixed;
             pointer-events: none;
-            transform: translate(-50%, -50%);
-            transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
             z-index: 9999;
-            opacity: 0.9;
-            box-shadow: 0 0 50px rgba(255, 0, 128, 0.6);
+            will-change: transform;
+            transform: translate(-50%, -50%);
+            transition: width 0.2s ease, height 0.2s ease, border-color 0.2s ease;
         }
 
         .cursor-dot.hover {
-            transform: translate(-50%, -50%) scale(3);
-            background: radial-gradient(circle, #00ff88, #00d4ff);
-            box-shadow: 0 0 60px rgba(0, 255, 136, 1), 0 0 120px rgba(0, 212, 255, 0.8);
+            width: 6px;
+            height: 6px;
+            background: linear-gradient(135deg, #00ff88, #00d4ff);
+            box-shadow: 0 0 25px rgba(0, 255, 136, 0.7);
         }
 
         .cursor-outline.hover {
-            transform: translate(-50%, -50%) scale(2);
-            opacity: 1;
-            border-color: #00ff88;
-            border-width: 4px;
-            box-shadow: 0 0 70px rgba(0, 255, 136, 0.8);
-        }
-
-        .cursor-dot.click {
-            transform: translate(-50%, -50%) scale(0.5);
-            background: radial-gradient(circle, #ffff00, #ff6600);
-        }
-
-        .cursor-outline.click {
-            transform: translate(-50%, -50%) scale(2.5);
-            border-color: #ffff00;
-        }
-
-        .cursor-trail {
-            position: fixed;
-            width: 8px;
-            height: 8px;
-            background: radial-gradient(circle, rgba(255, 0, 128, 0.6), rgba(121, 40, 202, 0.3));
-            border-radius: 50%;
-            pointer-events: none;
-            z-index: 9998;
-            opacity: 0;
-            transition: opacity 0.3s ease;
+            width: 45px;
+            height: 45px;
+            border-color: rgba(0, 255, 136, 0.5);
+            border-width: 2.5px;
         }
 
         .container {
@@ -219,7 +573,6 @@
             z-index: 1;
         }
 
-        /* Navigation */
         nav {
             background: rgba(255, 255, 255, 0.8);
             padding: 2rem 0;
@@ -230,6 +583,12 @@
             backdrop-filter: blur(20px);
             transition: var(--transition);
             box-shadow: 0 2px 20px rgba(0,0,0,0.05);
+        }
+
+        [data-theme="dark"] nav {
+            background: rgba(26, 26, 26, 0.95);
+            border-bottom: 1px solid var(--gray-300);
+            box-shadow: 0 2px 20px rgba(0,0,0,0.8);
         }
 
         nav.scrolled {
@@ -251,6 +610,7 @@
             color: var(--black);
             letter-spacing: -0.02em;
             transition: var(--transition);
+            cursor: pointer;
         }
 
         .logo:hover {
@@ -296,7 +656,6 @@
             color: var(--black);
         }
 
-        /* Page Content */
         .page {
             display: none;
             margin: 4rem 0;
@@ -318,8 +677,18 @@
                 transform: translateY(0);
             }
         }
+        
+        .scroll-reveal {
+            opacity: 0;
+            transform: translateY(30px);
+            transition: opacity 0.8s ease, transform 0.8s ease;
+        }
+        
+        .scroll-reveal.revealed {
+            opacity: 1;
+            transform: translateY(0);
+        }
 
-        /* Hero Section */
         .hero {
             margin: 6rem 0 8rem 0;
             display: grid;
@@ -480,7 +849,6 @@
             transform: translateY(-2px);
         }
 
-        /* Page Headers */
         .page-header {
             margin-bottom: 4rem;
             border-bottom: 1px solid var(--gray-200);
@@ -505,7 +873,6 @@
             margin: 0 auto;
         }
 
-        /* About Page */
         .about-content {
             display: grid;
             grid-template-columns: 2fr 1fr;
@@ -554,7 +921,6 @@
             font-weight: 600;
         }
 
-        /* Skills Grid */
         .skills-grid {
             display: grid;
             grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
@@ -637,6 +1003,7 @@
             background: var(--gray-200);
             border-radius: 4px;
             display: inline-block;
+            margin-top: 1rem;
         }
 
         .skill-level.advanced {
@@ -648,13 +1015,41 @@
             background: var(--warning);
             color: white;
         }
+        
+        .skill-progress {
+            margin-top: 1rem;
+        }
+        
+        .skill-progress-bar {
+            width: 100%;
+            height: 8px;
+            background: var(--gray-200);
+            border-radius: 10px;
+            overflow: hidden;
+            margin-bottom: 0.5rem;
+        }
+        
+        .skill-progress-fill {
+            height: 100%;
+            background: linear-gradient(90deg, var(--accent), var(--success));
+            border-radius: 10px;
+            transition: width 1s ease;
+            width: 0%;
+        }
+        
+        .skill-progress-fill.advanced {
+            background: linear-gradient(90deg, var(--success), #5fdb7f);
+        }
+        
+        .skill-progress-fill.intermediate {
+            background: linear-gradient(90deg, var(--warning), #ffd54f);
+        }
 
         .skill-level.learning {
             background: var(--accent);
             color: white;
         }
 
-        /* Projects Grid */
         .projects-grid {
             display: grid;
             grid-template-columns: repeat(auto-fit, minmax(350px, 1fr));
@@ -798,7 +1193,6 @@
             transform: translateY(-2px);
         }
 
-        /* Loading and Error States */
         .loading, .error {
             text-align: center;
             padding: 3rem;
@@ -825,7 +1219,6 @@
             100% { transform: rotate(360deg); }
         }
 
-        /* Contact Section */
         .contact-section {
             background: var(--gray-100);
             padding: 4rem 2rem;
@@ -845,12 +1238,101 @@
             margin-bottom: 2rem;
         }
 
-        /* Footer */
+        .contact-form {
+            max-width: 600px;
+            margin: 0 auto 2rem;
+            text-align: left;
+        }
+
+        .form-group {
+            margin-bottom: 1.5rem;
+        }
+
+        .form-group label {
+            display: block;
+            margin-bottom: 0.5rem;
+            color: var(--gray-700);
+            font-weight: 500;
+            font-size: 0.9rem;
+        }
+
+        .form-group input,
+        .form-group textarea {
+            width: 100%;
+            padding: 0.75rem 1rem;
+            border: 2px solid var(--gray-300);
+            border-radius: 4px;
+            font-family: var(--primary-font);
+            font-size: 1rem;
+            transition: var(--transition);
+            background: var(--white);
+        }
+
+        .form-group input:focus,
+        .form-group textarea:focus {
+            outline: none;
+            border-color: var(--accent);
+            box-shadow: 0 0 0 3px rgba(0, 123, 255, 0.1);
+        }
+
+        .form-group textarea {
+            min-height: 200px;
+            resize: vertical;
+        }
+
+        .submit-btn {
+            background: var(--accent);
+            color: white;
+            border: none;
+            padding: 1rem 2rem;
+            font-size: 1rem;
+            font-weight: 600;
+            border-radius: 4px;
+            cursor: pointer;
+            transition: var(--transition);
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            width: 100%;
+        }
+
+        .submit-btn:hover {
+            background: linear-gradient(135deg, #ff0080, #7928ca);
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(0, 123, 255, 0.3);
+        }
+
+        .submit-btn:disabled {
+            background: var(--gray-400);
+            cursor: not-allowed;
+            transform: none;
+        }
+
+        .form-message {
+            margin-top: 1rem;
+            padding: 1rem;
+            border-radius: 4px;
+            text-align: center;
+            display: none;
+        }
+
+        .form-message.success {
+            background: #d4edda;
+            color: #155724;
+            border: 1px solid #c3e6cb;
+            display: block;
+        }
+
+        .form-message.error {
+            background: #f8d7da;
+            color: #721c24;
+            border: 1px solid #f5c6cb;
+            display: block;
+        }
+
         .footer {
             margin-top: 8rem;
-            padding: 4rem 0 2rem 0;
+            padding: 4rem 0 0 0;
             border-top: 1px solid var(--gray-200);
-            text-align: center;
             background: var(--gray-100);
         }
 
@@ -858,8 +1340,13 @@
             color: var(--gray-600);
             font-size: 0.9rem;
         }
+        
+        @media (max-width: 768px) {
+            .footer {
+                padding: 3rem 0 0 0;
+            }
+        }
 
-        /* Mobile Menu */
         .mobile-menu-toggle {
             display: none;
             background: none;
@@ -869,37 +1356,137 @@
             color: var(--black);
         }
 
-        /* Scroll to top button */
         .scroll-to-top {
             position: fixed;
             bottom: 2rem;
             right: 2rem;
-            width: 50px;
-            height: 50px;
+            width: 60px;
+            height: 60px;
             background: var(--accent);
             color: white;
             border: none;
             border-radius: 50%;
-            font-size: 1.2rem;
+            font-size: 1.5rem;
             cursor: pointer;
             opacity: 0;
             visibility: hidden;
             transition: var(--transition);
             z-index: 1000;
+            box-shadow: 0 4px 15px rgba(0, 123, 255, 0.3);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        
+        .scroll-to-top::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            border-radius: 50%;
+            border: 3px solid var(--accent);
+            transform: scale(1);
+            opacity: 0;
         }
 
         .scroll-to-top.visible {
             opacity: 1;
             visibility: visible;
         }
+        
+        .scroll-to-top.visible::before {
+            animation: progressRing 2s linear infinite;
+        }
+        
+        @keyframes progressRing {
+            0% {
+                transform: scale(1);
+                opacity: 1;
+            }
+            100% {
+                transform: scale(1.3);
+                opacity: 0;
+            }
+        }
 
         .scroll-to-top:hover {
             background: linear-gradient(135deg, #ff0080, #7928ca);
-            transform: translateY(-2px) scale(1.1);
-            box-shadow: 0 0 30px rgba(255, 0, 128, 0.6);
+            transform: translateY(-5px) scale(1.1);
+        }
+        
+        .quick-contact-btn {
+            position: fixed;
+            bottom: 2rem;
+            left: 2rem;
+            width: 60px;
+            height: 60px;
+            background: linear-gradient(135deg, #28a745, #20c997);
+            color: white;
+            border: none;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            text-decoration: none;
+            cursor: pointer;
+            transition: var(--transition);
+            z-index: 1000;
+            box-shadow: 0 4px 15px rgba(40, 167, 69, 0.3);
+        }
+        
+        .quick-contact-btn:hover {
+            background: linear-gradient(135deg, #20c997, #17a2b8);
+            transform: translateY(-5px) scale(1.1);
+            box-shadow: 0 6px 20px rgba(40, 167, 69, 0.5);
+        }
+        
+        .quick-contact-btn svg {
+            width: 28px;
+            height: 28px;
+        }
+        
+        /* Loading Skeleton Styles */
+        .skeleton-card {
+            background: var(--white);
+            border: 1px solid var(--gray-200);
+            padding: 2rem;
+            border-radius: 8px;
+        }
+        
+        .skeleton {
+            background: linear-gradient(90deg, var(--gray-200) 25%, var(--gray-100) 50%, var(--gray-200) 75%);
+            background-size: 200% 100%;
+            animation: loading 1.5s ease-in-out infinite;
+            border-radius: 4px;
+            margin-bottom: 1rem;
+        }
+        
+        .skeleton-title {
+            height: 28px;
+            width: 70%;
+        }
+        
+        .skeleton-text {
+            height: 16px;
+            width: 100%;
+        }
+        
+        .skeleton-tags {
+            height: 24px;
+            width: 50%;
+        }
+        
+        @keyframes loading {
+            0% {
+                background-position: 200% 0;
+            }
+            100% {
+                background-position: -200% 0;
+            }
         }
 
-        /* Particle Effects */
         .particles {
             position: fixed;
             top: 0;
@@ -908,16 +1495,18 @@
             height: 100%;
             pointer-events: none;
             z-index: 0;
+            overflow: hidden;
         }
 
         .particle {
             position: absolute;
             width: 4px;
             height: 4px;
-            background: radial-gradient(circle, #ff0080, transparent);
+            background: radial-gradient(circle, rgba(255, 0, 128, 0.4), transparent);
             border-radius: 50%;
             animation: particleFloat 10s linear infinite;
-            opacity: 0.6;
+            opacity: 0.4;
+            pointer-events: none;
         }
 
         @keyframes particleFloat {
@@ -937,33 +1526,6 @@
             }
         }
 
-        /* Scroll Reveal Animations */
-        .reveal {
-            opacity: 0;
-            transform: translateY(50px);
-            transition: all 0.8s cubic-bezier(0.4, 0, 0.2, 1);
-        }
-
-        .reveal.active {
-            opacity: 1;
-            transform: translateY(0);
-        }
-
-        /* Glowing Elements */
-        .glow {
-            animation: glow 2s ease-in-out infinite;
-        }
-
-        @keyframes glow {
-            0%, 100% {
-                box-shadow: 0 0 20px rgba(0, 123, 255, 0.5);
-            }
-            50% {
-                box-shadow: 0 0 40px rgba(0, 123, 255, 0.8), 0 0 60px rgba(255, 0, 128, 0.4);
-            }
-        }
-
-        /* Responsive */
         @media (max-width: 1024px) {
             .hero {
                 grid-template-columns: 1fr;
@@ -1042,14 +1604,9 @@
             }
         }
 
-        /* Print styles */
         @media print {
-            .cursor-dot, .cursor-outline, .scroll-to-top {
+            .scroll-to-top {
                 display: none !important;
-            }
-            
-            body {
-                cursor: auto !important;
             }
             
             .page {
@@ -1058,7 +1615,6 @@
             }
         }
 
-        /* Accessibility improvements */
         @media (prefers-reduced-motion: reduce) {
             *, *::before, *::after {
                 animation-duration: 0.01ms !important;
@@ -1067,13 +1623,11 @@
             }
         }
 
-        /* Focus styles for keyboard navigation */
         a:focus, button:focus, .nav-links a:focus {
             outline: 2px solid var(--accent);
             outline-offset: 2px;
         }
 
-        /* High contrast mode support */
         @media (prefers-contrast: high) {
             :root {
                 --gray-600: #4a4a4a;
@@ -1164,14 +1718,20 @@
                         <span class="stat-label">Technologies</span>
                     </div>
                     <div class="stat-item">
-                        <span class="stat-number">24/7</span>
-                        <span class="stat-label">Problem Solving</span>
+                        <span class="stat-number" data-count="100">0</span><span>%</span>
+                        <span class="stat-label">Dedication</span>
+                    </div>
+                    <div style="margin-top: 2rem; padding-top: 1.5rem; border-top: 2px solid var(--gray-200);">
+                        <p style="font-size: 0.85rem; color: var(--gray-600); margin: 0 0 0.5rem 0;">Status</p>
+                        <p style="font-size: 0.95rem; color: var(--success); font-weight: 600; margin: 0;">
+                            <span style="display: inline-block; width: 8px; height: 8px; background: var(--success); border-radius: 50%; margin-right: 6px;"></span>
+                            Available for Work
+                        </p>
                     </div>
                 </aside>
             </div>
         </main>
 
-        <!-- About Page -->
         <section class="page" id="about">
             <div class="page-header">
                 <h1>About Me</h1>
@@ -1180,42 +1740,59 @@
             
             <div class="about-content">
                 <div class="about-text">
-                    <p>I'm Sami, a full-stack developer passionate about creating powerful, modern, and elegant web solutions that merge performance with style. My journey in software development started with curiosity and has evolved into a deep commitment to building exceptional digital experiences.</p>
+                    <p>I'm Samrath "Sami" Singh, a motivated junior developer from Point Cook, VIC. I have hands-on experience in coding, system design, and client support. At age 14, I registered my own ABN and launched my first business. Since then, I've been building ICT solutions that make a difference.</p>
                     
-                    <p>I specialize in creating robust web applications using modern technologies and best practices. Whether it's crafting responsive user interfaces or building scalable backend systems, I approach every project with attention to detail and a focus on clean, maintainable code.</p>
+                    <p>I create user-focused web applications and digital solutions. I design 3D models for 3DPrintzAU, build custom Minecraft plugins, and develop web apps through Procoders Coding Service. I approach every project with attention to detail and a commitment to quality.</p>
                     
-                    <p>My development philosophy centers around user-first design, performance optimization, and writing code that's not just functional but also elegant and maintainable. I believe in the power of technology to solve real-world problems and create meaningful connections.</p>
+                    <p>I gather requirements carefully, test thoroughly, and document clearly. I build systems that are functional, secure, well-documented, and genuinely solve problems for users.</p>
                     
-                    <p>When I'm not coding, you'll find me exploring new technologies, contributing to open-source projects, or sharing knowledge with the developer community. I believe in continuous learning and staying at the forefront of web development trends.</p>
+                    <p>I'm currently studying at Point Cook College while running multiple businesses and taking on freelance development work. I'm passionate about continuous learning and contributing to impactful projects.</p>
+                    
+                    <div style="margin-top: 2rem; padding: 1.5rem; background: var(--gray-100); border-radius: 8px;">
+                        <h3 style="margin-bottom: 1rem;">What I Bring to Your Projects</h3>
+                        <ul style="list-style: none; padding: 0;">
+                            <li style="padding: 0.5rem 0; border-bottom: 1px solid var(--gray-300);">
+                                <strong>Requirements Analysis:</strong> I gather and understand your needs through clear communication.
+                            </li>
+                            <li style="padding: 0.5rem 0; border-bottom: 1px solid var(--gray-300);">
+                                <strong>System Testing:</strong> I perform thorough functional and integration testing to ensure reliability.
+                            </li>
+                            <li style="padding: 0.5rem 0; border-bottom: 1px solid var(--gray-300);">
+                                <strong>Documentation:</strong> I provide clear technical specifications, user guides, and support materials.
+                            </li>
+                            <li style="padding: 0.5rem 0;">
+                                <strong>Client Support:</strong> I offer ongoing technical assistance and troubleshooting.
+                            </li>
+                        </ul>
+                    </div>
                 </div>
                 
                 <aside class="about-info">
                     <h3>Personal Info</h3>
                     <div class="info-item">
                         <span class="info-label">Location</span>
-                        <span class="info-value">Remote</span>
+                        <span class="info-value">Point Cook, VIC</span>
                     </div>
                     <div class="info-item">
                         <span class="info-label">Experience</span>
                         <span class="info-value">2+ Years</span>
                     </div>
                     <div class="info-item">
-                        <span class="info-label">Focus</span>
-                        <span class="info-value">Full-Stack</span>
+                        <span class="info-label">Education</span>
+                        <span class="info-value">Point Cook College</span>
+                    </div>
+                    <div class="info-item">
+                        <span class="info-label">ABN</span>
+                        <span class="info-value">72 925 087 373</span>
                     </div>
                     <div class="info-item">
                         <span class="info-label">Availability</span>
                         <span class="info-value">Open to Work</span>
                     </div>
-                    <div class="info-item">
-                        <span class="info-label">Languages</span>
-                        <span class="info-value">English, Hindi</span>
-                    </div>
                 </aside>
             </div>
         </section>
 
-        <!-- Skills Page -->
         <section class="page" id="skills">
             <div class="page-header">
                 <h1>Skills & Expertise</h1>
@@ -1224,86 +1801,313 @@
             
             <div class="skills-grid">
                 <article class="skill-category">
-                    <h3>Frontend Development</h3>
+                    <h3>💻 Programming Languages</h3>
                     <ul class="skill-list">
-                        <li>HTML5 & CSS3</li>
-                        <li>JavaScript (ES6+)</li>
-                        <li>React.js & Redux</li>
-                        <li>Responsive Design</li>
-                        <li>CSS Frameworks (Bootstrap, Tailwind)</li>
-                        <li>Modern Build Tools</li>
+                        <li>🌐 HTML & CSS</li>
+                        <li>⚡ JavaScript</li>
+                        <li>🐍 Python</li>
+                        <li>🐘 PHP</li>
+                        <li>📋 JSON & YAML</li>
                     </ul>
-                    <div class="skill-level advanced">Advanced</div>
+                    <div class="skill-progress">
+                        <div class="skill-progress-bar">
+                            <div class="skill-progress-fill advanced" data-progress="90"></div>
+                        </div>
+                        <div class="skill-level advanced">Proficient - 90%</div>
+                    </div>
+                    <div style="margin-top: 1rem; padding-top: 1rem; border-top: 1px solid var(--gray-300);">
+                        <p style="font-size: 0.85rem; color: var(--gray-600); margin-bottom: 0.5rem;">Examples:</p>
+                        <div style="display: flex; gap: 0.5rem; flex-wrap: wrap;">
+                            <a href="#" onclick="showPage('projects'); return false;" style="font-size: 0.8rem; color: var(--accent); text-decoration: none; padding: 0.25rem 0.5rem; background: var(--gray-100); border-radius: 4px; transition: var(--transition);">View My Projects →</a>
+                        </div>
+                    </div>
                 </article>
                 
                 <article class="skill-category">
-                    <h3>Backend Development</h3>
+                    <h3>🌐 Web & APIs</h3>
                     <ul class="skill-list">
-                        <li>Python & Django</li>
-                        <li>Node.js & Express</li>
-                        <li>RESTful APIs</li>
-                        <li>Database Design</li>
-                        <li>Server Management</li>
-                        <li>Authentication & Security</li>
+                        <li>🔌 REST APIs</li>
+                        <li>📡 WebSockets</li>
+                        <li>🔐 HTTP/HTTPS Protocols</li>
+                        <li>🎨 Bootstrap Framework</li>
+                        <li>☁️ Cloudflare Workers</li>
+                        <li>⚙️ NGINX</li>
                     </ul>
-                    <div class="skill-level intermediate">Intermediate</div>
+                    <div class="skill-progress">
+                        <div class="skill-progress-bar">
+                            <div class="skill-progress-fill advanced" data-progress="85"></div>
+                        </div>
+                        <div class="skill-level advanced">Proficient - 85%</div>
+                    </div>
+                    <div style="margin-top: 1rem; padding-top: 1rem; border-top: 1px solid var(--gray-300);">
+                        <p style="font-size: 0.85rem; color: var(--gray-600); margin-bottom: 0.5rem;">Used in:</p>
+                        <div style="display: flex; gap: 0.5rem; flex-wrap: wrap;">
+                            <a href="https://github.com/Sami9889" target="_blank" rel="noopener noreferrer" style="font-size: 0.8rem; color: var(--accent); text-decoration: none; padding: 0.25rem 0.5rem; background: var(--gray-100); border-radius: 4px; transition: var(--transition);">GitHub Projects →</a>
+                        </div>
+                    </div>
                 </article>
                 
                 <article class="skill-category">
-                    <h3>Database & Storage</h3>
+                    <h3>🛠️ Development Tools</h3>
                     <ul class="skill-list">
-                        <li>PostgreSQL & MySQL</li>
-                        <li>MongoDB</li>
-                        <li>Redis Caching</li>
-                        <li>Database Optimization</li>
-                        <li>Data Modeling</li>
-                        <li>Cloud Storage</li>
+                        <li>📝 Visual Studio Code</li>
+                        <li>🔗 GitHub & Git</li>
+                        <li>📮 Postman (API Testing)</li>
+                        <li>💡 Replit Online IDE</li>
+                        <li>📁 FTP & cPanel</li>
+                        <li>📄 Markdown</li>
                     </ul>
-                    <div class="skill-level intermediate">Intermediate</div>
+                    <div class="skill-progress">
+                        <div class="skill-progress-bar">
+                            <div class="skill-progress-fill intermediate" data-progress="80"></div>
+                        </div>
+                        <div class="skill-level">Experienced - 80%</div>
+                    </div>
+                    <div style="margin-top: 1rem; padding-top: 1rem; border-top: 1px solid var(--gray-300);">
+                        <p style="font-size: 0.85rem; color: var(--gray-600); margin-bottom: 0.5rem;">Workflow Examples:</p>
+                        <div style="display: flex; gap: 0.5rem; flex-wrap: wrap;">
+                            <a href="https://github.com/Sami9889" target="_blank" rel="noopener noreferrer" style="font-size: 0.8rem; color: var(--accent); text-decoration: none; padding: 0.25rem 0.5rem; background: var(--gray-100); border-radius: 4px; transition: var(--transition);">GitHub Repos →</a>
+                        </div>
+                    </div>
                 </article>
                 
                 <article class="skill-category">
-                    <h3>Tools & Technologies</h3>
+                    <h3>🔒 Infrastructure & Security</h3>
                     <ul class="skill-list">
-                        <li>Git & GitHub</li>
-                        <li>VS Code & JetBrains</li>
-                        <li>Linux/Unix Systems</li>
-                        <li>Package Managers</li>
-                        <li>Development Workflows</li>
-                        <li>API Testing Tools</li>
+                        <li>☁️ Cloudflare DNS & SSL</li>
+                        <li>🛡️ Data Privacy Principles</li>
+                        <li>🔑 Access Controls</li>
+                        <li>🔐 Cybersecurity Basics</li>
+                        <li>💻 Windows, macOS, iOS, Linux</li>
                     </ul>
-                    <div class="skill-level">Proficient</div>
+                    <div class="skill-progress">
+                        <div class="skill-progress-bar">
+                            <div class="skill-progress-fill" data-progress="70"></div>
+                        </div>
+                        <div class="skill-level">Competent - 70%</div>
+                    </div>
+                    <div style="margin-top: 1rem; padding-top: 1rem; border-top: 1px solid var(--gray-300);">
+                        <p style="font-size: 0.85rem; color: var(--gray-600); margin-bottom: 0.5rem;">Implemented in:</p>
+                        <div style="display: flex; gap: 0.5rem; flex-wrap: wrap;">
+                            <a href="#" onclick="showPage('services'); return false;" style="font-size: 0.8rem; color: var(--accent); text-decoration: none; padding: 0.25rem 0.5rem; background: var(--gray-100); border-radius: 4px; transition: var(--transition);">Client Projects →</a>
+                        </div>
+                    </div>
                 </article>
                 
                 <article class="skill-category">
-                    <h3>DevOps & Deployment</h3>
+                    <h3>💾 Data & Databases</h3>
                     <ul class="skill-list">
-                        <li>Docker Containers</li>
-                        <li>Shell Scripting</li>
-                        <li>CI/CD Pipelines</li>
-                        <li>Cloud Services (AWS, Vercel)</li>
-                        <li>Monitoring & Logging</li>
-                        <li>Performance Optimization</li>
+                        <li>📊 SQL Queries</li>
+                        <li>📋 JSON & YAML Data</li>
+                        <li>📈 CSV Handling</li>
+                        <li>📉 Data Analysis</li>
+                        <li>⚡ Performance Metrics</li>
                     </ul>
-                    <div class="skill-level learning">Learning</div>
+                    <div class="skill-progress">
+                        <div class="skill-progress-bar">
+                            <div class="skill-progress-fill" data-progress="75"></div>
+                        </div>
+                        <div class="skill-level">Competent - 75%</div>
+                    </div>
+                    <div style="margin-top: 1rem; padding-top: 1rem; border-top: 1px solid var(--gray-300);">
+                        <p style="font-size: 0.85rem; color: var(--gray-600); margin-bottom: 0.5rem;">Applied in:</p>
+                        <div style="display: flex; gap: 0.5rem; flex-wrap: wrap;">
+                            <a href="#" onclick="showPage('projects'); return false;" style="font-size: 0.8rem; color: var(--accent); text-decoration: none; padding: 0.25rem 0.5rem; background: var(--gray-100); border-radius: 4px; transition: var(--transition);">Data Projects →</a>
+                        </div>
+                    </div>
                 </article>
                 
                 <article class="skill-category">
-                    <h3>Design & UX</h3>
+                    <h3>🎯 Professional Skills</h3>
                     <ul class="skill-list">
-                        <li>UI/UX Principles</li>
-                        <li>Figma & Design Tools</li>
-                        <li>User Research</li>
-                        <li>Accessibility (WCAG)</li>
-                        <li>Design Systems</li>
-                        <li>Prototyping</li>
+                        <li>📝 Requirements Gathering</li>
+                        <li>🧪 System Testing</li>
+                        <li>📚 Technical Documentation</li>
+                        <li>💬 Client Support</li>
+                        <li>🔄 Agile Methodologies</li>
+                        <li>🧩 Problem Solving</li>
                     </ul>
-                    <div class="skill-level learning">Learning</div>
+                    <div class="skill-progress">
+                        <div class="skill-progress-bar">
+                            <div class="skill-progress-fill intermediate" data-progress="85"></div>
+                        </div>
+                        <div class="skill-level">Experienced - 85%</div>
+                    </div>
+                    <div style="margin-top: 1rem; padding-top: 1rem; border-top: 1px solid var(--gray-300);">
+                        <p style="font-size: 0.85rem; color: var(--gray-600); margin-bottom: 0.5rem;">Demonstrated through:</p>
+                        <div style="display: flex; gap: 0.5rem; flex-wrap: wrap;">
+                            <a href="#" onclick="showPage('experience'); return false;" style="font-size: 0.8rem; color: var(--accent); text-decoration: none; padding: 0.25rem 0.5rem; background: var(--gray-100); border-radius: 4px; transition: var(--transition);">My Experience →</a>
+                        </div>
+                    </div>
                 </article>
             </div>
         </section>
 
-        <!-- Projects Page -->
+        <section class="page" id="services">
+            <div class="page-header">
+                <h1>Services Offered</h1>
+                <p class="page-subtitle">Professional development and technical services</p>
+            </div>
+            
+            <div class="projects-grid">
+                <article class="project-card">
+                    <div style="font-size: 3rem; margin-bottom: 1rem;">💻</div>
+                    <h3>Custom Web Development</h3>
+                    <p>I build custom websites, web applications, and landing pages using modern technologies. I create responsive designs with clean code and optimized performance.</p>
+                    <div class="project-tags">
+                        <span class="tag">HTML/CSS/JS</span>
+                        <span class="tag">Responsive</span>
+                        <span class="tag">APIs</span>
+                    </div>
+                </article>
+                
+                <article class="project-card">
+                    <div style="font-size: 3rem; margin-bottom: 1rem;">🎮</div>
+                    <h3>Minecraft Plugin Development</h3>
+                    <p>I develop custom Minecraft plugins tailored to your server needs. I create everything from gameplay mechanics to administrative tools, and I deliver them with full documentation.</p>
+                    <div class="project-tags">
+                        <span class="tag">Python</span>
+                        <span class="tag">Custom Features</span>
+                        <span class="tag">Testing</span>
+                    </div>
+                </article>
+                
+                <article class="project-card">
+                    <div style="font-size: 3rem; margin-bottom: 1rem;">🛒</div>
+                    <h3>eCommerce Solutions</h3>
+                    <p>I set up, customize, and optimize Shopify stores. I implement front-end modifications, API integrations, and performance improvements.</p>
+                    <div class="project-tags">
+                        <span class="tag">Shopify</span>
+                        <span class="tag">UI/UX</span>
+                        <span class="tag">Analytics</span>
+                    </div>
+                </article>
+                
+                <article class="project-card">
+                    <div style="font-size: 3rem; margin-bottom: 1rem;">🔧</div>
+                    <h3>Technical Support & Troubleshooting</h3>
+                    <p>I debug systems, resolve issues, and create technical documentation. I help with web hosting, DNS, SSL, and deployment challenges.</p>
+                    <div class="project-tags">
+                        <span class="tag">Debugging</span>
+                        <span class="tag">DNS/SSL</span>
+                        <span class="tag">Support</span>
+                    </div>
+                </article>
+                
+                <article class="project-card">
+                    <div style="font-size: 3rem; margin-bottom: 1rem;">🖨️</div>
+                    <h3>3D Design & Printing</h3>
+                    <p>I design and print custom 3D models. I take projects from concept to delivery, providing technical consultation and prototyping support along the way.</p>
+                    <div class="project-tags">
+                        <span class="tag">3D Modeling</span>
+                        <span class="tag">Prototyping</span>
+                        <span class="tag">Manufacturing</span>
+                    </div>
+                </article>
+                
+                <article class="project-card">
+                    <div style="font-size: 3rem; margin-bottom: 1rem;">📱</div>
+                    <h3>API Integration & Automation</h3>
+                    <p>I connect systems using REST APIs, webhooks, and automation. I synchronize data, automate workflows, and create custom integrations.</p>
+                    <div class="project-tags">
+                        <span class="tag">REST APIs</span>
+                        <span class="tag">Webhooks</span>
+                        <span class="tag">Automation</span>
+                    </div>
+                </article>
+            </div>
+            
+            <div style="text-align: center; margin-top: 4rem; padding: 3rem; background: var(--gray-100); border-radius: 12px;">
+                <h2 style="margin-bottom: 1rem;">Ready to work together?</h2>
+                <p style="color: var(--gray-600); margin-bottom: 2rem; max-width: 600px; margin-left: auto; margin-right: auto;">
+                    Whether you need a custom solution, technical support, or want to discuss a project idea, I'm here to help.
+                </p>
+                <div style="display: flex; gap: 1rem; justify-content: center; flex-wrap: wrap;">
+                    <a href="mailto:samisingh988@gmail.com" style="background: var(--accent); color: white; padding: 1rem 2rem; border-radius: 6px; text-decoration: none; font-weight: 600; transition: var(--transition);">Get in Touch</a>
+                    <a href="https://github.com/Sami9889" target="_blank" style="background: var(--black); color: white; padding: 1rem 2rem; border-radius: 6px; text-decoration: none; font-weight: 600; transition: var(--transition);">View GitHub</a>
+                </div>
+            </div>
+        </section>
+
+        <section class="page" id="experience">
+            <div class="page-header">
+                <h1>Experience & Journey</h1>
+                <p class="page-subtitle">My path in software development and key milestones</p>
+            </div>
+            
+            <div style="max-width: 900px; margin: 0 auto;">
+                <div class="timeline">
+                    <div class="timeline-item">
+                        <div class="timeline-dot"></div>
+                        <div class="timeline-content">
+                            <div class="timeline-date">2022 - Present</div>
+                            <h3>Founder – 3DPrintzAU</h3>
+                            <p>Designed 3D models and managed digital manufacturing from concept to delivery. Maintained and troubleshot 3D printer systems (hardware/software), documented client requirements, and delivered tailored solutions with technical support.</p>
+                            <div class="timeline-tags">
+                                <span class="tag">3D Design</span>
+                                <span class="tag">Manufacturing</span>
+                                <span class="tag">Client Support</span>
+                                <span class="tag">Documentation</span>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="timeline-item">
+                        <div class="timeline-dot"></div>
+                        <div class="timeline-content">
+                            <div class="timeline-date">2023 - Present</div>
+                            <h3>Freelance Developer – Procoders Coding Service</h3>
+                            <p>Delivered client-specific Minecraft plugins, live camera/web apps, and backend services. Conducted requirements analysis, testing, debugging, and support. Implemented secure data handling and responsive interfaces.</p>
+                            <div class="timeline-tags">
+                                <span class="tag">Python</span>
+                                <span class="tag">JavaScript</span>
+                                <span class="tag">APIs</span>
+                                <span class="tag">Testing</span>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="timeline-item">
+                        <div class="timeline-dot active"></div>
+                        <div class="timeline-content">
+                            <div class="timeline-date">2024 - Present</div>
+                            <h3>Founder – Bad to the Bone (Shopify)</h3>
+                            <p>Created and managed an eCommerce store with custom UI modifications. Handled product fulfilment, digital operations, and analytics. Coded front-end adjustments and integrated API-based tools focused on system usability and performance.</p>
+                            <div class="timeline-tags">
+                                <span class="tag">Shopify</span>
+                                <span class="tag">eCommerce</span>
+                                <span class="tag">Front-End</span>
+                                <span class="tag">Analytics</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="certifications-section" style="margin-top: 4rem;">
+                    <h2 style="text-align: center; margin-bottom: 2rem; font-size: 2rem;">Key Achievements</h2>
+                    <div class="projects-grid">
+                        <div class="project-card">
+                            <div style="font-size: 3rem; margin-bottom: 1rem;">🏆</div>
+                            <h3 style="font-size: 1.2rem;">Age 14 Entrepreneur</h3>
+                            <p>Registered ABN and paid ASIC fees at age 14, launching multiple successful businesses</p>
+                        </div>
+                        
+                        <div class="project-card">
+                            <div style="font-size: 3rem; margin-bottom: 1rem;">💼</div>
+                            <h3 style="font-size: 1.2rem;">Multiple Businesses</h3>
+                            <p>Created and maintained 3DPrintzAU, Bad to the Bone, and Procoders Coding Service</p>
+                        </div>
+                        
+                        <div class="project-card">
+                            <div style="font-size: 3rem; margin-bottom: 1rem;">🚀</div>
+                            <h3 style="font-size: 1.2rem;">Live Systems</h3>
+                            <p>Built and maintained live web tools, plugins, and systems with real clients</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
         <section class="page" id="projects">
             <div class="page-header">
                 <h1>Featured Projects</h1>
@@ -1311,8 +2115,27 @@
             </div>
             
             <div id="loading" class="loading">
-                <div class="loading-spinner"></div>
-                <p>Loading projects from GitHub...</p>
+                <div class="projects-grid">
+                    <!-- Loading Skeleton -->
+                    <div class="skeleton-card">
+                        <div class="skeleton skeleton-title"></div>
+                        <div class="skeleton skeleton-text"></div>
+                        <div class="skeleton skeleton-text"></div>
+                        <div class="skeleton skeleton-tags"></div>
+                    </div>
+                    <div class="skeleton-card">
+                        <div class="skeleton skeleton-title"></div>
+                        <div class="skeleton skeleton-text"></div>
+                        <div class="skeleton skeleton-text"></div>
+                        <div class="skeleton skeleton-tags"></div>
+                    </div>
+                    <div class="skeleton-card">
+                        <div class="skeleton skeleton-title"></div>
+                        <div class="skeleton skeleton-text"></div>
+                        <div class="skeleton skeleton-text"></div>
+                        <div class="skeleton skeleton-tags"></div>
+                    </div>
+                </div>
             </div>
             
             <div id="error" class="error" style="display: none;">
@@ -1320,11 +2143,319 @@
                 <button onclick="retryLoadProjects()" style="margin-top: 1rem; padding: 0.5rem 1rem; background: var(--accent); color: white; border: none; border-radius: 4px; cursor: pointer;">Retry</button>
             </div>
             
-            <div class="projects-grid" id="projects-container">
+            <div class="projects-grid" id="projects-container"></div>
+            
+            <!-- GitHub Contribution Graph -->
+            <div style="margin-top: 4rem; text-align: center;">
+                <h2 style="margin-bottom: 2rem; font-size: 2rem;">GitHub Activity</h2>
+                <div style="background: var(--white); padding: 2rem; border-radius: 12px; box-shadow: var(--shadow); display: inline-block; max-width: 100%;">
+                    <img src="https://ghchart.rshah.org/007bff/Sami9889" alt="GitHub Contribution Graph" style="max-width: 100%; height: auto; border-radius: 8px;" />
+                    <p style="margin-top: 1rem; color: var(--gray-600); font-size: 0.9rem;">My GitHub contribution activity over the past year</p>
+                    <a href="https://github.com/Sami9889" target="_blank" rel="noopener noreferrer" style="display: inline-block; margin-top: 1rem; padding: 0.75rem 1.5rem; background: var(--accent); color: white; text-decoration: none; border-radius: 4px; font-weight: 600; transition: var(--transition);">
+                        View Full Profile →
+                    </a>
+                </div>
             </div>
         </section>
 
-        <!-- Contact Page -->
+        <section class="page" id="privacy">
+            <div class="page-header">
+                <h1>Privacy Policy</h1>
+                <p class="page-subtitle">How we collect, use, and protect your information</p>
+            </div>
+            
+            <div style="max-width: 800px; margin: 0 auto;">
+                <div style="background: var(--gray-100); padding: 2rem; border-radius: 8px; margin-bottom: 2rem;">
+                    <p style="color: var(--black); margin-bottom: 0.5rem;"><strong>Effective Date:</strong> December 2024</p>
+                    <p style="color: var(--black); margin-bottom: 0.5rem;"><strong>Contact:</strong> samisingh988@gmail.com</p>
+                    <p style="color: var(--black); margin-bottom: 0;"><strong>ABN:</strong> 72 925 087 373</p>
+                </div>
+                
+                <div style="background: var(--white); border: 1px solid var(--gray-200); padding: 3rem; border-radius: 8px; margin-bottom: 2rem; box-shadow: var(--shadow);">
+                    <h3 style="color: var(--black); margin-bottom: 1.5rem; font-size: 1.4rem;">📋 Information We Collect</h3>
+                    <ul style="line-height: 1.8; font-size: 1.05rem; color: var(--gray-800);">
+                        <li>Contact information when you reach out via forms or email including name, email address, and message content</li>
+                        <li>Technical information through cookies and analytics (with your consent) such as IP address, browser type, device information, and page views</li>
+                        <li>Project requirements and specifications for service delivery including scope, timeline, and technical details</li>
+                        <li>Communication records for project management and support purposes</li>
+                        <li>Payment and billing information when engaging our services</li>
+                    </ul>
+                </div>
+                
+                <div style="background: var(--white); border: 1px solid var(--gray-200); padding: 3rem; border-radius: 8px; margin-bottom: 2rem; box-shadow: var(--shadow);">
+                    <h3 style="color: var(--black); margin-bottom: 1.5rem; font-size: 1.4rem;">🎯 How We Use Your Information</h3>
+                    <ul style="line-height: 1.8; font-size: 1.05rem; color: var(--gray-800);">
+                        <li>To respond to your inquiries and provide requested services in a timely and professional manner</li>
+                        <li>To deliver custom development and technical solutions according to agreed specifications</li>
+                        <li>To improve our website and services through analytics (with consent) to enhance user experience</li>
+                        <li>To maintain security and prevent misuse of our platform and services</li>
+                        <li>To communicate project updates, delivery timelines, and technical support</li>
+                        <li>To comply with legal obligations and protect our legitimate business interests</li>
+                    </ul>
+                </div>
+                
+                <div style="background: var(--white); border: 1px solid var(--gray-200); padding: 3rem; border-radius: 8px; margin-bottom: 2rem; box-shadow: var(--shadow);">
+                    <h3 style="color: var(--black); margin-bottom: 1.5rem; font-size: 1.4rem;">🔒 Data Protection & Security</h3>
+                    <p style="line-height: 1.8; font-size: 1.05rem; margin-bottom: 1rem; color: var(--gray-800);">We implement appropriate technical and organizational security measures to protect your information against unauthorized access, alteration, disclosure, or destruction. Personal data is stored securely using industry-standard encryption and security protocols, and is only accessed by authorized personnel for legitimate business purposes.</p>
+                    <p style="line-height: 1.8; font-size: 1.05rem; margin-bottom: 1rem; color: var(--gray-800);">We regularly review our security practices and update them as necessary to maintain the highest level of protection. All data transfers are conducted over secure connections (HTTPS/TLS) and we employ best practices in data handling and storage.</p>
+                    <p style="line-height: 1.8; font-size: 1.05rem; color: var(--gray-800);">While we strive to protect your personal information, no method of transmission over the internet is 100% secure. We cannot guarantee absolute security but are committed to protecting your data to the best of our ability.</p>
+                </div>
+                
+                <div style="background: var(--white); border: 1px solid var(--gray-200); padding: 3rem; border-radius: 8px; margin-bottom: 2rem; box-shadow: var(--shadow);">
+                    <h3 style="color: var(--black); margin-bottom: 1.5rem; font-size: 1.4rem;">🍪 Cookie Policy</h3>
+                    <p style="line-height: 1.8; font-size: 1.05rem; margin-bottom: 1rem; color: var(--gray-800);"><strong>What Are Cookies:</strong> Cookies are small text files stored on your device when you visit a website. They help us remember your preferences, analyze website performance, and improve your browsing experience.</p>
+                    <p style="line-height: 1.8; font-size: 1.05rem; margin-bottom: 1rem; color: var(--gray-800);"><strong>Types of Cookies We Use:</strong></p>
+                    <ul style="line-height: 1.8; font-size: 1.05rem; margin-bottom: 1rem; color: var(--gray-800); padding-left: 2rem;">
+                        <li><strong>Essential Cookies:</strong> Required for the website to function properly (e.g., cookie consent preferences, session management)</li>
+                        <li><strong>Analytics Cookies:</strong> Help us understand how visitors interact with the website using services like Sentry for error tracking (only with your consent)</li>
+                        <li><strong>Preference Cookies:</strong> Remember your settings such as dark/light theme preference</li>
+                    </ul>
+                    <p style="line-height: 1.8; font-size: 1.05rem; margin-bottom: 1rem; color: var(--gray-800);"><strong>Managing Cookies:</strong> You can control and delete cookies through your browser settings. However, disabling essential cookies may affect website functionality. You can manage analytics cookies through our cookie consent banner that appears when you first visit the site.</p>
+                    <p style="line-height: 1.8; font-size: 1.05rem; color: var(--gray-800);"><strong>Third-Party Cookies:</strong> We use Sentry (sentry.io) for error monitoring when you provide consent. These services may set their own cookies. We do not use advertising or tracking cookies.</p>
+                    
+                    <h3 style="color: var(--black); margin-bottom: 1.5rem; font-size: 1.4rem; margin-top: 2rem;">📊 Analytics & Tracking</h3>
+                    <p style="line-height: 1.8; font-size: 1.05rem; margin-bottom: 1rem; color: var(--gray-800);">We use cookies and Google Analytics only with your explicit consent via our cookie banner displayed on your first visit. These tools help us understand how visitors interact with our website and enable us to improve your experience.</p>
+                    <p style="line-height: 1.8; font-size: 1.05rem; margin-bottom: 1rem; color: var(--gray-800);">Cookies we may use include essential cookies for site functionality, analytics cookies to track usage patterns, and preference cookies to remember your settings. All analytics tracking is configured to respect user privacy with IP anonymization enabled.</p>
+                    <p style="line-height: 1.8; font-size: 1.05rem; color: var(--gray-800);">You can withdraw consent at any time by clearing your browser storage or adjusting your cookie preferences. You may also use browser settings or third-party tools to block cookies, though this may affect site functionality.</p>
+                </div>
+                
+                <div style="background: var(--white); border: 1px solid var(--gray-200); padding: 3rem; border-radius: 8px; margin-bottom: 2rem; box-shadow: var(--shadow);">
+                    <h3 style="color: var(--black); margin-bottom: 1.5rem; font-size: 1.4rem;">🔒 Security & Content Security Policy (CSP)</h3>
+                    <p style="line-height: 1.8; font-size: 1.05rem; margin-bottom: 1rem; color: var(--gray-800);">This website implements a Content Security Policy (CSP) to enhance security and protect against cross-site scripting (XSS), clickjacking, and other code injection attacks. The CSP restricts the sources from which content can be loaded and executed on this website. Only trusted domains are whitelisted for scripts, styles, fonts, and other resources. This helps ensure that malicious scripts cannot be injected into the website and protects your browsing experience.</p>
+                    
+                    <h3 style="color: var(--black); margin-bottom: 1.5rem; font-size: 1.4rem;">🏢 Business Type & Information</h3>
+                    <p style="line-height: 1.8; font-size: 1.05rem; margin-bottom: 1rem; color: var(--gray-800);">This website is operated by Samrath Singh, an individual sole trader providing professional IT consulting, software development, and technical services. ABN: 72 925 087 373. Business Location: Point Cook, VIC, Australia. As an Australian-based business, all services are provided in accordance with Australian Consumer Law and the Competition and Consumer Act 2010.</p>
+                    
+                    <h3 style="color: var(--black); margin-bottom: 1.5rem; font-size: 1.4rem;">💚 Sponsorship & Open Source Support</h3>
+                    <p style="line-height: 1.8; font-size: 1.05rem; margin-bottom: 1rem; color: var(--gray-800);">Sponsorships are welcome from individuals, businesses, and organizations that support open source development, education in technology, and innovation in the IT sector. Sponsors may include technology companies, educational institutions, non-profit organizations focused on digital literacy, and businesses that value software development excellence. All sponsorship funds support ongoing open source projects, educational content creation, and community contributions. Sponsors will be recognized based on their contribution tier as outlined on the Sponsors page. We do not accept sponsorships from organizations involved in illegal activities, gambling, tobacco, or adult content.</p>
+                    
+                    <h3 style="color: var(--black); margin-bottom: 1.5rem; font-size: 1.4rem;">⚖️ Your Rights</h3>
+                    <p style="line-height: 1.8; font-size: 1.05rem; margin-bottom: 1rem; color: var(--gray-800);">Under Australian Privacy Principles (APPs) and applicable privacy laws, you have the right to access, correct, or delete your personal information that we hold. You may also request a copy of your data or ask us to restrict its processing.</p>
+                    <p style="line-height: 1.8; font-size: 1.05rem; margin-bottom: 1rem; color: var(--gray-800);">To exercise any of these rights, please contact us at samisingh988@gmail.com with a clear description of your request. We will respond to your request within a reasonable timeframe and may need to verify your identity before processing certain requests.</p>
+                    <p style="line-height: 1.8; font-size: 1.05rem; margin-bottom: 1rem; color: var(--gray-800);">You also have the right to lodge a complaint with the Office of the Australian Information Commissioner (OAIC) if you believe we have not handled your personal information appropriately.</p>
+                    <p style="line-height: 1.8; font-size: 1.05rem; color: var(--gray-800);">For more information about privacy in Australia, visit: <a href="https://www.oaic.gov.au" target="_blank" style="color: var(--accent); text-decoration: underline;">www.oaic.gov.au</a></p>
+                </div>
+                
+                <div style="background: var(--gray-100); border: 1px solid var(--gray-300); padding: 2rem; border-radius: 8px; margin-top: 3rem;">
+                    <p style="color: var(--gray-700); font-size: 0.95rem; line-height: 1.7; margin: 0;"><strong>Last Updated:</strong> December 2024 • This privacy policy may be updated from time to time. We will notify users of any material changes by posting the new policy on this page.</p>
+                </div>
+            </div>
+        </section>
+
+        <section class="page" id="terms">
+            <div class="page-header">
+                <h1>Terms of Service</h1>
+                <p class="page-subtitle">Terms and conditions for our services</p>
+            </div>
+            
+            <div style="max-width: 800px; margin: 0 auto;">
+                <div style="background: var(--gray-100); padding: 2rem; border-radius: 8px; margin-bottom: 2rem;">
+                    <p style="color: var(--black); margin-bottom: 0.5rem;"><strong>Service Provider:</strong> Samrath Singh</p>
+                    <p style="color: var(--black); margin-bottom: 0.5rem;"><strong>ABN:</strong> 72 925 087 373</p>
+                    <p style="color: var(--black); margin-bottom: 0.5rem;"><strong>Location:</strong> Point Cook, VIC, Australia</p>
+                    <p style="color: var(--black); margin-bottom: 0;"><strong>Contact:</strong> samisingh988@gmail.com</p>
+                </div>
+                
+                <div style="background: var(--white); border: 1px solid var(--gray-200); padding: 2.5rem; border-radius: 8px; margin-bottom: 2rem; box-shadow: var(--shadow);">
+                    <h3 style="color: var(--black); margin-bottom: 1.5rem; font-size: 1.4rem;">📦 Services Offered</h3>
+                    <ul style="line-height: 1.8; font-size: 1.05rem; color: var(--gray-800);">
+                        <li>Custom web development and programming</li>
+                        <li>Minecraft plugin development</li>
+                        <li>eCommerce solutions and Shopify customization</li>
+                        <li>Technical support and troubleshooting</li>
+                        <li>3D design and printing services</li>
+                        <li>API integration and automation</li>
+                    </ul>
+                </div>
+                
+                <div style="background: var(--white); border: 1px solid var(--gray-200); padding: 3rem; border-radius: 8px; margin-bottom: 2rem; box-shadow: var(--shadow);">
+                    <h3 style="color: var(--black); margin-bottom: 1.5rem; font-size: 1.4rem;">✅ Acceptable Use Policy</h3>
+                    <p style="line-height: 1.8; font-size: 1.05rem; margin-bottom: 1rem; color: var(--gray-800);">When using our services or engaging with us, you agree to:</p>
+                    <ul style="line-height: 1.8; font-size: 1.05rem; margin-bottom: 1rem; color: var(--gray-800); padding-left: 2rem;">
+                        <li>Provide accurate and complete information when requesting services or communicating with us</li>
+                        <li>Use our services only for lawful purposes and in accordance with all applicable laws and regulations</li>
+                        <li>Not use our services to create, distribute, or facilitate illegal, harmful, or offensive content</li>
+                        <li>Not attempt to gain unauthorized access to our systems, networks, or data</li>
+                        <li>Not transmit viruses, malware, or any other malicious code</li>
+                        <li>Respect intellectual property rights, including copyrights, trademarks, and patents</li>
+                        <li>Not engage in activities that could damage, disable, or impair our website or services</li>
+                        <li>Not harass, abuse, or harm others through our services or communications</li>
+                    </ul>
+                    <p style="line-height: 1.8; font-size: 1.05rem; margin-bottom: 1rem; color: var(--gray-800);"><strong>Prohibited Uses:</strong> You may not use our services for: gambling platforms, adult content, illegal activities, pyramid schemes, spam or phishing, cryptocurrency mining without disclosure, or any activity that violates Australian law.</p>
+                    <p style="line-height: 1.8; font-size: 1.05rem; color: var(--gray-800);"><strong>Enforcement:</strong> We reserve the right to refuse service, terminate agreements, or take legal action if we determine that you have violated this Acceptable Use Policy. Violations may also result in reporting to appropriate law enforcement authorities.</p>
+                    
+                    <h3 style="color: var(--black); margin-bottom: 1.5rem; font-size: 1.4rem; margin-top: 2rem;">📝 Service Agreement</h3>
+                    <p style="line-height: 1.8; font-size: 1.05rem; margin-bottom: 1rem; color: var(--gray-800);">Services are provided based on mutually agreed specifications and requirements documented before project commencement. Project scope, deliverables, timeline, and pricing are confirmed in writing before work begins.</p>
+                    <p style="line-height: 1.8; font-size: 1.05rem; margin-bottom: 1rem; color: var(--gray-800);">Changes to the agreed scope may affect project timeline and costs. Any scope changes will be communicated and agreed upon before implementation. We strive to deliver projects on time and within budget while maintaining high quality standards.</p>
+                    <p style="line-height: 1.8; font-size: 1.05rem; color: var(--gray-800);">All services are subject to Australian Consumer Law. We reserve the right to refuse service at our discretion and may terminate agreements with appropriate notice if circumstances require.</p>
+                </div>
+                
+                <div style="background: var(--white); border: 1px solid var(--gray-200); padding: 3rem; border-radius: 8px; margin-bottom: 2rem; box-shadow: var(--shadow);">
+                    <h3 style="color: var(--black); margin-bottom: 1.5rem; font-size: 1.4rem;">💰 Payment Terms</h3>
+                    <p style="line-height: 1.8; font-size: 1.05rem; margin-bottom: 1rem; color: var(--gray-800);">Payment terms are agreed upon per project and documented in the service agreement. We typically require a deposit before commencing work, with the remainder due upon completion or according to agreed milestones.</p>
+                    <p style="line-height: 1.8; font-size: 1.05rem; margin-bottom: 1rem; color: var(--gray-800);">Accepted payment methods will be specified in the project agreement. All prices are quoted in Australian Dollars (AUD) unless otherwise stated. Australian Consumer Law applies to all transactions and protects your rights as a consumer.</p>
+                    <p style="line-height: 1.8; font-size: 1.05rem; color: var(--gray-800);">Late payments may incur additional fees as specified in the agreement. ABN: 72 925 087 373. Tax invoices will be provided for all transactions.</p>
+                    
+                    <h3 style="color: var(--black); margin-bottom: 1.5rem; font-size: 1.4rem;">🔄 Refund & Cancellation Policy</h3>
+                    <p style="line-height: 1.8; font-size: 1.05rem; margin-bottom: 1rem; color: var(--gray-800);"><strong>Cancellation by Client:</strong> If you wish to cancel a project after work has commenced, you will be charged for all work completed up to the point of cancellation, plus any non-refundable expenses incurred. Deposits are non-refundable once work has begun. If cancellation occurs before any work has started, a partial refund may be available at our discretion, minus any administrative fees.</p>
+                    <p style="line-heightj: 1.8; font-size: 1.05rem; margin-bottom: 1rem; color: var(--gray-800);"><strong>Refunds for Services:</strong> Due to the nature of custom software development and IT services, refunds are generally not available once work has been delivered and accepted. If you are dissatisfied with the deliverables, we will work with you to address concerns and make reasonable revisions as outlined in the service agreement.</p>
+                    <p style="line-height: 1.8; font-size: 1.05rem; margin-bottom: 1rem; color: var(--gray-800;"><strong>Australian Consumer Law:</strong> Nothing in this policy limits your rights under Australian Consumer Law. If our services fail to meet consumer guarantees (such as being provided with acceptable care and skill), you may be entitled to a remedy, which could include a refund, credit, or additional service at no extra cost.</p>
+                    <p style="line-height: 1.8; font-size: 1.05rem; color: var(--gray-800);">To request a cancellation or refund, please contact us at samisingh988@gmail.com with your project details and reason for the request. We will respond within 5 business days.</p>
+                </div>
+                
+                <div style="background: var(--white); border: 1px solid var(--gray-200); padding: 3rem; border-radius: 8px; margin-bottom: 2rem; box-shadow: var(--shadow);">
+                    <h3 style="color: var(--black); margin-bottom: 1.5rem; font-size: 1.4rem;">©️ Intellectual Property & Copyright</h3>
+                    <p style="line-height: 1.8; font-size: 1.05rem; margin-bottom: 1rem; color: var(--gray-800);"><strong>Website Content:</strong> All content on this website, including but not limited to text, graphics, logos, images, code, designs, and software, is the property of Samrath Singh (ABN: 72 925 087 373) or its content suppliers and is protected by Australian and international copyright laws.</p>
+                    <p style="line-height: 1.8; font-size: 1.05rem; margin-bottom: 1rem; color: var(--gray-800);"><strong>Client Work:</strong> Custom work created specifically for clients becomes the property of the client upon full payment, unless otherwise agreed in writing. This includes source code, designs, and deliverables created as part of the project scope. However, we retain the right to use generalized techniques, methodologies, and non-proprietary knowledge gained from projects.</p>
+                    <p style="line-height: 1.8; font-size: 1.05rem; margin-bottom: 1rem; color: var(--gray-800);"><strong>Open Source Projects:</strong> Some of our work is released as open source under specific licenses (e.g., MIT, GPL, Apache). When using our open source projects, you must comply with the respective license terms. Attribution is required where specified in the license.</p>
+                    <p style="line-height: 1.8; font-size: 1.05rem; margin-bottom: 1rem; color: var(--gray-800);"><strong>Portfolio Usage:</strong> We reserve the right to showcase completed projects (with client permission) in our portfolio, case studies, and marketing materials. Client names and specific details will only be included with explicit written consent.</p>
+                    <p style="line-height: 1.8; font-size: 1.05rem; margin-bottom: 1rem; color: var(--gray-800);"><strong>Trademarks:</strong> Any trademarks, service marks, or logos displayed on this website are the property of their respective owners. Use of any trademarks without permission is strictly prohibited.</p>
+                    <p style="line-height: 1.8; font-size: 1.05rem; margin-bottom: 1rem; color: var(--gray-800);"><strong>DMCA & Copyright Infringement:</strong> We respect the intellectual property rights of others. If you believe that your copyrighted work has been copied in a way that constitutes copyright infringement, please contact us at samisingh988@gmail.com with:</p>
+                    <ul style="line-height: 1.8; font-size: 1.05rem; margin-bottom: 1rem; color: var(--gray-800); padding-left: 2rem;">
+                        <li>A description of the copyrighted work you claim has been infringed</li>
+                        <li>The location (URL) of the allegedly infringing material</li>
+                        <li>Your contact information (email address, phone number, mailing address)</li>
+                        <li>A statement that you have a good faith belief that the use is not authorized</li>
+                        <li>A statement that the information provided is accurate and you are the copyright owner or authorized to act on their behalf</li>
+                        <li>Your electronic or physical signature</li>
+                    </ul>
+                    <p style="line-height: 1.8; font-size: 1.05rem; color: var(--gray-800);">We will investigate all valid copyright claims and take appropriate action, which may include removing infringing content.</p>
+                    
+                    <h3 style="color: var(--black); margin-bottom: 1.5rem; font-size: 1.4rem; margin-top: 2rem;">📜 License Grant for Website Use</h3>
+                    <p style="line-height: 1.8; font-size: 1.05rem; margin-bottom: 1rem; color: var(--gray-800);">Custom work created specifically for clients becomes the property of the client upon full payment, unless otherwise agreed in writing. This includes source code, designs, and deliverables created as part of the project scope.</p>
+                    <p style="line-height: 1.8; font-size: 1.05rem; margin-bottom: 1rem; color: var(--gray-800);">We retain rights to general methodologies, frameworks, tools, and non-specific technical knowledge developed or used in the course of providing services. We may showcase completed work in our portfolio unless confidentiality is specifically requested.</p>
+                    <p style="line-height: 1.8; font-size: 1.05rem; color: var(--gray-800);">Third-party components, libraries, and open-source software used in projects remain under their respective licenses. Clients are responsible for obtaining necessary licenses for any third-party software or services they request.</p>
+                    <div style="margin-top: 1.5rem; padding: 1.5rem; background: var(--gray-100); border-radius: 6px; border-left: 4px solid var(--accent);">
+                        <p style="font-size: 0.95rem; color: var(--gray-700); margin: 0;"><strong>Copyright Notice:</strong> All website content, design, code, and materials © 2024 Samrath Singh. All rights reserved. Unauthorized reproduction or distribution of copyrighted material is prohibited.</p>
+                    </div>
+                </div>
+                
+                <div style="background: var(--white); border: 1px solid var(--gray-200); padding: 3rem; border-radius: 8px; margin-bottom: 2rem; box-shadow: var(--shadow);">
+                    <h3 style="color: var(--black); margin-bottom: 1.5rem; font-size: 1.4rem;">📋 Disclaimer</h3>
+                    <p style="line-height: 1.8; font-size: 1.05rem; margin-bottom: 1rem; color: var(--gray-800);"><strong>Professional Advice:</strong> The information provided on this website is for general informational purposes only. While we strive to keep the information accurate and up-to-date, we make no representations or warranties of any kind, express or implied, about the completeness, accuracy, reliability, suitability, or availability of the information, products, services, or related graphics contained on the website for any purpose.</p>
+                    <p style="line-height: 1.8; font-size: 1.05rem; margin-bottom: 1rem; color: var(--gray-800);"><strong>No Professional Relationship:</strong> Viewing this website or contacting us does not create a professional or client relationship until a formal service agreement is signed. Any advice or recommendations provided before a formal agreement should not be relied upon without independent verification.</p>
+                    <p style="line-height: 1.8; font-size: 1.05rem; margin-bottom: 1rem; color: var(--gray-800);"><strong>External Links:</strong> This website may contain links to external websites that are not provided or maintained by us. We have no control over the content and nature of these sites and are not responsible for their availability or content.</p>
+                    <p style="line-height: 1.8; font-size: 1.05rem; margin-bottom: 1rem; color: var(--gray-800);"><strong>Availability:</strong> While we make every effort to keep the website running smoothly, we take no responsibility for, and will not be liable for, the website being temporarily unavailable due to technical issues beyond our control.</p>
+                    <p style="line-height: 1.8; font-size: 1.05rem; color: var(--gray-800);"><strong>Changes to Services:</strong> We reserve the right to modify, suspend, or discontinue any part of our services or website at any time without prior notice.</p>
+                    
+                    <h3 style="color: var(--black); margin-bottom: 1.5rem; font-size: 1.4rem; margin-top: 2rem;">⚠️ Limitation of Liability</h3>
+                    <p style="line-height: 1.8; font-size: 1.05rem; margin-bottom: 1rem; color: var(--gray-800);">Services are provided to the best of our ability with professional care and skill. While we strive for excellence, we cannot guarantee that services will meet all specific requirements or be error-free, uninterrupted, or completely secure.</p>
+                    <p style="line-height: 1.8; font-size: 1.05rem; margin-bottom: 1rem; color: var(--gray-800);">To the maximum extent permitted by Australian Consumer Law, we are not liable for indirect, incidental, special, or consequential damages including but not limited to loss of profits, data, or business opportunities arising from use of our services.</p>
+                    <p style="line-height: 1.8; font-size: 1.05rem; margin-bottom: 1rem; color: var(--gray-800);">Our maximum liability is limited to the total amount paid for the specific project or service giving rise to the claim. Nothing in these terms excludes or limits consumer guarantees provided under Australian Consumer Law where such exclusion or limitation would be prohibited.</p>
+                    <p style="line-height: 1.8; font-size: 1.05rem; color: var(--gray-800);">Clients are responsible for maintaining backups of their data and testing deliverables in their own environment before deployment to production systems.</p>
+                </div>
+                
+                <div style="background: var(--gray-100); border: 1px solid var(--gray-300); padding: 2rem; border-radius: 8px; margin-top: 3rem;">
+                    <p style="color: var(--gray-700); font-size: 0.95rem; line-height: 1.7; margin: 0;"><strong>Effective Date:</strong> December 2024 • <strong>Governing Law:</strong> These terms are governed by the laws of Victoria, Australia. Any disputes arising from these terms will be subject to the exclusive jurisdiction of the courts of Victoria, Australia.</p>
+                </div>
+            </div>
+        </section>
+
+        <section class="page" id="faq">
+            <div class="page-header">
+                <h1>Frequently Asked Questions</h1>
+                <p class="page-subtitle">Common questions about my services and process</p>
+            </div>
+            
+            <div style="max-width: 900px; margin: 0 auto;">
+                <div class="faq-item" style="background: var(--white); padding: 2rem; border-radius: 8px; margin-bottom: 1.5rem; border: 1px solid var(--gray-200);">
+                    <h3 style="font-size: 1.3rem; margin-bottom: 1rem; color: var(--black);">💼 What services do you offer?</h3>
+                    <p style="color: var(--gray-700); line-height: 1.8;">I specialize in custom web development, Minecraft plugin development, eCommerce solutions (especially Shopify), API integration, and automation. I also provide technical support and troubleshooting services.</p>
+                </div>
+                
+                <div class="faq-item" style="background: var(--white); padding: 2rem; border-radius: 8px; margin-bottom: 1.5rem; border: 1px solid var(--gray-200);">
+                    <h3 style="font-size: 1.3rem; margin-bottom: 1rem; color: var(--black);">⏱️ How long does a typical project take?</h3>
+                    <p style="color: var(--gray-700); line-height: 1.8;">Project timelines vary based on complexity and scope. Simple websites can take 1-2 weeks, while custom applications may take 4-8 weeks. I provide detailed timelines during the initial consultation and keep you updated throughout the project.</p>
+                </div>
+                
+                <div class="faq-item" style="background: var(--white); padding: 2rem; border-radius: 8px; margin-bottom: 1.5rem; border: 1px solid var(--gray-200);">
+                    <h3 style="font-size: 1.3rem; margin-bottom: 1rem; color: var(--black);">💰 How much do you charge?</h3>
+                    <p style="color: var(--gray-700); line-height: 1.8;">Pricing depends on project scope, complexity, and requirements. I offer both hourly rates and project-based pricing. After understanding your needs, I'll provide a detailed quote with no hidden fees. Contact me for a free consultation and estimate.</p>
+                </div>
+                
+                <div class="faq-item" style="background: var(--white); padding: 2rem; border-radius: 8px; margin-bottom: 1.5rem; border: 1px solid var(--gray-200);">
+                    <h3 style="font-size: 1.3rem; margin-bottom: 1rem; color: var(--black);">🔄 Do you provide ongoing support?</h3>
+                    <p style="color: var(--gray-700); line-height: 1.8;">Yes! I offer post-launch support and maintenance packages. This includes bug fixes, updates, and technical assistance. We can discuss ongoing support options that fit your needs and budget.</p>
+                </div>
+                
+                <div class="faq-item" style="background: var(--white); padding: 2rem; border-radius: 8px; margin-bottom: 1.5rem; border: 1px solid var(--gray-200);">
+                    <h3 style="font-size: 1.3rem; margin-bottom: 1rem; color: var(--black);">📍 Do you work with clients outside Australia?</h3>
+                    <p style="color: var(--gray-700); line-height: 1.8;">Absolutely! While I'm based in Point Cook, VIC, Australia, I work with clients globally. I'm comfortable with remote collaboration and have experience coordinating across different time zones.</p>
+                </div>
+                
+                <div class="faq-item" style="background: var(--white); padding: 2rem; border-radius: 8px; margin-bottom: 1.5rem; border: 1px solid var(--gray-200);">
+                    <h3 style="font-size: 1.3rem; margin-bottom: 1rem; color: var(--black);">🛠️ What technologies do you work with?</h3>
+                    <p style="color: var(--gray-700); line-height: 1.8;">I work with HTML, CSS, JavaScript, Python, PHP, REST APIs, Cloudflare Workers, and various frameworks. For a complete list, check out my Skills page. I'm always learning new technologies to better serve my clients.</p>
+                </div>
+                
+                <div class="faq-item" style="background: var(--white); padding: 2rem; border-radius: 8px; margin-bottom: 1.5rem; border: 1px solid var(--gray-200);">
+                    <h3 style="font-size: 1.3rem; margin-bottom: 1rem; color: var(--black);">📝 How do we get started?</h3>
+                    <p style="color: var(--gray-700); line-height: 1.8;">Simply reach out via the Contact page or email me at samisingh988@gmail.com. We'll schedule a consultation to discuss your project requirements, timeline, and budget. From there, I'll provide a detailed proposal and we can begin!</p>
+                </div>
+                
+                <div class="faq-item" style="background: var(--white); padding: 2rem; border-radius: 8px; margin-bottom: 1.5rem; border: 1px solid var(--gray-200);">
+                    <h3 style="font-size: 1.3rem; margin-bottom: 1rem; color: var(--black);">🎓 Are you still a student?</h3>
+                    <p style="color: var(--gray-700); line-height: 1.8;">Yes, I'm currently studying at Point Cook College while running multiple businesses and freelance development work. This doesn't affect my commitment to quality—I've successfully delivered numerous projects and maintain professional standards in all my work.</p>
+                </div>
+            </div>
+        </section>
+
+        <section class="page" id="sponsors">
+            <div class="page-header">
+                <h1>💖 Support My Open Source Work</h1>
+                <p class="page-subtitle">Help me build amazing open source projects for developers worldwide</p>
+            </div>
+            
+            <div style="max-width: 900px; margin: 0 auto;">
+                <div style="background: var(--white); padding: 2.5rem; border-radius: 12px; margin-bottom: 2rem; border: 1px solid var(--gray-200);">
+                    <h2 style="margin-bottom: 1.5rem; color: var(--black);">Hey! I'm Sami9889</h2>
+                    <p style="color: var(--gray-700); line-height: 1.8; margin-bottom: 1.5rem;">Building open source projects for developers worldwide.</p>
+                    
+                    <h3 style="margin-bottom: 1rem; color: var(--black); font-size: 1.3rem;">Why Sponsor?</h3>
+                    <p style="color: var(--gray-700); line-height: 1.8; margin-bottom: 1.5rem;">Your support helps me dedicate more time to:</p>
+                    <ul style="color: var(--gray-700); line-height: 2; margin-bottom: 2rem; padding-left: 1.5rem;">
+                        <li>Building features & fixing bugs</li>
+                        <li>Writing documentation</li>
+                        <li>Supporting the community</li>
+                    </ul>
+                    
+                    <h3 style="margin-bottom: 1.5rem; color: var(--black); font-size: 1.3rem;">Sponsorship Tiers</h3>
+                    <div style="display: grid; gap: 1rem; margin-bottom: 2rem;">
+                        <div style="padding: 1.5rem; background: var(--gray-50); border-radius: 8px; border-left: 4px solid var(--accent);">
+                            <strong style="color: var(--black);">☕ $1-5 - Coffee supporter</strong>
+                            <p style="color: var(--gray-600); margin: 0.5rem 0 0 0; font-size: 0.95rem;">Help keep me caffeinated while coding</p>
+                        </div>
+                        <div style="padding: 1.5rem; background: var(--gray-50); border-radius: 8px; border-left: 4px solid var(--accent);">
+                            <strong style="color: var(--black);">🌟 $10 - Backer</strong>
+                            <p style="color: var(--gray-600); margin: 0.5rem 0 0 0; font-size: 0.95rem;">Show your support for open source</p>
+                        </div>
+                        <div style="padding: 1.5rem; background: var(--gray-50); border-radius: 8px; border-left: 4px solid #cd7f32;">
+                            <strong style="color: var(--black);">🥉 $25 - Bronze</strong>
+                            <p style="color: var(--gray-600); margin: 0.5rem 0 0 0; font-size: 0.95rem;">Priority support on issues</p>
+                        </div>
+                        <div style="padding: 1.5rem; background: var(--gray-50); border-radius: 8px; border-left: 4px solid #c0c0c0;">
+                            <strong style="color: var(--black);">🥈 $50 - Silver</strong>
+                            <p style="color: var(--gray-600); margin: 0.5rem 0 0 0; font-size: 0.95rem;">Listed in project READMEs</p>
+                        </div>
+                        <div style="padding: 1.5rem; background: var(--gray-50); border-radius: 8px; border-left: 4px solid #ffd700;">
+                            <strong style="color: var(--black);">🥇 $100 - Gold</strong>
+                            <p style="color: var(--gray-600); margin: 0.5rem 0 0 0; font-size: 0.95rem;">Your logo in documentation</p>
+                        </div>
+                        <div style="padding: 1.5rem; background: var(--gray-50); border-radius: 8px; border-left: 4px solid #e5e4e2;">
+                            <strong style="color: var(--black);">💎 $250+ - Platinum</strong>
+                            <p style="color: var(--gray-600); margin: 0.5rem 0 0 0; font-size: 0.95rem;">Sponsor badge + Prominent logo placement</p>
+                        </div>
+                    </div>
+                    
+                    <p style="color: var(--gray-700); text-align: center; font-size: 1.1rem; margin-top: 2rem;">Thank you for supporting open source! 💚</p>
+                </div>
+                
+                <div style="text-align: center; margin-top: 2rem;">
+                    <iframe src="https://github.com/sponsors/Sami9889/card" title="Sponsor Sami9889" height="225" width="600" style="border: 0; max-width: 100%; border-radius: 8px; box-shadow: 0 4px 12px rgba(0,0,0,0.1);"></iframe>
+                </div>
+            </div>
+        </section>
+
         <section class="page" id="contact">
             <div class="page-header">
                 <h1>Get In Touch</h1>
@@ -1335,6 +2466,100 @@
                 <h2>Ready to work together?</h2>
                 <p>I'm always interested in hearing about new opportunities and interesting projects. Whether you have a project in mind, want to collaborate, or just want to say hello, feel free to reach out!</p>
                 
+                <form class="contact-form" id="contactForm" action="https://formsubmit.co/samisingh988@gmail.com" method="POST">
+                    <input type="hidden" name="_subject" value="🎫 New Contact Form Submission - Ticket #" id="ticketSubject">
+                    <input type="hidden" name="_template" value="table">
+                    <input type="hidden" name="_autoresponse" value="Thank you for contacting Samrath Singh! Your inquiry has been received. Tracking Number: {TICKET}. I will review your message and respond within 24-48 hours. For urgent matters, email samisingh988@gmail.com directly. Best regards, Samrath Sami Singh - Full-Stack Developer | GitHub: Sami9889 | Instagram: @sami9889 | LinkedIn: samrath-singh-400705297 | Website: sami.is-a.dev | ABN: 72 925 087 373">
+                    <input type="text" name="_honey" style="display:none">
+                    <input type="hidden" name="Ticket Number" id="ticketNumber">
+                    <input type="hidden" name="Submission Date" id="submissionDate">
+                    <input type="hidden" name="Submission Time" id="submissionTime">
+                    
+                    <div class="form-group">
+                        <label for="name">Full Name *</label>
+                        <input type="text" id="name" name="Full Name" required placeholder="Your full name">
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="email">Email Address *</label>
+                        <input type="email" id="email" name="Email Address" required placeholder="your.email@example.com">
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="phone">Phone Number (Optional)</label>
+                        <input type="tel" id="phone" name="Phone Number" placeholder="+61 XXX XXX XXX">
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="subject">Subject / Topic *</label>
+                        <select id="subject" name="Inquiry Type" required style="width: 100%; padding: 0.75rem 1rem; border: 2px solid var(--gray-300); border-radius: 4px; font-family: var(--primary-font); font-size: 1rem; background: var(--white);">
+                            <option value="">Select inquiry type...</option>
+                            <option value="Web Development">Web Development Project</option>
+                            <option value="Minecraft Plugin">Minecraft Plugin Development</option>
+                            <option value="Shopify/eCommerce">Shopify / eCommerce Solution</option>
+                            <option value="API Integration">API Integration / Automation</option>
+                            <option value="Technical Support">Technical Support / Troubleshooting</option>
+                            <option value="General Inquiry">General Inquiry</option>
+                            <option value="Other">Other</option>
+                        </select>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="budget">Budget Range (Optional)</label>
+                        <select id="budget" name="Budget Range" style="width: 100%; padding: 0.75rem 1rem; border: 2px solid var(--gray-300); border-radius: 4px; font-family: var(--primary-font); font-size: 1rem; background: var(--white);">
+                            <option value="">Select budget range...</option>
+                            <option value="Under $500">Under $500 AUD</option>
+                            <option value="$500 - $1,000">$500 - $1,000 AUD</option>
+                            <option value="$1,000 - $2,500">$1,000 - $2,500 AUD</option>
+                            <option value="$2,500 - $5,000">$2,500 - $5,000 AUD</option>
+                            <option value="$5,000+">$5,000+ AUD</option>
+                            <option value="Not sure / Flexible">Not sure / Flexible</option>
+                        </select>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="timeline">Project Timeline (Optional)</label>
+                        <select id="timeline" name="Timeline" style="width: 100%; padding: 0.75rem 1rem; border: 2px solid var(--gray-300); border-radius: 4px; font-family: var(--primary-font); font-size: 1rem; background: var(--white);">
+                            <option value="">Select timeline...</option>
+                            <option value="ASAP">As soon as possible</option>
+                            <option value="Within 1 week">Within 1 week</option>
+                            <option value="Within 1 month">Within 1 month</option>
+                            <option value="1-3 months">1-3 months</option>
+                            <option value="Flexible">Flexible / No rush</option>
+                        </select>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="message">Project Details & Requirements *</label>
+                        <textarea id="message" name="Project Details" required placeholder="Please describe your project in detail including:
+- What you need built or fixed
+- Any specific features or requirements
+- Technical specifications (if any)
+- Target audience or use case
+- Any existing systems to integrate with
+- Additional notes or questions
+
+The more details you provide, the better I can understand your needs and provide an accurate quote." style="min-height: 250px;"></textarea>
+                    </div>
+                    
+                    <div class="g-recaptcha" data-sitekey="6LcRBhAsAAAAACatryubAg_7jPQPb5i_tcAIoCa-" style="margin: 1.5rem auto; width: fit-content;"></div>
+                    
+                    <button type="submit" class="submit-btn" id="submitBtn">Send Message</button>
+                    
+                    <div class="form-message" id="formMessage"></div>
+                </form>
+                
+                <script>
+                // Generate ticket number when form loads
+                const ticketNum = 'SAMI-' + Date.now().toString(36).toUpperCase() + '-' + Math.random().toString(36).substr(2, 4).toUpperCase();
+                document.getElementById('ticketNumber').value = ticketNum;
+                document.getElementById('ticketSubject').value = '🎫 New Contact Form Submission - Ticket #' + ticketNum;
+                
+                const now = new Date();
+                document.getElementById('submissionDate').value = now.toLocaleDateString('en-AU');
+                document.getElementById('submissionTime').value = now.toLocaleTimeString('en-AU');
+                </script>
+                
                 <div class="social-links">
                     <a href="mailto:samisingh988@gmail.com" aria-label="Send email">Email Me</a>
                     <a href="https://github.com/Sami9889" target="_blank" rel="noopener noreferrer" aria-label="Visit GitHub profile">GitHub</a>
@@ -1344,131 +2569,187 @@
             </div>
         </section>
 
-        <!-- Footer -->
         <footer class="footer">
-            <p>&copy; 2024 Samrath Singh. Built with passion and precision. Made with ❤️ using pure HTML, CSS & JavaScript.</p>
+            <div style="max-width: 1200px; margin: 0 auto;">
+                <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: 3rem; margin-bottom: 3rem; text-align: left;">
+                    <div>
+                        <h3 style="margin-bottom: 1rem; font-size: 1.2rem; color: var(--black); font-weight: 600;">Samrath Singh</h3>
+                        <p style="color: var(--gray-700); margin-bottom: 0.5rem; font-size: 0.95rem;">Junior Developer</p>
+                        <p style="color: var(--gray-600); font-size: 0.9rem;">Point Cook, VIC</p>
+                        <p style="color: var(--gray-600); font-size: 0.9rem; line-height: 1.6; margin-top: 1rem;">Building user-focused web solutions with clean code and attention to detail.</p>
+                    </div>
+                    
+                    <div>
+                        <h3 style="margin-bottom: 1rem; font-size: 1.2rem; color: var(--black); font-weight: 600;">Legal</h3>
+                        <div style="display: flex; flex-direction: column; gap: 0.5rem;">
+                            <a href="#" onclick="showPage('privacy'); return false;" style="color: var(--gray-600); text-decoration: none; transition: color 0.3s; font-size: 0.9rem;">Privacy Policy</a>
+                            <a href="#" onclick="showPage('terms'); return false;" style="color: var(--gray-600); text-decoration: none; transition: color 0.3s; font-size: 0.9rem;">Terms of Service</a>
+                        </div>
+                    </div>
+                    
+                    <div>
+                        <h3 style="margin-bottom: 1rem; font-size: 1.2rem; color: var(--black); font-weight: 600;">Connect</h3>
+                        <div style="display: flex; flex-direction: column; gap: 0.5rem;">
+                            <a href="mailto:samisingh988@gmail.com" style="color: var(--gray-600); text-decoration: none; transition: color 0.3s; font-size: 0.9rem;">Email</a>
+                        </div>
+                    </div>
+                    <div>
+                        <h3 style="margin-bottom: 1rem; font-size: 1.2rem; color: var(--black); font-weight: 600;">Policies</h3>
+                        <div style="display: flex; flex-direction: column; gap: 0.5rem;">
+                            <a href="#" onclick="showPage('privacy'); return false;" style="color: var(--gray-600); text-decoration: none; transition: color 0.3s; font-size: 0.85rem;">Cookie Policy</a>
+                            <a href="#" onclick="showPage('terms'); return false;" style="color: var(--gray-600); text-decoration: none; transition: color 0.3s; font-size: 0.85rem;">Refund & Cancellation</a>
+                            <a href="#" onclick="showPage('terms'); return false;" style="color: var(--gray-600); text-decoration: none; transition: color 0.3s; font-size: 0.85rem;">Acceptable Use</a>
+                            <a href="#" onclick="showPage('terms'); return false;" style="color: var(--gray-600); text-decoration: none; transition: color 0.3s; font-size: 0.85rem;">Copyright & IP</a>
+                            <a href="#" onclick="showPage('terms'); return false;" style="color: var(--gray-600); text-decoration: none; transition: color 0.3s; font-size: 0.85rem;">Disclaimer</a>
+                        </div>
+                    </div>
+                    <div style="display: none;">
+                        <h3 style="margin-bottom: 1rem; font-size: 1.2rem; color: var(--black); font-weight: 600;">Connect (hidden)</h3>
+                        <div style="display: flex; flex-direction: column; gap: 0.5rem;">
+                            <a href="mailto:samisingh988@gmail.com" style="color: var(--gray-600); text-decoration: none; transition: color 0.3s; font-size: 0.9rem;">samisingh988@gmail.com</a>
+                            <a href="https://github.com/Sami9889" target="_blank" style="color: var(--gray-600); text-decoration: none; transition: color 0.3s; font-size: 0.9rem;">GitHub</a>
+                            <a href="https://www.linkedin.com/in/samrath-singh-400705297" target="_blank" style="color: var(--gray-600); text-decoration: none; transition: color 0.3s; font-size: 0.9rem;">LinkedIn</a>
+                            <a href="https://discord.gg/fhvGABfw" target="_blank" style="color: var(--gray-600); text-decoration: none; transition: color 0.3s; font-size: 0.9rem;">Discord</a>
+                        </div>
+                    </div>
+                </div>
+                
+                <div style="border-top: 1px solid var(--gray-300); padding-top: 2rem; margin-top: 3rem; text-align: center;">
+                    <p style="color: var(--gray-700); margin-bottom: 0.5rem; font-size: 0.95rem;">&copy; 2024 Samrath Singh. All Rights Reserved.</p>
+                    <p style="color: var(--gray-600); margin-bottom: 0.5rem; font-size: 0.9rem;">ABN: 72 925 087 373 | Point Cook, VIC, Australia</p>
+                    <p style="margin-top: 1rem; color: var(--gray-600); font-size: 0.85rem;">Built with care using pure HTML, CSS & JavaScript. No frameworks, just clean code.</p>
+                    <p style="margin-top: 0.5rem; color: var(--gray-500); font-size: 0.8rem;">This website and its contents are protected by copyright law. Unauthorized reproduction is prohibited.</p>
+                </div>
+            </div>
         </footer>
     </div>
 
-    <!-- Custom Cursor -->
-    <div class="cursor-dot" id="cursor-dot" aria-hidden="true"></div>
-    <div class="cursor-outline" id="cursor-outline" aria-hidden="true"></div>
-
-    <!-- Scroll to top button -->
     <button class="scroll-to-top" id="scroll-to-top" onclick="scrollToTop()" aria-label="Scroll to top">↑</button>
+    
+    <!-- Quick Contact Button -->
+    <a href="mailto:samisingh988@gmail.com" class="quick-contact-btn" aria-label="Quick contact via email" title="Email me">
+        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"></path>
+            <polyline points="22,6 12,13 2,6"></polyline>
+        </svg>
+    </a>
 
     <script>
-        // Navigation and page management
-        function showPage(pageId) {
-            const pages = document.querySelectorAll('.page');
-            pages.forEach(page => page.classList.remove('active'));
+        // Define showPage IMMEDIATELY in global scope
+        window.showPage = function(pageId, updateHistory) {
+            updateHistory = (typeof updateHistory === 'undefined') ? true : updateHistory;
+            var pages = document.querySelectorAll('.page');
+            pages.forEach(function(page){ page.classList.remove('active'); });
             
-            const targetPage = document.getElementById(pageId);
-            if (targetPage) {
-                targetPage.classList.add('active');
-            }
+            var targetPage = document.getElementById(pageId);
+            if (targetPage) targetPage.classList.add('active');
 
-            const navLinks = document.querySelectorAll('.nav-links a');
-            navLinks.forEach(link => link.classList.remove('active'));
+            var navLinks = document.querySelectorAll('.nav-links a');
+            navLinks.forEach(function(link){ link.classList.remove('active'); });
             
-            const activeLink = document.querySelector(`.nav-links a[onclick*="${pageId}"]`);
-            if (activeLink) {
-                activeLink.classList.add('active');
-            }
+            var activeLink = document.querySelector('.nav-links a[onclick*="' + pageId + '"]');
+            if (activeLink) activeLink.classList.add('active');
 
-            const navLinksContainer = document.getElementById('nav-links');
-            navLinksContainer.classList.remove('open');
+                const navLinksEl = document.getElementById('nav-links');
+                if (navLinksEl) navLinksEl.classList.remove('open');
 
-            if (pageId === 'projects' && !projectsLoaded) {
+            if (pageId === 'projects' && !window.projectsLoaded) {
                 loadGitHubProjects();
-                projectsLoaded = true;
+                window.projectsLoaded = true;
             }
 
-            const pageTitles = {
+            var pageTitles = {
                 'home': 'Samrath "Sami" Singh - Full-Stack Developer',
                 'about': 'About - Samrath Singh',
                 'skills': 'Skills - Samrath Singh',
+                'services': 'Services - Samrath Singh',
+                'experience': 'Experience - Samrath Singh',
                 'projects': 'Projects - Samrath Singh',
-                'contact': 'Contact - Samrath Singh'
+                'faq': 'FAQ - Samrath Singh',
+                'contact': 'Contact - Samrath Singh',
+                'privacy': 'Privacy Policy - Samrath Singh',
+                'terms': 'Terms of Service - Samrath Singh'
             };
             document.title = pageTitles[pageId] || 'Samrath Singh';
             
+            if (updateHistory) {
+                var path = (pageId === 'home') ? '/' : '/' + pageId;
+                history.pushState({ page: pageId }, document.title, path);
+            }
+            
             window.scrollTo({ top: 0, behavior: 'smooth' });
-        }
+        };
 
-        function toggleMobileMenu() {
-            const navLinks = document.getElementById('nav-links');
-            navLinks.classList.toggle('open');
-        }
+        // Global variables
+        window.dot = null;
+        window.outline = null;
+        window.projectsLoaded = false;
+        window.loadingAttempts = 0;
+        window.maxRetries = 3;
 
-        const dot = document.getElementById('cursor-dot');
-        const outline = document.getElementById('cursor-outline');
+        window.toggleMobileMenu = function() {
+            document.getElementById('nav-links').classList.toggle('open');
+        };
 
+        // Custom cursor removed for better performance
         const prefersReducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
         const isTouchDevice = 'ontouchstart' in window || navigator.maxTouchPoints > 0;
 
-        if (!isTouchDevice) {
-            document.body.style.cursor = 'none';
-            dot.style.display = 'block';
-            outline.style.display = 'block';
+        // Optimized cursor with better performance
+        if (!isTouchDevice && !prefersReducedMotion) {
+            // Create cursor elements
+            dot = document.createElement('div');
+            dot.className = 'cursor-dot';
+            document.body.appendChild(dot);
+            
+            outline = document.createElement('div');
+            outline.className = 'cursor-outline';
+            document.body.appendChild(outline);
             
             let mouseX = 0, mouseY = 0;
-            let dotX = 0, dotY = 0;
-            let outlineX = 0, outlineY = 0;
 
+            // Use direct transform for instant cursor movement (no lag)
             window.addEventListener('mousemove', (e) => {
                 mouseX = e.clientX;
                 mouseY = e.clientY;
-            });
-
-            function animateCursor() {
-                const speed = prefersReducedMotion ? 1 : 0.8;
-                const outlineSpeed = prefersReducedMotion ? 1 : 0.15;
                 
-                dotX += (mouseX - dotX) * speed;
-                dotY += (mouseY - dotY) * speed;
-                outlineX += (mouseX - outlineX) * outlineSpeed;
-                outlineY += (mouseY - outlineY) * outlineSpeed;
+                // Update cursor position immediately using transform (GPU accelerated)
+                // Add null checks to prevent ReferenceError
+                if (dot && dot.style) {
+                    dot.style.transform = `translate(${mouseX}px, ${mouseY}px) translate(-50%, -50%)`;
+                }
+                if (outline && outline.style) {
+                    outline.style.transform = `translate(${mouseX}px, ${mouseY}px) translate(-50%, -50%)`;
+                }
+            }, { passive: true });
 
-                dot.style.left = `${dotX}px`;
-                dot.style.top = `${dotY}px`;
-                outline.style.left = `${outlineX}px`;
-                outline.style.top = `${outlineY}px`;
-
-                requestAnimationFrame(animateCursor);
-            }
-            animateCursor();
-
-            document.addEventListener('mousedown', () => {
-                dot.classList.add('click');
-                outline.classList.add('click');
-            });
-
-            document.addEventListener('mouseup', () => {
-                dot.classList.remove('click');
-                outline.classList.remove('click');
-            });
-
-            const hoverElements = document.querySelectorAll('a, .skill-category, .project-card, .hero-stats, .stat-item, button, .logo');
-            
-            hoverElements.forEach(element => {
-                element.addEventListener('mouseenter', () => {
-                    dot.classList.add('hover');
-                    outline.classList.add('hover');
-                });
-                
-                element.addEventListener('mouseleave', () => {
-                    dot.classList.remove('hover');
-                    outline.classList.remove('hover');
-                });
+            // Add hover effects - capture dot and outline in closure to prevent reference errors
+            const cursorDot = dot;
+            const cursorOutline = outline;
+            const interactiveElements = document.querySelectorAll('a, button, .nav-links a, .project-card, .skill-category, .logo, .hero-stats, .stat-item');
+            interactiveElements.forEach(el => {
+                el.addEventListener('mouseenter', () => {
+                    if (cursorDot && cursorDot.classList) {
+                        cursorDot.classList.add('hover');
+                    }
+                    if (cursorOutline && cursorOutline.classList) {
+                        cursorOutline.classList.add('hover');
+                    }
+                }, { passive: true });
+                el.addEventListener('mouseleave', () => {
+                    if (cursorDot && cursorDot.classList) {
+                        cursorDot.classList.remove('hover');
+                    }
+                    if (cursorOutline && cursorOutline.classList) {
+                        cursorOutline.classList.remove('hover');
+                    }
+                }, { passive: true });
             });
         } else {
-            dot.style.display = 'none';
-            outline.style.display = 'none';
+            // Hide cursor on touch devices or if reduced motion preferred
             document.body.style.cursor = 'auto';
         }
 
-        let lastScrollTop = 0;
         const navbar = document.getElementById('navbar');
         const scrollToTopBtn = document.getElementById('scroll-to-top');
 
@@ -1482,20 +2763,11 @@
                 navbar.classList.remove('scrolled');
                 scrollToTopBtn.classList.remove('visible');
             }
-            
-            lastScrollTop = scrollTop <= 0 ? 0 : scrollTop;
         });
 
-        function scrollToTop() {
-            window.scrollTo({
-                top: 0,
-                behavior: 'smooth'
-            });
-        }
-
-        let projectsLoaded = false;
-        let loadingAttempts = 0;
-        const maxRetries = 3;
+        window.scrollToTop = function() {
+            window.scrollTo({ top: 0, behavior: 'smooth' });
+        };
 
         async function loadGitHubProjects() {
             const loading = document.getElementById('loading');
@@ -1523,142 +2795,83 @@
                 clearTimeout(timeoutId);
                 
                 if (!response.ok) {
-                    if (response.status === 403) {
-                        throw new Error('GitHub API rate limit exceeded. Please try again later.');
-                    }
+                    if (response.status === 403) throw new Error('GitHub API rate limit exceeded. Please try again later.');
                     throw new Error(`GitHub API error: ${response.status} ${response.statusText}`);
                 }
                 
                 const repos = await response.json();
-                
                 loading.style.display = 'none';
                 
                 const filteredRepos = repos
-                    .filter(repo => {
-                        if (repo.fork) return false;
-                        if (repo.name === 'Sami9889' || repo.name.toLowerCase().includes('readme')) return false;
-                        return true;
-                    })
-                    .sort((a, b) => {
-                        const scoreA = calculateRepoScore(a);
-                        const scoreB = calculateRepoScore(b);
-                        return scoreB - scoreA;
-                    })
+                    .filter(repo => !repo.fork && repo.name !== 'Sami9889' && !repo.name.toLowerCase().includes('readme'))
+                    .sort((a, b) => calculateRepoScore(b) - calculateRepoScore(a))
                     .slice(0, 12);
                 
                 if (filteredRepos.length === 0) {
-                    container.innerHTML = `
-                        <div style="grid-column: 1 / -1; text-align: center; padding: 3rem; color: var(--gray-600);">
-                            <h3>No public repositories found</h3>
-                            <p>Projects are being updated. Check back soon!</p>
-                        </div>
-                    `;
+                    container.innerHTML = '<div style="grid-column: 1 / -1; text-align: center; padding: 3rem; color: var(--gray-600);"><h3>No public repositories found</h3><p>Projects are being updated. Check back soon!</p></div>';
                     return;
                 }
                 
-                const githubProjects = filteredRepos.map(repo => {
-                    const updatedDate = new Date(repo.updated_at).toLocaleDateString('en-US', {
-                        year: 'numeric',
-                        month: 'short',
-                        day: 'numeric'
-                    });
-                    const createdDate = new Date(repo.created_at).toLocaleDateString('en-US', {
-                        year: 'numeric',
-                        month: 'short'
-                    });
+                container.innerHTML = filteredRepos.map(repo => {
+                    const updatedDate = new Date(repo.updated_at).toLocaleDateString('en-US', { year: 'numeric', month: 'short', day: 'numeric' });
+                    const createdDate = new Date(repo.created_at).toLocaleDateString('en-US', { year: 'numeric', month: 'short' });
                     const languageColor = getLanguageColor(repo.language);
                     const repoName = formatRepoName(repo.name);
                     const description = repo.description || generateDescription(repo.name, repo.language);
                     
+                    // Add placeholder for screenshot/demo visual
+                    const hasVisual = repo.homepage || repo.has_pages;
+                    const visualPlaceholder = hasVisual ? 
+                        `<div style="width: 100%; height: 180px; background: linear-gradient(135deg, var(--gray-200) 0%, var(--gray-100) 100%); border-radius: 6px; margin-bottom: 1rem; display: flex; align-items: center; justify-content: center; color: var(--gray-600); font-size: 3rem;">🖼️</div>` : '';
+                    
                     return `
                         <article class="project-card" data-repo="${repo.name}">
-                            <div class="project-date">
-                                Created ${createdDate} • Updated ${updatedDate}
-                            </div>
+                            ${visualPlaceholder}
+                            <div class="project-date">Created ${createdDate} • Updated ${updatedDate}</div>
                             <h3>${repoName}</h3>
                             <p>${description}</p>
-                            
-                            ${repo.topics && repo.topics.length > 0 ? `
-                                <div class="project-tags">
-                                    ${repo.topics.slice(0, 5).map(topic => `<span class="tag">${topic}</span>`).join('')}
-                                </div>
-                            ` : ''}
-                            
+                            ${repo.topics && repo.topics.length > 0 ? `<div class="project-tags">${repo.topics.slice(0, 5).map(topic => `<span class="tag">${topic}</span>`).join('')}</div>` : ''}
                             <div class="project-stats">
-                                ${repo.language ? `
-                                    <div class="project-stat">
-                                        <span class="language-indicator" style="background-color: ${languageColor}"></span>
-                                        ${repo.language}
-                                    </div>
-                                ` : ''}
-                                ${repo.stargazers_count > 0 ? `
-                                    <div class="project-stat" title="${repo.stargazers_count} stars">
-                                        ⭐ ${repo.stargazers_count}
-                                    </div>
-                                ` : ''}
-                                ${repo.forks_count > 0 ? `
-                                    <div class="project-stat" title="${repo.forks_count} forks">
-                                        🍴 ${repo.forks_count}
-                                    </div>
-                                ` : ''}
-                                ${repo.size > 0 ? `
-                                    <div class="project-stat" title="Repository size">
-                                        📦 ${formatFileSize(repo.size * 1024)}
-                                    </div>
-                                ` : ''}
+                                ${repo.language ? `<div class="project-stat"><span class="language-indicator" style="background-color: ${languageColor}"></span>${repo.language}</div>` : ''}
+                                ${repo.stargazers_count > 0 ? `<div class="project-stat" title="${repo.stargazers_count} stars">⭐ ${repo.stargazers_count}</div>` : ''}
+                                ${repo.forks_count > 0 ? `<div class="project-stat" title="${repo.forks_count} forks">🍴 ${repo.forks_count}</div>` : ''}
+                                ${repo.size > 0 ? `<div class="project-stat" title="Repository size">📦 ${formatFileSize(repo.size * 1024)}</div>` : ''}
                             </div>
-                            
                             <div class="project-links">
-                                <a href="${repo.html_url}" target="_blank" rel="noopener noreferrer" title="View source code">
-                                    View Code
-                                </a>
-                                ${repo.homepage ? `
-                                    <a href="${repo.homepage}" target="_blank" rel="noopener noreferrer" title="Live demo">
-                                        Live Demo
-                                    </a>
-                                ` : ''}
-                                ${repo.has_pages ? `
-                                    <a href="https://${repo.owner.login}.github.io/${repo.name}" target="_blank" rel="noopener noreferrer" title="GitHub Pages">
-                                        Demo
-                                    </a>
-                                ` : ''}
+                                <a href="${repo.html_url}" target="_blank" rel="noopener noreferrer" title="View source code">View Code</a>
+                                ${repo.homepage ? `<a href="${repo.homepage}" target="_blank" rel="noopener noreferrer" title="Live demo">Live Demo</a>` : ''}
+                                ${repo.has_pages ? `<a href="https://${repo.owner.login}.github.io/${repo.name}" target="_blank" rel="noopener noreferrer" title="GitHub Pages">Demo</a>` : ''}
                             </div>
                         </article>
                     `;
                 }).join('');
                 
-                container.innerHTML = githubProjects;
-                
                 attachProjectEventListeners();
-                
                 projectsLoaded = true;
                 loadingAttempts = 0;
                 
-            } catch (err) {
+            }
+            catch (err) {
                 loading.style.display = 'none';
                 error.style.display = 'block';
                 
-                const errorElement = error.querySelector('p');
-                if (err.name === 'AbortError') {
+                var errorElement = error.querySelector('p');
+                if (err.name === 'AbortError') { 
                     errorElement.textContent = 'Request timed out. Please check your connection and try again.';
-                } else if (err.message.includes('rate limit')) {
-                    errorElement.textContent = err.message;
-                } else {
-                    errorElement.textContent = `Failed to load projects: ${err.message}`;
                 }
-                
-                console.error('Error loading GitHub projects:', err);
+                else if (err.message.includes('rate limit')) { 
+                    errorElement.textContent = err.message;
+                }
+                else { 
+                    errorElement.textContent = 'Failed to load projects: ' + err.message;
+                }
             }
         }
 
         function calculateRepoScore(repo) {
-            let score = 0;
-            score += repo.stargazers_count * 10;
-            score += repo.forks_count * 5;
+            let score = repo.stargazers_count * 10 + repo.forks_count * 5;
             const daysSinceUpdate = (Date.now() - new Date(repo.updated_at)) / (1000 * 60 * 60 * 24);
-            score += Math.max(0, 365 - daysSinceUpdate) / 10;
-            const sizeScore = Math.min(repo.size / 1000, 10);
-            score += sizeScore;
+            score += Math.max(0, 365 - daysSinceUpdate) / 10 + Math.min(repo.size / 1000, 10);
             if (repo.description && repo.description.length > 10) score += 5;
             if (repo.homepage) score += 3;
             if (repo.topics && repo.topics.length > 0) score += repo.topics.length;
@@ -1666,138 +2879,325 @@
         }
 
         function formatRepoName(name) {
-            return name
-                .split('-')
-                .map(word => word.charAt(0).toUpperCase() + word.slice(1))
-                .join(' ')
-                .replace(/([a-z])([A-Z])/g, '$1 $2');
+            return name.split('-').map(word => word.charAt(0).toUpperCase() + word.slice(1)).join(' ').replace(/([a-z])([A-Z])/g, '$1 $2');
         }
 
         function generateDescription(name, language) {
             const descriptions = {
-                'JavaScript': 'A modern JavaScript application showcasing interactive web development.',
-                'Python': 'A Python project demonstrating backend development and data processing.',
-                'HTML': 'A web project featuring modern HTML and CSS design patterns.',
-                'CSS': 'A frontend project showcasing advanced styling and responsive design.',
-                'Java': 'A Java application demonstrating object-oriented programming principles.',
-                'C++': 'A C++ project showcasing system programming and algorithms.',
-                'PHP': 'A PHP web application with server-side functionality.',
-                'Ruby': 'A Ruby project demonstrating elegant and readable code.',
-                'Go': 'A Go application showcasing modern system programming.',
-                'Rust': 'A Rust project demonstrating memory-safe systems programming.',
-                'TypeScript': 'A TypeScript application with enhanced type safety and modern features.',
-                'Shell': 'A shell script project for automation and system administration.',
-                'Swift': 'A Swift application for iOS/macOS development.',
-                'Kotlin': 'A Kotlin project for modern Android development.'
+                'JavaScript': 'I built this JavaScript application to showcase interactive web development techniques. It demonstrates modern DOM manipulation, event handling, and responsive design patterns.',
+                'Python': 'I developed this Python project to demonstrate backend development and data processing capabilities. It includes error handling, data validation, and efficient algorithm implementation.',
+                'HTML': 'I created this web project featuring modern HTML5 and CSS3 design patterns. It showcases responsive layouts, semantic markup, and accessibility best practices.',
+                'TypeScript': 'I built this TypeScript application with enhanced type safety and modern ECMAScript features. It demonstrates strong typing, interfaces, and scalable architecture patterns.',
+                'PHP': 'I developed this PHP application for server-side functionality. It includes database interactions, form processing, and secure authentication implementations.',
+                'Java': 'I created this Java project demonstrating object-oriented programming principles. It includes design patterns, data structures, and robust error handling.',
+                'C++': 'I built this C++ project showcasing low-level programming and performance optimization. It demonstrates memory management, algorithms, and efficient data structures.'
             };
-            
-            return descriptions[language] || `A ${language || 'software'} project showcasing various development skills and technologies.`;
+            return descriptions[language] || `I created this ${language || 'software'} project to showcase my development skills and problem-solving abilities. It demonstrates practical implementation of core programming concepts and best practices.`;
         }
 
         function formatFileSize(bytes) {
             if (bytes === 0) return '0 B';
-            const k = 1024;
-            const sizes = ['B', 'KB', 'MB', 'GB'];
+            const k = 1024, sizes = ['B', 'KB', 'MB', 'GB'];
             const i = Math.floor(Math.log(bytes) / Math.log(k));
             return parseFloat((bytes / Math.pow(k, i)).toFixed(1)) + ' ' + sizes[i];
         }
 
         function getLanguageColor(language) {
-            const colors = {
-                'JavaScript': '#f1e05a',
-                'Python': '#3572A5',
-                'Java': '#b07219',
-                'TypeScript': '#2b7489',
-                'C++': '#f34b7d',
-                'C': '#555555',
-                'PHP': '#4F5D95',
-                'Ruby': '#701516',
-                'Go': '#00ADD8',
-                'Rust': '#dea584',
-                'Swift': '#ffac45',
-                'Kotlin': '#F18E33',
-                'HTML': '#e34c26',
-                'CSS': '#563d7c',
-                'Shell': '#89e051',
-                'Dart': '#00B4AB',
-                'Scala': '#c22d40'
-            };
+            const colors = { 'JavaScript': '#f1e05a', 'Python': '#3572A5', 'Java': '#b07219', 'TypeScript': '#2b7489', 'C++': '#f34b7d', 'HTML': '#e34c26', 'CSS': '#563d7c', 'Shell': '#89e051' };
             return colors[language] || '#858585';
         }
 
         function retryLoadProjects() {
-            if (loadingAttempts < maxRetries) {
-                loadGitHubProjects();
-            } else {
-                const errorElement = document.getElementById('error');
-                errorElement.querySelector('p').textContent = 'Maximum retry attempts reached. Please refresh the page.';
-                errorElement.querySelector('button').style.display = 'none';
+            if (loadingAttempts < maxRetries) loadGitHubProjects();
+            else {
+                document.getElementById('error').querySelector('p').textContent = 'Maximum retry attempts reached. Please refresh the page.';
+                document.getElementById('error').querySelector('button').style.display = 'none';
             }
         }
 
         function attachProjectEventListeners() {
-            if (!prefersReducedMotion) {
-                const projectCards = document.querySelectorAll('.project-card');
-                projectCards.forEach(card => {
-                    card.addEventListener('mouseenter', () => {
-                        dot.classList.add('hover');
-                        outline.classList.add('hover');
-                    });
-                    
-                    card.addEventListener('mouseleave', () => {
-                        dot.classList.remove('hover');
-                        outline.classList.remove('hover');
-                    });
+            if (!prefersReducedMotion && !isTouchDevice && dot && outline) {
+                // Capture dot and outline in closure to prevent reference errors
+                const cursorDot = dot;
+                const cursorOutline = outline;
+                document.querySelectorAll('.project-card').forEach(card => {
+                    card.addEventListener('mouseenter', () => { 
+                        if (cursorDot && cursorDot.classList) {
+                            cursorDot.classList.add('hover');
+                        }
+                        if (cursorOutline && cursorOutline.classList) {
+                            cursorOutline.classList.add('hover');
+                        }
+                    }, { passive: true });
+                    card.addEventListener('mouseleave', () => { 
+                        if (cursorDot && cursorDot.classList) {
+                            cursorDot.classList.remove('hover');
+                        }
+                        if (cursorOutline && cursorOutline.classList) {
+                            cursorOutline.classList.remove('hover');
+                        }
+                    }, { passive: true });
                 });
             }
         }
 
         function createParticles() {
             const particlesContainer = document.getElementById('particles');
-            const particleCount = 450;
-            
-            for (let i = 0; i < particleCount; i++) {
+            for (let i = 0; i < 50; i++) {
                 const particle = document.createElement('div');
                 particle.className = 'particle';
                 particle.style.left = Math.random() * 100 + '%';
                 particle.style.animationDelay = Math.random() * 15 + 's';
                 particle.style.animationDuration = (Math.random() * 15 + 8) + 's';
-                
                 const size = Math.random() * 4 + 1;
                 particle.style.width = size + 'px';
                 particle.style.height = size + 'px';
-                
                 particlesContainer.appendChild(particle);
             }
         }
 
-        function initScrollReveal() {
-            const reveals = document.querySelectorAll('.skill-category, .project-card, .stat-item, .about-content, .social-links');
-            
-            const revealObserver = new IntersectionObserver((entries) => {
-                entries.forEach(entry => {
-                    if (entry.isIntersecting) {
-                        entry.target.classList.add('reveal', 'active');
-                    }
-                });
-            }, {
-                threshold: 0.1,
-                rootMargin: '0px 0px -50px 0px'
-            });
-            
-            reveals.forEach(el => {
-                el.classList.add('reveal');
-                revealObserver.observe(el);
-            });
-        }
+        // Contact form - Let it submit naturally without JavaScript interference
 
         createParticles();
         
-        if (document.readyState === 'loading') {
-            document.addEventListener('DOMContentLoaded', initScrollReveal);
-        } else {
-            initScrollReveal();
+        // ============================================
+        // DARK MODE TOGGLE
+        // ============================================
+        window.toggleTheme = function() {
+            const html = document.documentElement;
+            const currentTheme = html.getAttribute('data-theme');
+            const newTheme = currentTheme === 'dark' ? 'light' : 'dark';
+            
+            html.setAttribute('data-theme', newTheme);
+            localStorage.setItem('theme', newTheme);
+            
+            // Update icon
+            const icon = document.getElementById('theme-icon');
+            icon.textContent = newTheme === 'dark' ? '☀️' : '🌙';
+            
+            // Add smooth transition animation
+            document.getElementById('theme-toggle').style.transform = 'rotate(360deg)';
+            setTimeout(() => {
+                document.getElementById('theme-toggle').style.transform = 'rotate(0deg)';
+            }, 300);
         }
+        
+        // Load saved theme on page load
+        window.addEventListener('load', function() {
+            const savedTheme = localStorage.getItem('theme') || 'light';
+            document.documentElement.setAttribute('data-theme', savedTheme);
+            const icon = document.getElementById('theme-icon');
+            if (icon) {
+                icon.textContent = savedTheme === 'dark' ? '☀️' : '🌙';
+            }
+            
+            // Animate stats on load with a small delay to ensure DOM is ready
+            setTimeout(animateStats, 100);
+        });
+        
+        // ============================================
+        // ANIMATED STATISTICS
+        // ============================================
+        function animateStats() {
+            const stats = document.querySelectorAll('.stat-number[data-count]');
+            
+            stats.forEach(stat => {
+                const target = parseInt(stat.getAttribute('data-count'));
+                const duration = 2000; // 2 seconds
+                const increment = target / (duration / 16); // 60fps
+                let current = 0;
+                
+                const timer = setInterval(() => {
+                    current += increment;
+                    if (current >= target) {
+                        stat.textContent = target;
+                        clearInterval(timer);
+                    } else {
+                        stat.textContent = Math.floor(current);
+                    }
+                }, 16);
+            });
+        }
+        
+        // ============================================
+        // ANIMATE SKILL PROGRESS BARS
+        // ============================================
+        function animateSkillBars() {
+            const progressBars = document.querySelectorAll('.skill-progress-fill');
+            
+            progressBars.forEach(bar => {
+                const targetProgress = bar.getAttribute('data-progress');
+                setTimeout(() => {
+                    bar.style.width = targetProgress + '%';
+                }, 200);
+            });
+        }
+        
+        // Trigger skill bar animation when Skills page is shown
+        // (This wrapper will be extended below to include scroll-reveal functionality)
+        
+        // ============================================
+        // SCROLL PROGRESS BAR
+        // ============================================
+        function updateScrollProgress() {
+            const winScroll = document.body.scrollTop || document.documentElement.scrollTop;
+            const height = document.documentElement.scrollHeight - document.documentElement.clientHeight;
+            const scrolled = (winScroll / height) * 100;
+            document.getElementById('scroll-progress').style.width = scrolled + '%';
+        }
+        
+        window.addEventListener('scroll', updateScrollProgress);
+        
+        // ============================================
+        // TYPING ANIMATION
+        // ============================================
+        function typeWriter() {
+            const text = '// Building the web, one line of code at a time';
+            const element = document.getElementById('typing-text');
+            if (!element) return;
+            
+            element.textContent = '';
+            let i = 0;
+            
+            function type() {
+                if (i < text.length) {
+                    element.textContent += text.charAt(i);
+                    i++;
+                    setTimeout(type, 50);
+                } else {
+                    // Add blinking cursor
+                    element.style.borderRight = '2px solid var(--black)';
+                    element.style.paddingRight = '5px';
+                    setInterval(() => {
+                        element.style.borderRight = element.style.borderRight === '2px solid transparent' 
+                            ? '2px solid var(--black)' 
+                            : '2px solid transparent';
+                    }, 500);
+                }
+            }
+            
+            setTimeout(type, 500);
+        }
+        
+        // Start typing animation on load
+        window.addEventListener('load', typeWriter);
+        
+        // ============================================
+        // SCROLL REVEAL ANIMATIONS
+        // ============================================
+        function revealOnScroll() {
+            const reveals = document.querySelectorAll('.scroll-reveal');
+            
+            reveals.forEach(element => {
+                const windowHeight = window.innerHeight;
+                const elementTop = element.getBoundingClientRect().top;
+                const elementVisible = 150;
+                
+                if (elementTop < windowHeight - elementVisible) {
+                    element.classList.add('revealed');
+                }
+            });
+        }
+        
+        window.addEventListener('scroll', revealOnScroll);
+        revealOnScroll(); // Initial check
+        
+        // Extend showPage function for scroll-reveal animations
+        const baseShowPage = showPage;
+        function showPageWithAnimations(pageId, updateHistory = true) {
+            // Call the original showPage function
+            baseShowPage(pageId, updateHistory);
+            
+            // Add scroll-reveal class to main content sections
+            setTimeout(() => {
+                const sections = document.querySelectorAll('.skill-category, .project-card, .timeline-item, .faq-item');
+                sections.forEach((section, index) => {
+                    section.classList.add('scroll-reveal');
+                    section.style.transitionDelay = `${index * 0.1}s`;
+                });
+                revealOnScroll();
+            }, 100);
+            
+            // Trigger skill bar animation when Skills page is shown
+            if (pageId === 'skills') {
+                setTimeout(animateSkillBars, 100);
+            }
+        }
+        
+        // Replace showPage with the enhanced version
+        showPage = showPageWithAnimations;
+        
+        // ============================================
+        // COOKIE CONSENT BANNER
+        // ============================================
+        function acceptCookies() {
+            localStorage.setItem('cookieConsent', 'accepted');
+            document.getElementById('cookieBanner').classList.remove('show');
+            loadAnalytics(); // Load analytics after consent
+        }
+        
+        function declineCookies() {
+            localStorage.setItem('cookieConsent', 'declined');
+            document.getElementById('cookieBanner').classList.remove('show');
+        }
+        
+        // Show banner if user hasn't made a choice
+        window.addEventListener('load', function() {
+            const consent = localStorage.getItem('cookieConsent');
+            if (!consent) {
+                setTimeout(() => {
+                    document.getElementById('cookieBanner').classList.add('show');
+                }, 1000); // Show after 1 second
+            }
+        });
+        
+        // ============================================
+        // URL ROUTING - Handle browser back/forward buttons
+        // ============================================
+        window.addEventListener('popstate', function(event) {
+            if (event.state && event.state.page) {
+                showPage(event.state.page, false);
+            } else {
+                // If no state, determine page from URL
+                const path = window.location.pathname;
+                const pageId = path === '/' ? 'home' : path.substring(1);
+                showPage(pageId, false);
+            }
+        });
+        
+        // ============================================
+        // INITIALIZE PAGE BASED ON URL ON LOAD
+        // ============================================
+        window.addEventListener('DOMContentLoaded', function() {
+            // Check if we were redirected from 404 page
+            let pageId;
+            
+            if (sessionStorage.redirect) {
+                // Handle 404 redirect
+                const redirect = sessionStorage.redirect;
+                delete sessionStorage.redirect;
+                
+                // Extract the page ID from the redirect path
+                pageId = redirect === '/' ? 'home' : redirect.substring(1).split('/')[0];
+            } else {
+                // Normal URL-based routing
+                const path = window.location.pathname;
+                pageId = path === '/' ? 'home' : path.substring(1);
+            }
+            
+            // Valid page IDs
+            const validPages = ['home', 'about', 'skills', 'services', 'experience', 'projects', 'faq', 'sponsors', 'contact', 'privacy', 'terms'];
+            
+            if (validPages.includes(pageId)) {
+                // Remove active class from home page
+                document.getElementById('home').classList.remove('active');
+                // Show the correct page without updating history
+                showPage(pageId, false);
+            } else if (pageId !== 'home' && pageId !== '') {
+                // Invalid page, redirect to home
+                showPage('home', true);
+            }
+        });
     </script>
 </body>
 </html>
