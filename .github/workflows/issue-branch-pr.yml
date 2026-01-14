@@ -7,7 +7,7 @@ on:
     types: [opened, closed, synchronize]
   workflow_dispatch:
   schedule:
-    - cron: '0 2 * * 0'  # Weekly on Sundays at 2 AM UTC for cleanup
+    - cron: '0 2 * * 0'
 
 permissions:
   contents: write
@@ -38,25 +38,16 @@ jobs:
           ISSUE_NUMBER="${{ github.event.issue.number }}"
           ISSUE_TITLE="${{ github.event.issue.title }}"
           
-          # Clean the issue title for branch name
-          CLEAN_TITLE=$(echo "$ISSUE_TITLE" | \
-            sed 's/[^a-zA-Z0-9 ]//g' | \
-            tr '[:upper:]' '[:lower:]' | \
-            sed 's/ /-/g' | \
-            sed 's/--*/-/g' | \
-            sed 's/^-\|-$//g' | \
-            cut -c1-50)
+          CLEAN_TITLE=$(echo "$ISSUE_TITLE" | sed 's/[^a-zA-Z0-9 ]//g' | tr '[:upper:]' '[:lower:]' | sed 's/ /-/g' | sed 's/--*/-/g' | sed 's/^-\|-$//g' | cut -c1-50)
           
           BRANCH_NAME="issue-${ISSUE_NUMBER}-${CLEAN_TITLE}"
           
           echo "Creating branch: $BRANCH_NAME"
           
-          # Check if branch already exists
           if git ls-remote --heads origin "$BRANCH_NAME" | grep -q "$BRANCH_NAME"; then
             echo "Branch $BRANCH_NAME already exists"
             echo "branch_exists=true" >> $GITHUB_OUTPUT
           else
-            # Create and push new branch
             git checkout -b "$BRANCH_NAME"
             git push origin "$BRANCH_NAME"
             echo "branch_exists=false" >> $GITHUB_OUTPUT
@@ -76,18 +67,15 @@ jobs:
             const branchName = '${{ steps.create_branch.outputs.branch_name }}';
             const issueNumber = context.issue.number;
             
-            const comment = `🔀 **Branch Created**
-            
-            A new branch has been created for this issue:
-            - Branch: \`${branchName}\`
-            - You can start working on this issue by checking out the branch
-            
-            \`\`\`bash
-            git fetch origin
-            git checkout ${branchName}
-            \`\`\`
-            
-            When ready, create a pull request to merge your changes!`;
+            const comment = 'Branch Created\n\n' +
+                          'A new branch has been created for this issue:\n' +
+                          '- Branch: `' + branchName + '`\n' +
+                          '- You can start working on this issue by checking out the branch\n\n' +
+                          '```bash\n' +
+                          'git fetch origin\n' +
+                          'git checkout ' + branchName + '\n' +
+                          '```\n\n' +
+                          'When ready, create a pull request to merge your changes!';
             
             await github.rest.issues.createComment({
               owner: context.repo.owner,
@@ -116,7 +104,6 @@ jobs:
             const issue = context.payload.issue;
             const issueNumber = issue.number;
             
-            // Clean the issue title for branch name (same logic as create-branch job)
             const cleanTitle = issue.title
               .replace(/[^a-zA-Z0-9 ]/g, '')
               .toLowerCase()
@@ -125,126 +112,104 @@ jobs:
               .replace(/^-|-$/g, '')
               .substring(0, 50);
             
-            const branchName = `issue-${issueNumber}-${cleanTitle}`;
+            const branchName = 'issue-' + issueNumber + '-' + cleanTitle;
             
             try {
-              // Check if branch exists
-              const { data: branch } = await github.rest.repos.getBranch({
+              const branch = await github.rest.repos.getBranch({
                 owner: context.repo.owner,
                 repo: context.repo.repo,
                 branch: branchName
               });
               
-              // Check if PR already exists
-              const { data: existingPRs } = await github.rest.pulls.list({
+              const existingPRs = await github.rest.pulls.list({
                 owner: context.repo.owner,
                 repo: context.repo.repo,
-                head: `${context.repo.owner}:${branchName}`,
+                head: context.repo.owner + ':' + branchName,
                 state: 'open'
               });
               
-              if (existingPRs.length > 0) {
-                console.log(`PR already exists for branch ${branchName}`);
+              if (existingPRs.data.length > 0) {
+                console.log('PR already exists for branch ' + branchName);
                 
-                // Comment on issue
                 await github.rest.issues.createComment({
                   owner: context.repo.owner,
                   repo: context.repo.repo,
                   issue_number: issueNumber,
-                  body: `🔄 **Pull Request Already Exists**
-                  
-                  A pull request already exists for this issue:
-                  - PR: #${existingPRs[0].number}
-                  - Branch: \`${branchName}\`
-                  
-                  [View Pull Request](${existingPRs[0].html_url})`
+                  body: 'Pull Request Already Exists\n\n' +
+                        'A pull request already exists for this issue:\n' +
+                        '- PR: #' + existingPRs.data[0].number + '\n' +
+                        '- Branch: `' + branchName + '`\n\n' +
+                        '[View Pull Request](' + existingPRs.data[0].html_url + ')'
                 });
                 return;
               }
               
-              // Create new PR
-              const { data: newPR } = await github.rest.pulls.create({
+              const newPR = await github.rest.pulls.create({
                 owner: context.repo.owner,
                 repo: context.repo.repo,
-                title: `Fix #${issueNumber}: ${issue.title}`,
+                title: 'Fix #' + issueNumber + ': ' + issue.title,
                 head: branchName,
                 base: 'main',
-                body: `## Description
-                
-                Fixes #${issueNumber}
-                
-                ## Issue Details
-                ${issue.body || 'No description provided.'}
-                
-                ## Changes Made
-                - [ ] List your changes here
-                
-                ## Testing
-                - [ ] Add testing details here
-                
-                ## Checklist
-                - [ ] Code follows project style guidelines
-                - [ ] Self-review completed
-                - [ ] Tests added/updated as needed
-                - [ ] Documentation updated as needed`,
+                body: '## Description\n\n' +
+                      'Fixes #' + issueNumber + '\n\n' +
+                      '## Issue Details\n' +
+                      (issue.body || 'No description provided.') + '\n\n' +
+                      '## Changes Made\n' +
+                      '- [ ] List your changes here\n\n' +
+                      '## Testing\n' +
+                      '- [ ] Add testing details here\n\n' +
+                      '## Checklist\n' +
+                      '- [ ] Code follows project style guidelines\n' +
+                      '- [ ] Self-review completed\n' +
+                      '- [ ] Tests added/updated as needed\n' +
+                      '- [ ] Documentation updated as needed',
                 draft: false
               });
               
-              console.log(`Created PR #${newPR.number} for issue #${issueNumber}`);
+              console.log('Created PR #' + newPR.data.number + ' for issue #' + issueNumber);
               
-              // Comment on issue
               await github.rest.issues.createComment({
                 owner: context.repo.owner,
                 repo: context.repo.repo,
                 issue_number: issueNumber,
-                body: `🚀 **Pull Request Created**
-                
-                A pull request has been automatically created for this issue:
-                - PR: #${newPR.number}
-                - Branch: \`${branchName}\`
-                
-                [View Pull Request](${newPR.html_url})
-                
-                Please review and update the PR description with your implementation details.`
+                body: 'Pull Request Created\n\n' +
+                      'A pull request has been automatically created for this issue:\n' +
+                      '- PR: #' + newPR.data.number + '\n' +
+                      '- Branch: `' + branchName + '`\n\n' +
+                      '[View Pull Request](' + newPR.data.html_url + ')\n\n' +
+                      'Please review and update the PR description with your implementation details.'
               });
               
-              // Add labels to PR
               if (issue.labels && issue.labels.length > 0) {
                 const labelNames = issue.labels.map(label => label.name);
                 await github.rest.issues.addLabels({
                   owner: context.repo.owner,
                   repo: context.repo.repo,
-                  issue_number: newPR.number,
+                  issue_number: newPR.data.number,
                   labels: labelNames
                 });
               }
               
             } catch (error) {
-              console.log(`Error processing branch ${branchName}:`, error.message);
+              console.log('Error processing branch ' + branchName + ':', error.message);
               
               if (error.status === 404) {
-                // Branch doesn't exist
                 await github.rest.issues.createComment({
                   owner: context.repo.owner,
                   repo: context.repo.repo,
                   issue_number: issueNumber,
-                  body: `❌ **Branch Not Found**
-                  
-                  Could not find branch \`${branchName}\` for this issue.
-                  
-                  Please ensure the branch exists before creating a pull request, or remove the 'ready-for-pr' label and re-assign the issue to create a new branch.`
+                  body: 'Branch Not Found\n\n' +
+                        'Could not find branch `' + branchName + '` for this issue.\n\n' +
+                        'Please ensure the branch exists before creating a pull request, or remove the ready-for-pr label and re-assign the issue to create a new branch.'
                 });
               } else {
-                // Other error
                 await github.rest.issues.createComment({
                   owner: context.repo.owner,
                   repo: context.repo.repo,
                   issue_number: issueNumber,
-                  body: `❌ **Error Creating Pull Request**
-                  
-                  An error occurred while creating the pull request: ${error.message}
-                  
-                  Please create the pull request manually or contact a maintainer.`
+                  body: 'Error Creating Pull Request\n\n' +
+                        'An error occurred while creating the pull request: ' + error.message + '\n\n' +
+                        'Please create the pull request manually or contact a maintainer.'
                 });
               }
             }
@@ -266,7 +231,6 @@ jobs:
             const branchName = pr.head.ref;
             const username = pr.user.login;
             
-            // Extract issue number from various sources
             const branchMatch = branchName.match(/^issue-(\d+)-/);
             const titleMatch = prTitle.match(/(?:Fix|Fixes|Close|Closes|Resolve|Resolves)\s+#(\d+)/i);
             const bodyMatch = prBody.match(/(?:Fix|Fixes|Close|Closes|Resolve|Resolves)\s+#(\d+)/i);
@@ -274,173 +238,118 @@ jobs:
             const issueNumber = branchMatch?.[1] || titleMatch?.[1] || bodyMatch?.[1];
             
             if (issueNumber) {
-              console.log(`Found linked issue #${issueNumber} for external PR #${pr.number}`);
-              
-              const celebratory = [
-                "🎉 Amazing work!",
-                "🚀 Fantastic contribution!",
-                "✨ Outstanding effort!",
-                "💎 Great job!",
-                "🌟 Excellent work!",
-                "🔥 Awesome contribution!"
-              ];
-              
-              const achievements = [
-                "🏆 **First-time contributor achievement unlocked!**",
-                "🎯 **Open source champion in the making!**",
-                "💡 **Problem solver extraordinaire!**",
-                "🛠️ **Code craftsperson at work!**",
-                "🌱 **Growing the open source community!**"
-              ];
-              
-              const randomCelebration = celebratory[Math.floor(Math.random() * celebratory.length)];
-              const randomAchievement = achievements[Math.floor(Math.random() * achievements.length)];
+              console.log('Found linked issue #' + issueNumber + ' for external PR #' + pr.number);
               
               try {
-                // Get issue details
-                const { data: issue } = await github.rest.issues.get({
+                const issue = await github.rest.issues.get({
                   owner: context.repo.owner,
                   repo: context.repo.repo,
                   issue_number: parseInt(issueNumber)
                 });
                 
-                // Comment on the linked issue
                 await github.rest.issues.createComment({
                   owner: context.repo.owner,
                   repo: context.repo.repo,
                   issue_number: parseInt(issueNumber),
-                  body: `${randomCelebration} **Pull Request from Fork Detected!**
-                  
-                  @${username} has opened a pull request to resolve this issue! 
-                  
-                  **PR Details:**
-                  - 🔗 **Pull Request**: [#${pr.number} - ${pr.title}](${pr.html_url})
-                  - 🌿 **Branch**: \`${username}:${branchName}\`
-                  - 👤 **Author**: @${username}
-                  - 📊 **Changes**: +${pr.additions || 0} / -${pr.deletions || 0} lines
-                  
-                  ${randomAchievement}
-                  
-                  **What happens next?**
-                  1. 👀 **Review Process**: Maintainers will review the code
-                  2. 🔍 **Testing**: Automated tests will run
-                  3. 💬 **Feedback**: Any feedback will be provided in the PR
-                  4. ✅ **Merge**: Once approved, the PR will be merged!
-                  
-                  **Thank you @${username} for contributing to our project!** Your effort makes this project better for everyone! 🌍✨`
+                  body: 'Pull Request from Fork Detected!\n\n' +
+                        '@' + username + ' has opened a pull request to resolve this issue!\n\n' +
+                        'PR Details:\n' +
+                        '- Pull Request: [#' + pr.number + ' - ' + pr.title + '](' + pr.html_url + ')\n' +
+                        '- Branch: `' + username + ':' + branchName + '`\n' +
+                        '- Author: @' + username + '\n' +
+                        '- Changes: +' + (pr.additions || 0) + ' / -' + (pr.deletions || 0) + ' lines\n\n' +
+                        'What happens next?\n' +
+                        '1. Review Process: Maintainers will review the code\n' +
+                        '2. Testing: Automated tests will run\n' +
+                        '3. Feedback: Any feedback will be provided in the PR\n' +
+                        '4. Merge: Once approved, the PR will be merged!\n\n' +
+                        'Thank you @' + username + ' for contributing to our project!'
                 });
-                
-                // Add labels to the issue
-                const labelsToAdd = ['in-progress', 'external-contribution'];
                 
                 try {
                   await github.rest.issues.addLabels({
                     owner: context.repo.owner,
                     repo: context.repo.repo,
                     issue_number: parseInt(issueNumber),
-                    labels: labelsToAdd
+                    labels: ['in-progress', 'external-contribution']
                   });
                 } catch (labelError) {
                   console.log('Could not add labels:', labelError.message);
                 }
                 
-                // Welcome comment on PR for first-time contributors
-                const { data: allPRs } = await github.rest.pulls.list({
+                const allPRs = await github.rest.pulls.list({
                   owner: context.repo.owner,
                   repo: context.repo.repo,
                   creator: username,
                   state: 'all'
                 });
                 
-                const isFirstContribution = allPRs.length <= 1;
+                const isFirstContribution = allPRs.data.length <= 1;
                 
                 if (isFirstContribution) {
                   await github.rest.issues.createComment({
                     owner: context.repo.owner,
                     repo: context.repo.repo,
                     issue_number: pr.number,
-                    body: `🎉 **Welcome to the community, @${username}!**
-                    
-                    This appears to be your **first contribution** to this repository - that's awesome! 🌟
-                    
-                    **What to expect:**
-                    - ✅ **Automated checks** will run to ensure code quality
-                    - 👀 **Code review** from our maintainers (usually within 24-48 hours)
-                    - 💬 **Feedback** to help improve the contribution if needed
-                    - 🚀 **Merge** once everything looks good!
-                    
-                    **Pro Tips for Success:**
-                    - 📝 Keep an eye on this PR for any feedback
-                    - 🔄 Address any requested changes promptly  
-                    - 💡 Ask questions if anything is unclear
-                    - 🧪 Make sure all tests are passing
-                    
-                    **You're part of the open source community now!** 🌍
-                    
-                    Thank you for choosing to contribute here. We're excited to work with you! 🤝✨
-                    
-                    ---
-                    *Linked to issue #${issueNumber}*`
+                    body: 'Welcome to the community, @' + username + '!\n\n' +
+                          'This appears to be your first contribution to this repository - that\'s awesome!\n\n' +
+                          'What to expect:\n' +
+                          '- Automated checks will run to ensure code quality\n' +
+                          '- Code review from our maintainers (usually within 24-48 hours)\n' +
+                          '- Feedback to help improve the contribution if needed\n' +
+                          '- Merge once everything looks good!\n\n' +
+                          'Pro Tips for Success:\n' +
+                          '- Keep an eye on this PR for any feedback\n' +
+                          '- Address any requested changes promptly\n' +
+                          '- Ask questions if anything is unclear\n' +
+                          '- Make sure all tests are passing\n\n' +
+                          'Thank you for choosing to contribute here!\n\n' +
+                          '---\n' +
+                          'Linked to issue #' + issueNumber
                   });
                 } else {
-                  // Returning contributor
                   await github.rest.issues.createComment({
                     owner: context.repo.owner,
                     repo: context.repo.repo,
                     issue_number: pr.number,
-                    body: `👋 **Great to see you again, @${username}!**
-                    
-                    Thanks for another valuable contribution to the project! 🌟
-                    
-                    **PR Summary:**
-                    - 🎯 **Addresses**: Issue #${issueNumber}
-                    - 📊 **Changes**: +${pr.additions || 0} / -${pr.deletions || 0} lines
-                    - 🌿 **Branch**: \`${branchName}\`
-                    
-                    We'll review this as soon as possible. Your continued contributions help make this project better! 🚀
-                    
-                    ---
-                    *Auto-linked to issue #${issueNumber}*`
+                    body: 'Great to see you again, @' + username + '!\n\n' +
+                          'Thanks for another valuable contribution to the project!\n\n' +
+                          'PR Summary:\n' +
+                          '- Addresses: Issue #' + issueNumber + '\n' +
+                          '- Changes: +' + (pr.additions || 0) + ' / -' + (pr.deletions || 0) + ' lines\n' +
+                          '- Branch: `' + branchName + '`\n\n' +
+                          'We\'ll review this as soon as possible.\n\n' +
+                          '---\n' +
+                          'Auto-linked to issue #' + issueNumber
                   });
                 }
                 
               } catch (error) {
-                console.log(`Could not process issue #${issueNumber}:`, error.message);
+                console.log('Could not process issue #' + issueNumber + ':', error.message);
                 
-                // Still try to welcome the contributor
                 await github.rest.issues.createComment({
                   owner: context.repo.owner,
                   repo: context.repo.repo,
                   issue_number: pr.number,
-                  body: `🎉 **Thank you for your contribution, @${username}!**
-                  
-                  We've detected this PR is from a fork - welcome to the community! 🌟
-                  
-                  While we couldn't automatically link this to a specific issue, our maintainers will review your contribution and provide feedback soon.
-                  
-                  **Your effort is appreciated!** 🚀✨`
+                  body: 'Thank you for your contribution, @' + username + '!\n\n' +
+                        'We\'ve detected this PR is from a fork - welcome to the community!\n\n' +
+                        'While we couldn\'t automatically link this to a specific issue, our maintainers will review your contribution and provide feedback soon.'
                 });
               }
             } else {
-              // No issue number found, still welcome them
-              console.log(`No linked issue found for external PR #${pr.number}, but welcoming contributor`);
+              console.log('No linked issue found for external PR #' + pr.number);
               
               await github.rest.issues.createComment({
                 owner: context.repo.owner,
                 repo: context.repo.repo,
                 issue_number: pr.number,
-                body: `👋 **Welcome, @${username}!**
-                
-                Thank you for contributing to our project! 🌟
-                
-                **For better tracking, consider:**
-                - 🎯 Referencing an issue in your PR title (e.g., "Fix #123: Description")
-                - 📝 Adding "Fixes #issue-number" to your PR description
-                - 💡 Opening an issue first to discuss major changes
-                
-                We'll review your contribution and provide feedback soon! 🚀
-                
-                **Thank you for being part of our open source community!** ✨`
+                body: 'Welcome, @' + username + '!\n\n' +
+                      'Thank you for contributing to our project!\n\n' +
+                      'For better tracking, consider:\n' +
+                      '- Referencing an issue in your PR title (e.g., "Fix #123: Description")\n' +
+                      '- Adding "Fixes #issue-number" to your PR description\n' +
+                      '- Opening an issue first to discuss major changes\n\n' +
+                      'We\'ll review your contribution and provide feedback soon!'
               });
             }
 
@@ -459,91 +368,48 @@ jobs:
             const username = pr.user.login;
             const branchName = pr.head.ref;
             
-            // Extract issue number
             const branchMatch = branchName.match(/^issue-(\d+)-/);
             const titleMatch = pr.title.match(/(?:Fix|Fixes|Close|Closes|Resolve|Resolves)\s+#(\d+)/i);
             const bodyMatch = pr.body?.match(/(?:Fix|Fixes|Close|Closes|Resolve|Resolves)\s+#(\d+)/i);
             
             const issueNumber = branchMatch?.[1] || titleMatch?.[1] || bodyMatch?.[1];
             
-            const celebrations = [
-              "🎊 **MERGED!** 🎊",
-              "🚀 **SHIPPED!** 🚀", 
-              "✨ **DEPLOYED!** ✨",
-              "🔥 **LIVE!** 🔥",
-              "🏆 **SUCCESS!** 🏆"
-            ];
-            
-            const thankYouMessages = [
-              "Your code is now part of our project forever! 📚",
-              "You've made the project better for everyone! 🌍", 
-              "Your contribution will help countless users! 👥",
-              "You're officially a contributor to this project! 🏅",
-              "Your code is now running in production! 🖥️"
-            ];
-            
-            const randomCelebration = celebrations[Math.floor(Math.random() * celebrations.length)];
-            const randomThankYou = thankYouMessages[Math.floor(Math.random() * thankYouMessages.length)];
-            
-            // Celebrate on the PR
             await github.rest.issues.createComment({
               owner: context.repo.owner,
               repo: context.repo.repo,
               issue_number: pr.number,
-              body: `${randomCelebration}
-              
-              **Congratulations @${username}!** Your pull request has been successfully merged! 🎉
-              
-              **Impact Summary:**
-              - ✅ **Lines Added**: ${pr.additions || 0}
-              - ✅ **Lines Removed**: ${pr.deletions || 0}  
-              - ✅ **Files Changed**: ${pr.changed_files || 0}
-              - ✅ **Commits**: ${pr.commits || 1}
-              
-              **What this means:**
-              ${randomThankYou}
-              
-              **Next Steps:**
-              - 🌟 **Star the repository** if you enjoyed contributing!
-              - 👀 **Watch for updates** to stay in the loop
-              - 🔍 **Find more issues** to work on
-              - 📢 **Share your success** with the community!
-              
-              **You're now part of our contributor family!** 👨‍👩‍👧‍👦
-              
-              Thank you for making open source better! 🌟✨
-              
-              ---
-              *Merge commit: ${pr.merge_commit_sha?.substring(0, 7) || 'unknown'}*`
+              body: 'MERGED!\n\n' +
+                    'Congratulations @' + username + '! Your pull request has been successfully merged!\n\n' +
+                    'Impact Summary:\n' +
+                    '- Lines Added: ' + (pr.additions || 0) + '\n' +
+                    '- Lines Removed: ' + (pr.deletions || 0) + '\n' +
+                    '- Files Changed: ' + (pr.changed_files || 0) + '\n' +
+                    '- Commits: ' + (pr.commits || 1) + '\n\n' +
+                    'Your code is now part of our project forever!\n\n' +
+                    'Next Steps:\n' +
+                    '- Star the repository if you enjoyed contributing!\n' +
+                    '- Watch for updates to stay in the loop\n' +
+                    '- Find more issues to work on\n' +
+                    '- Share your success with the community!\n\n' +
+                    'Thank you for making open source better!\n\n' +
+                    '---\n' +
+                    'Merge commit: ' + (pr.merge_commit_sha?.substring(0, 7) || 'unknown')
             });
             
-            // If linked to an issue, celebrate there too
             if (issueNumber) {
               try {
                 await github.rest.issues.createComment({
                   owner: context.repo.owner,
                   repo: context.repo.repo,
                   issue_number: parseInt(issueNumber),
-                  body: `🎉 **Issue Resolved by Community Contribution!**
-                  
-                  This issue has been successfully resolved by @${username}'s contribution! 
-                  
-                  **Merged PR**: [#${pr.number} - ${pr.title}](${pr.html_url})
-                  **Contributor**: @${username} 🌟
-                  **Merge Commit**: ${pr.merge_commit_sha?.substring(0, 7) || 'unknown'}
-                  
-                  **Community Impact**: ${randomThankYou}
-                  
-                  **Special thanks to @${username} for:**
-                  - 🍴 Forking the repository
-                  - 💻 Writing quality code  
-                  - 🔄 Going through the review process
-                  - 🚀 Getting it merged successfully!
-                  
-                  This is what open source collaboration looks like! 🤝✨`
+                  body: 'Issue Resolved by Community Contribution!\n\n' +
+                        'This issue has been successfully resolved by @' + username + '\'s contribution!\n\n' +
+                        'Merged PR: [#' + pr.number + ' - ' + pr.title + '](' + pr.html_url + ')\n' +
+                        'Contributor: @' + username + '\n' +
+                        'Merge Commit: ' + (pr.merge_commit_sha?.substring(0, 7) || 'unknown') + '\n\n' +
+                        'This is what open source collaboration looks like!'
                 });
                 
-                // Close the issue and add completion labels
                 await github.rest.issues.update({
                   owner: context.repo.owner,
                   repo: context.repo.repo,
@@ -563,33 +429,28 @@ jobs:
                 }
                 
               } catch (error) {
-                console.log(`Could not celebrate on issue #${issueNumber}:`, error.message);
+                console.log('Could not celebrate on issue #' + issueNumber + ':', error.message);
               }
             }
             
-            // Check if this is their first merged contribution for extra celebration
-            const { data: mergedPRs } = await github.rest.pulls.list({
+            const mergedPRs = await github.rest.pulls.list({
               owner: context.repo.owner,
               repo: context.repo.repo,
               creator: username,
               state: 'closed'
             });
             
-            const userMergedPRs = mergedPRs.filter(pr => pr.merged_at);
+            const userMergedPRs = mergedPRs.data.filter(pr => pr.merged_at);
             
             if (userMergedPRs.length === 1) {
-              // This is their first merged PR!
               await github.rest.issues.createComment({
                 owner: context.repo.owner,
                 repo: context.repo.repo,
                 issue_number: pr.number,
-                body: `🏆 **FIRST CONTRIBUTION MILESTONE!** 🏆
-                
-                @${username}, this is your **FIRST MERGED CONTRIBUTION** to this repository! 
-                
-                🌟 **Welcome to the contributor hall of fame!** 🌟
-                
-                Your journey as an open source contributor has officially begun! 🚀✨`
+                body: 'FIRST CONTRIBUTION MILESTONE!\n\n' +
+                      '@' + username + ', this is your FIRST MERGED CONTRIBUTION to this repository!\n\n' +
+                      'Welcome to the contributor hall of fame!\n\n' +
+                      'Your journey as an open source contributor has officially begun!'
               });
             }
 
@@ -609,38 +470,28 @@ jobs:
             const prBody = pr.body || '';
             const branchName = pr.head.ref;
             
-            // Extract issue number from branch name (issue-123-title format)
             const branchMatch = branchName.match(/^issue-(\d+)-/);
-            
-            // Extract issue number from PR title (Fix #123: or Fixes #123 format)
             const titleMatch = prTitle.match(/(?:Fix|Fixes|Close|Closes|Resolve|Resolves)\s+#(\d+)/i);
-            
-            // Extract issue number from PR body
             const bodyMatch = prBody.match(/(?:Fix|Fixes|Close|Closes|Resolve|Resolves)\s+#(\d+)/i);
             
             const issueNumber = branchMatch?.[1] || titleMatch?.[1] || bodyMatch?.[1];
             
             if (issueNumber) {
-              console.log(`Found linked issue #${issueNumber} for PR #${pr.number}`);
+              console.log('Found linked issue #' + issueNumber + ' for PR #' + pr.number);
               
-              // Comment on the linked issue
               try {
                 await github.rest.issues.createComment({
                   owner: context.repo.owner,
                   repo: context.repo.repo,
                   issue_number: parseInt(issueNumber),
-                  body: `🔗 **Pull Request Linked**
-                  
-                  Pull request #${pr.number} has been ${github.event.action === 'opened' ? 'opened' : 'updated'} for this issue.
-                  
-                  - PR: [${pr.title}](${pr.html_url})
-                  - Branch: \`${branchName}\`
-                  - Author: @${pr.user.login}
-                  
-                  ${github.event.action === 'opened' ? 'Review the changes and provide feedback!' : 'Changes have been updated in the PR.'}`
+                  body: 'Pull Request Linked\n\n' +
+                        'Pull request #' + pr.number + ' has been ' + (github.event.action === 'opened' ? 'opened' : 'updated') + ' for this issue.\n\n' +
+                        '- PR: [' + pr.title + '](' + pr.html_url + ')\n' +
+                        '- Branch: `' + branchName + '`\n' +
+                        '- Author: @' + pr.user.login + '\n\n' +
+                        (github.event.action === 'opened' ? 'Review the changes and provide feedback!' : 'Changes have been updated in the PR.')
                 });
                 
-                // Add "in-progress" label to issue if PR is opened
                 if (github.event.action === 'opened') {
                   await github.rest.issues.addLabels({
                     owner: context.repo.owner,
@@ -651,10 +502,10 @@ jobs:
                 }
                 
               } catch (error) {
-                console.log(`Could not comment on issue #${issueNumber}:`, error.message);
+                console.log('Could not comment on issue #' + issueNumber + ':', error.message);
               }
             } else {
-              console.log(`No linked issue found for PR #${pr.number}`);
+              console.log('No linked issue found for PR #' + pr.number);
             }
 
   handle-pr-merge:
@@ -671,22 +522,19 @@ jobs:
             const pr = context.payload.pull_request;
             const branchName = pr.head.ref;
             
-            // Extract issue number from branch name
             const branchMatch = branchName.match(/^issue-(\d+)-/);
             
             if (branchMatch) {
               const issueNumber = parseInt(branchMatch[1]);
               
               try {
-                // Get the issue
-                const { data: issue } = await github.rest.issues.get({
+                const issue = await github.rest.issues.get({
                   owner: context.repo.owner,
                   repo: context.repo.repo,
                   issue_number: issueNumber
                 });
                 
-                // Close the issue if it's still open
-                if (issue.state === 'open') {
+                if (issue.data.state === 'open') {
                   await github.rest.issues.update({
                     owner: context.repo.owner,
                     repo: context.repo.repo,
@@ -694,23 +542,18 @@ jobs:
                     state: 'closed'
                   });
                   
-                  // Add completion comment
                   await github.rest.issues.createComment({
                     owner: context.repo.owner,
                     repo: context.repo.repo,
                     issue_number: issueNumber,
-                    body: `✅ **Issue Completed**
-                    
-                    This issue has been resolved and closed automatically because PR #${pr.number} was merged.
-                    
-                    - Merged PR: [${pr.title}](${pr.html_url})
-                    - Merged by: @${pr.merged_by?.login || 'unknown'}
-                    - Merge commit: ${pr.merge_commit_sha?.substring(0, 7) || 'unknown'}
-                    
-                    Thank you for your contribution! 🎉`
+                    body: 'Issue Completed\n\n' +
+                          'This issue has been resolved and closed automatically because PR #' + pr.number + ' was merged.\n\n' +
+                          '- Merged PR: [' + pr.title + '](' + pr.html_url + ')\n' +
+                          '- Merged by: @' + (pr.merged_by?.login || 'unknown') + '\n' +
+                          '- Merge commit: ' + (pr.merge_commit_sha?.substring(0, 7) || 'unknown') + '\n\n' +
+                          'Thank you for your contribution!'
                   });
                   
-                  // Remove "in-progress" label and add "completed" label
                   try {
                     await github.rest.issues.removeLabel({
                       owner: context.repo.owner,
@@ -719,7 +562,7 @@ jobs:
                       name: 'in-progress'
                     });
                   } catch (e) {
-                    // Label might not exist, ignore
+                    console.log('Label might not exist');
                   }
                   
                   await github.rest.issues.addLabels({
@@ -731,7 +574,7 @@ jobs:
                 }
                 
               } catch (error) {
-                console.log(`Error processing issue #${issueNumber}:`, error.message);
+                console.log('Error processing issue #' + issueNumber + ':', error.message);
               }
             }
 
@@ -749,28 +592,25 @@ jobs:
             const pr = context.payload.pull_request;
             const branchName = pr.head.ref;
             
-            // Only delete issue branches that were merged
             if (branchName.startsWith('issue-') && pr.merged) {
               try {
                 await github.rest.git.deleteRef({
                   owner: context.repo.owner,
                   repo: context.repo.repo,
-                  ref: `heads/${branchName}`
+                  ref: 'heads/' + branchName
                 });
                 
-                console.log(`Deleted branch: ${branchName}`);
+                console.log('Deleted branch: ' + branchName);
                 
-                // Comment on PR
                 await github.rest.issues.createComment({
                   owner: context.repo.owner,
                   repo: context.repo.repo,
                   issue_number: pr.number,
-                  body: `🧹 **Branch Cleanup**
-                  
-                  Branch \`${branchName}\` has been automatically deleted after merge.`
+                  body: 'Branch Cleanup\n\n' +
+                        'Branch `' + branchName + '` has been automatically deleted after merge.'
                 });
                 
               } catch (error) {
-                console.log(`Could not delete branch ${branchName}:`, error.message);
+                console.log('Could not delete branch ' + branchName + ':', error.message);
               }
             }

@@ -1,0 +1,253 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <script>
+    // MAINTENANCE MODE TOGGLE
+    const MAINTENANCE_MODE = false; // Change to true to enable maintenance
+    
+    // Check if maintenance has completed (bypass flag)
+    const maintenanceComplete = localStorage.getItem('maintenanceComplete');
+    const completedAt = localStorage.getItem('maintenanceCompletedAt');
+    
+    // Clear bypass flag if it's older than 1 hour
+    if (completedAt && (Date.now() - parseInt(completedAt)) > 3600000) {
+      localStorage.removeItem('maintenanceComplete');
+      localStorage.removeItem('maintenanceCompletedAt');
+    }
+    
+    // Redirect to maintenance only if mode is enabled AND no valid bypass
+    if (MAINTENANCE_MODE && maintenanceComplete !== 'true') {
+      window.location.replace('/maintenance.html');
+    }
+  </script>
+  
+  <script>
+    // Initialize StatusPage availability flag
+    window.statusPageAvailable = false;
+    
+    // Load StatusPage widget with error handling
+    (function() {
+      try {
+        const script = document.createElement('script');
+        script.src = 'https://samidev.statuspage.io/embed/script.js';
+        script.async = true;
+        script.defer = true;
+        script.crossOrigin = 'anonymous';
+        
+        script.onload = function() {
+          // Mark as available when script loads successfully
+          window.statusPageAvailable = true;
+        };
+        
+        script.onerror = function() {
+          // Silently fail - StatusPage is optional
+          window.statusPageAvailable = false;
+          // Create a dummy StatusPage object to prevent errors if code tries to use it
+          window.StatusPage = window.StatusPage || {
+            page: function() {
+              return {
+                scheduledMaintenances: function(opts) {
+                  // Silent fallback - no warnings
+                  if (opts && opts.error) opts.error(new Error('StatusPage not available'));
+                },
+                components: function(opts) {
+                  // Silent fallback - no warnings
+                  if (opts && opts.error) opts.error(new Error('StatusPage not available'));
+                }
+              };
+            }
+          };
+        };
+        
+        document.head.appendChild(script);
+      } catch (e) {
+        // Silently handle error - StatusPage is optional
+        window.statusPageAvailable = false;
+        window.StatusPage = window.StatusPage || {
+          page: function() {
+            return {
+              scheduledMaintenances: function(opts) {
+                if (opts && opts.error) opts.error(new Error('StatusPage not available'));
+              },
+              components: function(opts) {
+                if (opts && opts.error) opts.error(new Error('StatusPage not available'));
+              }
+            };
+          }
+        };
+      }
+    })();
+  </script>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  
+  <!-- SEO - Prevent this page from being indexed -->
+  <meta name="robots" content="noindex, nofollow">
+  <meta name="googlebot" content="noindex, nofollow">
+  <meta name="description" content="Security verification page for sami.is-a.dev - Complete CAPTCHA to access Sami Singh's portfolio website">
+  
+  <title>Security Verification - Sami Singh Portfolio</title>
+  
+  <!-- Google Tag Manager -->
+  <script>(function(w,d,s,l,i){w[l]=w[l]||[];w[l].push({'gtm.start':
+  new Date().getTime(),event:'gtm.js'});var f=d.getElementsByTagName(s)[0],
+  j=d.createElement(s),dl=l!='dataLayer'?'&l='+l:'';j.async=true;j.src=
+  'https://www.googletagmanager.com/gtm.js?id='+i+dl;j.crossOrigin='anonymous';f.parentNode.insertBefore(j,f);
+  })(window,document,'script','dataLayer','GTM-W3LFMLDQ');</script>
+  <!-- End Google Tag Manager -->
+  
+  <style>
+    html,body{height:100%;margin:0;font-family:'Space Grotesk',system-ui,Arial,sans-serif}
+    body{display:flex;align-items:center;justify-content:center;background:linear-gradient(135deg,#f8f9fa,#e3f2fd);cursor:auto}
+    .box{background:rgba(255,255,255,0.98);padding:24px;border-radius:12px;box-shadow:0 8px 30px rgba(0,0,0,.12);text-align:center;max-width:540px}
+    h1{margin:0 0 8px;font-size:20px}
+    p{margin:0 0 14px;color:#444}
+    #recaptcha-placeholder{min-height:78px}
+  </style>
+</head>
+<body>
+  <!-- Google Tag Manager (noscript) -->
+  <noscript><iframe src="https://www.googletagmanager.com/ns.html?id=GTM-W3LFMLDQ"
+  height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
+  <!-- End Google Tag Manager (noscript) -->
+  
+  <div class="box">
+    <h1>Verify you're human</h1>
+    <p>Please complete the CAPTCHA below to continue.</p>
+    <div id="recaptcha-placeholder"></div>
+  </div>
+
+  <script>
+    const SITE = location.origin.replace(/\/$/,''); // e.g. https://sami.is-a.dev
+    const MAIN = SITE + '/';
+    const COOKIE_NAME = 'sami_verified';
+    const COOKIE_DAYS = 7;
+    const STATUS_PAGE_ID = 't8rwzx70wvzt'; // StatusPage.io page ID
+    
+    // Function to safely check for maintenance using StatusPage widget
+    function checkMaintenanceStatus() {
+      // Only check if StatusPage widget is available
+      if (!window.statusPageAvailable || typeof StatusPage === 'undefined' || typeof StatusPage.page !== 'function') {
+        // Silently skip - StatusPage is optional
+        return;
+      }
+      
+      try {
+        const sp = new StatusPage.page({ page: STATUS_PAGE_ID });
+        
+        // Check if scheduledMaintenances method exists
+        if (typeof sp.scheduledMaintenances !== 'function') {
+          // Silently skip if method not available
+          return;
+        }
+        
+        // Check for active maintenance
+        sp.scheduledMaintenances({
+          filter: 'active',
+          success: function(data) {
+            if (data.scheduled_maintenances && data.scheduled_maintenances.length > 0) {
+              // Active maintenance found, redirect
+              window.location.replace('/maintenance.html');
+            }
+          },
+          error: function(err) {
+            // Silently continue on error - maintenance check is optional
+          }
+        });
+      } catch (e) {
+        // Silently continue if check fails - StatusPage is optional
+      }
+    }
+    
+    // Run maintenance check after a short delay to ensure widget loads
+    setTimeout(checkMaintenanceStatus, 1000);
+
+    function setCookie(name,value,days){
+      const d=new Date(); 
+      d.setTime(d.getTime() + (days*24*60*60*1000));
+      document.cookie = `${name}=${value};expires=${d.toUTCString()};path=/;SameSite=Lax`;
+    }
+
+    function getCookie(name){
+      const pairs=document.cookie.split(';').map(s=>s.trim());
+      for(const p of pairs) if(p.startsWith(name+'=')) return p.split('=')[1];
+      return null;
+    }
+
+    // Push verification page view to dataLayer
+    window.dataLayer = window.dataLayer || [];
+    window.dataLayer.push({
+      'event': 'page_view',
+      'page_title': 'Verification Page',
+      'page_location': window.location.href
+    });
+
+    // Check if user came from successful verification
+    const urlParams = new URLSearchParams(window.location.search);
+    if (urlParams.get('verified') === '1') {
+      // User just verified, redirect to main page
+      window.dataLayer.push({
+        'event': 'verification_redirect',
+        'verification_status': 'redirecting_to_main'
+      });
+      window.location.replace(MAIN + '?verified=1&ts=' + Date.now());
+    } else if(getCookie(COOKIE_NAME) === 'true' || localStorage.getItem(COOKIE_NAME) === 'true'){
+      // User already verified - push event and redirect
+      window.dataLayer.push({
+        'event': 'verification_skipped',
+        'verification_status': 'already_verified'
+      });
+      window.location.replace(MAIN + '?verified=1&ts=' + Date.now());
+    } else {
+      // Load reCAPTCHA
+      const s=document.createElement('script');
+      s.src='https://www.google.com/recaptcha/api.js?onload=__onRecaptchaLoad&render=explicit';
+      s.async=true; 
+      s.defer=true;
+      document.head.appendChild(s);
+
+      window.__onRecaptchaLoad = function(){
+        const holder = document.getElementById('recaptcha-placeholder');
+        holder.innerHTML = '';
+        const wrapper = document.createElement('div'); 
+        wrapper.id = 'gwidget';
+        holder.appendChild(wrapper);
+        
+        window.grecaptcha.render('gwidget', {
+          sitekey: '6LcRBhAsAAAAACatryubAg_7jPQPb5i_tcAIoCa-',
+          callback: onRecaptchaSuccess,
+          theme: 'light'
+        });
+
+        // Track reCAPTCHA load
+        window.dataLayer.push({
+          'event': 'recaptcha_loaded',
+          'recaptcha_version': 'v2'
+        });
+      };
+
+      function onRecaptchaSuccess(token){
+        // Track successful verification
+        window.dataLayer.push({
+          'event': 'verification_success',
+          'verification_method': 'recaptcha_v2'
+        });
+
+        // Set both cookie and localStorage
+        setCookie(COOKIE_NAME,'true', COOKIE_DAYS);
+        try {
+          localStorage.setItem(COOKIE_NAME, 'true');
+        } catch(e) {
+          // localStorage might be blocked in some browsers/modes
+          console.log('localStorage not available');
+        }
+        
+        // Redirect with verified parameter
+        window.location.replace(MAIN + '?verified=1&ts=' + Date.now());
+      }
+
+      window.onRecaptchaSuccess = onRecaptchaSuccess;
+    }
+  </script>
+</body>
+</html>
