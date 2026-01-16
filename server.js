@@ -2,11 +2,115 @@ const express = require('express');
 const fetch = require('node-fetch');
 const bodyParser = require('body-parser');
 const path = require('path');
+const fs = require('fs');
+const stripe = require('stripe')(process.env.STRIPE_SECRET_KEY || 'sk_test_dummy');
+const nodemailer = require('nodemailer');
+
 const app = express();
 const PORT = process.env.PORT || 3000;
 
 app.use(bodyParser.json());
 app.use(express.static(path.join(__dirname)));
+
+// Setup email transporter for order confirmations
+let emailTransporter = null;
+if(process.env.EMAIL_SERVICE && process.env.EMAIL_USER && process.env.EMAIL_PASSWORD){
+  emailTransporter = nodemailer.createTransport({
+    service: process.env.EMAIL_SERVICE,
+    auth: {
+      user: process.env.EMAIL_USER,
+      pass: process.env.EMAIL_PASSWORD
+    }
+  });
+}
+
+// Function to send order confirmation email
+async function sendOrderConfirmationEmail(orderData){
+  if(!emailTransporter) return; // Skip if email not configured
+  
+  try{
+    const to = orderData.address_to?.email || orderData.email;
+    if(!to) return;
+    
+    const customerName = orderData.address_to?.first_name || orderData.first_name || 'Customer';
+    const itemsList = (orderData.line_items || [])
+      .map(item => `  • ${item.quantity}x ${item.title || 'Product'} - ${orderData.display_currency || 'USD'} ${(item.price/100).toFixed(2)}`)
+      .join('\n');
+    
+    const htmlContent = `
+      <!DOCTYPE html>
+      <html>
+      <head>
+        <style>
+          body { font-family: Arial, sans-serif; color: #333; }
+          .container { max-width: 600px; margin: 0 auto; border: 1px solid #ddd; padding: 20px; border-radius: 8px; }
+          .header { background: linear-gradient(135deg, #007bff 0%, #0051cc 100%); color: white; padding: 20px; text-align: center; border-radius: 8px 8px 0 0; }
+          .content { padding: 20px; }
+          .order-section { margin: 15px 0; }
+          .order-section h3 { color: #007bff; margin: 10px 0; }
+          .items-list { background: #f9f9f9; padding: 10px; border-radius: 4px; }
+          .total { font-weight: bold; font-size: 1.2em; color: #28a745; margin-top: 10px; }
+          .footer { text-align: center; color: #666; font-size: 0.9em; margin-top: 20px; }
+        </style>
+      </head>
+      <body>
+        <div class="container">
+          <div class="header">
+            <h1>Order Confirmation</h1>
+          </div>
+          <div class="content">
+            <p>Hi ${customerName},</p>
+            <p>Thank you for your order! Your order has been received and is being processed.</p>
+            
+            <div class="order-section">
+              <h3>Order Details</h3>
+              <p><strong>Order ID:</strong> ${orderData.id}</p>
+              <p><strong>Order Date:</strong> ${new Date(orderData.created_at || Date.now()).toLocaleDateString()}</p>
+            </div>
+            
+            <div class="order-section">
+              <h3>Items Ordered</h3>
+              <div class="items-list">
+${itemsList}
+              </div>
+            </div>
+            
+            <div class="order-section">
+              <h3>Shipping Address</h3>
+              <p>
+                ${orderData.address_to?.first_name || ''} ${orderData.address_to?.last_name || ''}<br>
+                ${orderData.address_to?.address1 || ''}<br>
+                ${orderData.address_to?.city || ''}, ${orderData.address_to?.state || ''} ${orderData.address_to?.zip || ''}<br>
+                ${orderData.address_to?.country || ''}
+              </p>
+            </div>
+            
+            <div class="order-section total">
+              Total: ${orderData.display_currency || 'USD'} ${(orderData.total_cents/100).toFixed(2)}
+            </div>
+            
+            <div class="footer">
+              <p>You'll receive a tracking number via email once your order ships.</p>
+              <p>If you have any questions, please contact us.</p>
+            </div>
+          </div>
+        </div>
+      </body>
+      </html>
+    `;
+    
+    await emailTransporter.sendMail({
+      from: process.env.EMAIL_FROM || process.env.EMAIL_USER,
+      to: to,
+      subject: `Order Confirmation - ${orderData.id}`,
+      html: htmlContent
+    });
+    
+    console.log(`Order confirmation email sent to ${to}`);
+  }catch(err){
+    console.error('Failed to send email:', err);
+  }
+}
 
 // Products endpoint — will fetch from Printify if credentials are set, otherwise returns static sample products.
 app.get('/api/products', async (req, res) => {
@@ -63,8 +167,69 @@ app.get('/api/config', (req, res) => {
   res.json({
     backgroundImage: process.env.BACKGROUND_IMAGE || null,
     safeMode: process.env.SAFE_MODE === '1',
-    printifyConfigured: !!(process.env.PRINTIFY_TOKEN && process.env.SHOP_ID)
+    printifyConfigured: !!(process.env.PRINTIFY_TOKEN && process.env.SHOP_ID),
+    stripeConfigured: !!process.env.STRIPE_PUBLISHABLE_KEY,
+    stripePublishableKey: process.env.STRIPE_PUBLISHABLE_KEY || null
   });
+});
+
+// Stripe Payment Intent endpoint — creates a payment intent for Stripe payment processing
+app.post('/api/stripe/create-payment-intent', async (req, res) => {
+  if(!process.env.STRIPE_SECRET_KEY){
+    return res.status(400).json({ message: 'Stripe not configured on server' });
+  }
+  
+  try{
+    const { amount_cents, description, email } = req.body;
+    
+    if(!amount_cents || amount_cents < 50){
+      return res.status(400).json({ message: 'Invalid amount' });
+    }
+    
+    const paymentIntent = await stripe.paymentIntents.create({
+      amount: Math.round(amount_cents),
+      currency: 'usd',
+      description: description || 'Merch Store Order',
+      receipt_email: email
+    });
+    
+    res.json({
+      clientSecret: paymentIntent.client_secret,
+      paymentIntentId: paymentIntent.id
+    });
+  }catch(err){
+    console.error('Payment intent error:', err);
+    res.status(500).json({ message: 'Failed to create payment intent', error: err.message });
+  }
+});
+
+// Stripe Webhook endpoint — listens for payment success events
+app.post('/api/stripe/webhook', bodyParser.raw({type: 'application/json'}), async (req, res) => {
+  if(!process.env.STRIPE_WEBHOOK_SECRET){
+    return res.status(400).json({ message: 'Webhook not configured' });
+  }
+  
+  const sig = req.headers['stripe-signature'];
+  let event;
+  
+  try{
+    event = stripe.webhooks.constructEvent(
+      req.body,
+      sig,
+      process.env.STRIPE_WEBHOOK_SECRET
+    );
+  }catch(err){
+    console.error('Webhook sig error:', err);
+    return res.status(400).json({ message: 'Webhook signature verification failed' });
+  }
+  
+  if(event.type === 'payment_intent.succeeded'){
+    const paymentIntent = event.data.object;
+    console.log('Payment succeeded:', paymentIntent.id);
+    // Update order status or trigger fulfillment here
+  }
+  
+  res.json({received: true});
 });
 
 // Printify product details endpoint. Returns product info and shipping profiles when possible.
@@ -150,8 +315,14 @@ app.post('/api/checkout', async (req, res)=>{
       subtotal_cents: subtotal,
       shipping_cents: shipping,
       total_cents: total,
+      created_at: new Date().toISOString(),
+      address_to: payload.address_to,
+      line_items: payload.line_items,
+      display_currency: payload.display_currency || 'USD',
       message: 'This is a simulated order because PRINTIFY_TOKEN or SHOP_ID is not set on the server.'
     };
+    // Send confirmation email even for simulated orders
+    await sendOrderConfirmationEmail(simulatedOrder);
     return res.json(simulatedOrder);
   }
 
@@ -168,6 +339,7 @@ app.post('/api/checkout', async (req, res)=>{
         client_display_currency: payload.display_currency || 'USD',
         client_order_subtotal_cents: payload.order_subtotal_cents || 0,
         client_shipping_cost_usd_cents: payload.shipping_cost_usd_cents || 0,
+        payment_method: payload.payment_method || 'stripe'
       })
     });
 
@@ -178,12 +350,54 @@ app.post('/api/checkout', async (req, res)=>{
     });
     const json = await response.json();
     if(!response.ok) return res.status(response.status).json(json);
+    
+    // Enrich response with order data for email
+    const orderResponse = Object.assign({}, json, {
+      display_currency: payload.display_currency || 'USD',
+      line_items: payload.line_items,
+      address_to: payload.address_to
+    });
+    
+    // Send confirmation email after successful order
+    await sendOrderConfirmationEmail(orderResponse);
+    
     // Echo the Printify response back to client (do not store tokens)
     res.json(json);
   }catch(err){
     console.error('Checkout error', err);
     res.status(500).json({ message: 'Server error', error: err.message });
   }
+});
+
+// ADMIN_TOKEN handling — for local dev we provide a non-production default for convenience, but never use this in production.
+const DEFAULT_ADMIN_TOKEN = 'Procoder@988';
+const ADMIN_TOKEN = process.env.ADMIN_TOKEN || (process.env.NODE_ENV !== 'production' ? DEFAULT_ADMIN_TOKEN : '');
+if(!process.env.ADMIN_TOKEN && ADMIN_TOKEN){
+  console.warn('WARNING: Using default ADMIN_TOKEN for local/dev. Do NOT use this in production. Set ADMIN_TOKEN in the environment to a secret value.');
+}
+
+// Admin endpoints to view orders — protected by ADMIN_TOKEN (set in env)
+app.get('/admin/orders', (req, res)=>{
+  const token = ADMIN_TOKEN;
+  const auth = (req.headers.authorization || '').replace(/^Bearer\s*/, '');
+  if(!token || !auth || auth !== token) return res.status(401).json({ message: 'Unauthorized' });
+  try{
+    const files = fs.readdirSync(ORDERS_DIR).filter(f => f.endsWith('.json'));
+    const orders = files.map(f => JSON.parse(fs.readFileSync(path.join(ORDERS_DIR, f), 'utf8'))).map(o => ({ id: o.id, created_at: o.created_at, total_cents: o.total_cents, status: o.status }));
+    return res.json({ orders });
+  }catch(e){ console.error('Admin read orders error', e); return res.status(500).json({ message: 'Could not read orders' }); }
+});
+
+app.get('/admin/orders/:id', (req,res)=>{
+  const token = ADMIN_TOKEN;
+  const auth = (req.headers.authorization || '').replace(/^Bearer\s*/, '');
+  if(!token || !auth || auth !== token) return res.status(401).json({ message: 'Unauthorized' });
+  try{
+    const id = req.params.id; const file = path.join(ORDERS_DIR, `${id}.json`);
+    if(!fs.existsSync(file)) return res.status(404).json({ message: 'Not found' });
+    const order = JSON.parse(fs.readFileSync(file, 'utf8'));
+    return res.json({ order });
+  }catch(e){ console.error('Admin read order error', e); return res.status(500).json({ message: 'Could not read order' }); }
 });
 
 app.listen(PORT, ()=> console.log(`Server started on http://localhost:${PORT}`));

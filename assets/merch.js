@@ -274,14 +274,34 @@
 
   document.getElementById('closeProduct').addEventListener('click', ()=>{ document.getElementById('productModal').style.display = 'none'; });
 
-  // Load config (background, safeMode, printifyConfigured)
+  // Load config (background, safeMode, printifyConfigured, stripeConfigured)
   let CONFIG = {};
+  let stripe = null;
+  let elements = null;
+  let cardElement = null;
+
   async function loadConfig(){
     try{
       const res = await fetch('/api/config');
       CONFIG = await res.json();
       const statusEl = document.getElementById('shopStatus');
       if(CONFIG.backgroundImage){ document.body.style.backgroundImage = `url(${CONFIG.backgroundImage})`; document.body.style.backgroundSize = 'cover'; document.body.style.backgroundAttachment = 'fixed'; }
+      
+      // Initialize Stripe if configured
+      if(CONFIG.stripeConfigured && CONFIG.stripePublishableKey && window.Stripe){
+        stripe = window.Stripe(CONFIG.stripePublishableKey);
+        elements = stripe.elements();
+        cardElement = elements.create('card');
+        cardElement.mount('#card-element');
+        
+        // Handle real-time validation errors
+        cardElement.addEventListener('change', (event)=>{
+          const displayError = document.getElementById('card-errors');
+          if(event.error) displayError.textContent = event.error.message;
+          else displayError.textContent = '';
+        });
+      }
+      
       // show confirmation checkbox if printify configured and not safeMode
       if(CONFIG.printifyConfigured && !CONFIG.safeMode){ document.getElementById('confirmLabel').style.display = 'block'; }
       if(statusEl){
@@ -326,10 +346,23 @@
 
     const subtotal = cart.reduce((s,i)=>s + i.price * i.quantity, 0);
     const shippingUsdCents = getShippingUsdCents();
+    const totalCents = subtotal + shippingUsdCents;
 
     const payload = {
-      address_to: { first_name: data.first_name, email: data.email, address1: data.address1 || data.address, city: data.city, zip: data.zip, country: 'US' },
-      line_items: cart.map(i=>({ product_id: i.product_id, variant_id: i.variant_id, quantity: i.quantity })),
+      first_name: data.first_name,
+      last_name: data.last_name || '',
+      email: data.email,
+      address_to: { 
+        first_name: data.first_name, 
+        last_name: data.last_name || '',
+        email: data.email, 
+        address1: data.address1, 
+        city: data.city, 
+        zip: data.zip, 
+        country: data.country || 'US',
+        state: data.state || ''
+      },
+      line_items: cart.map(i=>({ product_id: i.product_id, variant_id: i.variant_id, quantity: i.quantity, title: i.title, price: i.price })),
       order_subtotal_cents: subtotal,
       shipping_cost_usd_cents: shippingUsdCents,
       shipping_method: getSelectedShippingMethod(),
@@ -338,28 +371,108 @@
       confirm_real: (CONFIG.printifyConfigured && !CONFIG.safeMode) ? true : false
     };
 
-    const resEl = document.getElementById('orderResult'); resEl.textContent = 'Placing order…';
-    try{
+    const resEl = document.getElementById('orderResult');
+    resEl.textContent = 'Processing payment…';
+
+    try {
       sendMetric('count', 'checkout_started', 1);
-    const rxStart = Date.now();
-    const res = await fetch('/api/checkout', { method:'POST', headers:{'content-type':'application/json'}, body: JSON.stringify(payload) });
-    const rxDur = Date.now() - rxStart; sendMetric('distribution', 'response_time', rxDur);
-    const json = await res.json();
-    if(!res.ok){ sendMetric('count', 'checkout_failed', 1); throw json; }
-    resEl.innerHTML = `<div style="color:green">Order placed — id: ${json.id || json.external_id || json.order_id}</div>`;
-    sendMetric('count', 'order_placed', 1);
-    // send order total as gauge in USD cents and in display currency cents if available
-    try{
-      const cart = readCart(); const amount = cart.reduce((s,i)=>s + i.price * i.quantity, 0);
-      const totalUsd = amount + (payload.shipping_cost_usd_cents || 0);
-      sendMetric('gauge', 'order_total_cents', totalUsd);
-      const converted = convertCentsToCurrency(totalUsd, CURRENT_CURRENCY);
-      sendMetric('gauge', `order_total_${CURRENT_CURRENCY}_cents`, converted);
-    }catch(e){}
-    localStorage.removeItem(CART_KEY); updateCartBadge(); renderCart();
-    }catch(err){ sendMetric('count', 'checkout_failed', 1);
+      
+      // If Stripe is configured, process payment first
+      if(CONFIG.stripeConfigured && stripe && cardElement && totalCents > 0){
+        const paymentIntentRes = await fetch('/api/stripe/create-payment-intent', {
+          method: 'POST',
+          headers: {'content-type':'application/json'},
+          body: JSON.stringify({
+            amount_cents: totalCents,
+            email: data.email,
+            description: `Merch Store Order - ${data.email}`
+          })
+        });
+        
+        if(!paymentIntentRes.ok){
+          throw new Error('Failed to create payment intent');
+        }
+        
+        const { clientSecret } = await paymentIntentRes.json();
+        
+        // Confirm payment with card element
+        const { error, paymentIntent } = await stripe.confirmCardPayment(clientSecret, {
+          payment_method: {
+            card: cardElement,
+            billing_details: {
+              name: `${data.first_name} ${data.last_name || ''}`,
+              email: data.email,
+              address: {
+                line1: data.address1,
+                city: data.city,
+                state: data.state,
+                postal_code: data.zip,
+                country: data.country
+              }
+            }
+          }
+        });
+        
+        if(error){
+          resEl.innerHTML = `<div style="color:#dc3545">Payment failed: ${error.message}</div>`;
+          sendMetric('count', 'checkout_failed', 1);
+          return;
+        }
+        
+        if(paymentIntent.status !== 'succeeded'){
+          resEl.innerHTML = `<div style="color:#dc3545">Payment not completed. Status: ${paymentIntent.status}</div>`;
+          sendMetric('count', 'checkout_failed', 1);
+          return;
+        }
+        
+        // Store payment intent ID in payload for tracking
+        payload.payment_intent_id = paymentIntent.id;
+      }
+      
+      // Submit order to Printify/server
+      const rxStart = Date.now();
+      const res = await fetch('/api/checkout', { 
+        method:'POST', 
+        headers:{'content-type':'application/json'}, 
+        body: JSON.stringify(payload) 
+      });
+      const rxDur = Date.now() - rxStart; 
+      sendMetric('distribution', 'response_time', rxDur);
+      
+      const json = await res.json();
+      if(!res.ok){ 
+        sendMetric('count', 'checkout_failed', 1); 
+        throw json; 
+      }
+      
+      resEl.innerHTML = `<div style="color:var(--success); font-weight:bold;">✓ Order placed successfully!<br>Order ID: ${json.id || json.external_id || json.order_id}<br>A confirmation email has been sent to ${data.email}</div>`;
+      sendMetric('count', 'order_placed', 1);
+      
+      // send order total as gauge in USD cents and in display currency cents if available
+      try{
+        const cart = readCart(); 
+        const amount = cart.reduce((s,i)=>s + i.price * i.quantity, 0);
+        const totalUsd = amount + (payload.shipping_cost_usd_cents || 0);
+        sendMetric('gauge', 'order_total_cents', totalUsd);
+        const converted = convertCentsToCurrency(totalUsd, CURRENT_CURRENCY);
+        sendMetric('gauge', `order_total_${CURRENT_CURRENCY}_cents`, converted);
+      }catch(e){}
+      
+      localStorage.removeItem(CART_KEY); 
+      updateCartBadge(); 
+      renderCart();
+      
+      // Clear form and hide after 2 seconds
+      setTimeout(()=>{
+        form.reset();
+        if(cardElement) cardElement.clear();
+        document.getElementById('checkoutForm').style.display = 'none';
+      }, 2000);
+      
+    }catch(err){ 
+      sendMetric('count', 'checkout_failed', 1);
       console.error(err);
-      resEl.innerHTML = `<div style="color:red">Failed: ${err.message || JSON.stringify(err)}</div>`;
+      resEl.innerHTML = `<div style="color:#dc3545">Error: ${err.message || JSON.stringify(err)}</div>`;
     }
   });
 
