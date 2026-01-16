@@ -2,6 +2,10 @@ const express = require('express');
 const fetch = require('node-fetch');
 const bodyParser = require('body-parser');
 const path = require('path');
+const fs = require('fs');
+const stripe = require('stripe')(process.env.STRIPE_SECRET_KEY || 'sk_test_dummy');
+const nodemailer = require('nodemailer');
+
 const app = express();
 const PORT = process.env.PORT || 3000;
 
@@ -29,8 +33,69 @@ app.get('/api/config', (req, res) => {
   res.json({
     backgroundImage: process.env.BACKGROUND_IMAGE || null,
     safeMode: process.env.SAFE_MODE === '1',
-    printifyConfigured: !!(process.env.PRINTIFY_TOKEN && process.env.SHOP_ID)
+    printifyConfigured: !!(process.env.PRINTIFY_TOKEN && process.env.SHOP_ID),
+    stripeConfigured: !!process.env.STRIPE_PUBLISHABLE_KEY,
+    stripePublishableKey: process.env.STRIPE_PUBLISHABLE_KEY || null
   });
+});
+
+// Stripe Payment Intent endpoint — creates a payment intent for Stripe payment processing
+app.post('/api/stripe/create-payment-intent', async (req, res) => {
+  if(!process.env.STRIPE_SECRET_KEY){
+    return res.status(400).json({ message: 'Stripe not configured on server' });
+  }
+  
+  try{
+    const { amount_cents, description, email } = req.body;
+    
+    if(!amount_cents || amount_cents < 50){
+      return res.status(400).json({ message: 'Invalid amount' });
+    }
+    
+    const paymentIntent = await stripe.paymentIntents.create({
+      amount: Math.round(amount_cents),
+      currency: 'usd',
+      description: description || 'Merch Store Order',
+      receipt_email: email
+    });
+    
+    res.json({
+      clientSecret: paymentIntent.client_secret,
+      paymentIntentId: paymentIntent.id
+    });
+  }catch(err){
+    console.error('Payment intent error:', err);
+    res.status(500).json({ message: 'Failed to create payment intent', error: err.message });
+  }
+});
+
+// Stripe Webhook endpoint — listens for payment success events
+app.post('/api/stripe/webhook', bodyParser.raw({type: 'application/json'}), async (req, res) => {
+  if(!process.env.STRIPE_WEBHOOK_SECRET){
+    return res.status(400).json({ message: 'Webhook not configured' });
+  }
+  
+  const sig = req.headers['stripe-signature'];
+  let event;
+  
+  try{
+    event = stripe.webhooks.constructEvent(
+      req.body,
+      sig,
+      process.env.STRIPE_WEBHOOK_SECRET
+    );
+  }catch(err){
+    console.error('Webhook sig error:', err);
+    return res.status(400).json({ message: 'Webhook signature verification failed' });
+  }
+  
+  if(event.type === 'payment_intent.succeeded'){
+    const paymentIntent = event.data.object;
+    console.log('Payment succeeded:', paymentIntent.id);
+    // Update order status or trigger fulfillment here
+  }
+  
+  res.json({received: true});
 });
 
 // Printify product details endpoint. Returns product info and shipping profiles when possible.

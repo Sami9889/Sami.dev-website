@@ -320,14 +320,34 @@
 
   document.getElementById('closeProduct').addEventListener('click', ()=>{ document.getElementById('productModal').classList.remove('open'); });
 
-  // Load config (background, safeMode, printifyConfigured)
+  // Load config (background, safeMode, printifyConfigured, stripeConfigured)
   let CONFIG = {};
+  let stripe = null;
+  let elements = null;
+  let cardElement = null;
+
   async function loadConfig(){
     try{
       const res = await fetch('/api/config');
       CONFIG = await res.json();
       const statusEl = document.getElementById('shopStatus');
       if(CONFIG.backgroundImage){ document.body.style.backgroundImage = `url(${CONFIG.backgroundImage})`; document.body.style.backgroundSize = 'cover'; document.body.style.backgroundAttachment = 'fixed'; }
+      
+      // Initialize Stripe if configured
+      if(CONFIG.stripeConfigured && CONFIG.stripePublishableKey && window.Stripe){
+        stripe = window.Stripe(CONFIG.stripePublishableKey);
+        elements = stripe.elements();
+        cardElement = elements.create('card');
+        cardElement.mount('#card-element');
+        
+        // Handle real-time validation errors
+        cardElement.addEventListener('change', (event)=>{
+          const displayError = document.getElementById('card-errors');
+          if(event.error) displayError.textContent = event.error.message;
+          else displayError.textContent = '';
+        });
+      }
+      
       // show confirmation checkbox if printify configured and not safeMode
       if(CONFIG.printifyConfigured && !CONFIG.safeMode){ document.getElementById('confirmLabel').style.display = 'block'; }
       if(statusEl){
@@ -399,6 +419,7 @@
 
     const subtotal = cart.reduce((s,i)=>s + i.price * i.quantity, 0);
     const shippingUsdCents = getShippingUsdCents();
+    const totalCents = subtotal + shippingUsdCents;
 
     const payload = {
       address_to: { first_name: data.first_name, last_name: data.last_name, email: data.email, address1: data.address1 || data.address, city: data.city, zip: data.zip, country: (data.country || CONFIG.defaultCountry || '') },
@@ -412,8 +433,10 @@
       send_confirmation_email: data.send_confirmation_email === 'on' || data.send_confirmation_email === 'true' || data.send_confirmation_email === '1'
     };
 
-    const resEl = document.getElementById('orderResult'); resEl.textContent = 'Placing order…';
-    try{
+    const resEl = document.getElementById('orderResult');
+    resEl.textContent = 'Processing payment…';
+
+    try {
       sendMetric('count', 'checkout_started', 1);
     const rxStart = Date.now();
     const res = await fetch('/api/checkout', { method:'POST', headers:{'content-type':'application/json'}, body: JSON.stringify(payload) });
