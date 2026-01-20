@@ -8,6 +8,16 @@ const nodemailer = require('nodemailer');
 
 const app = express();
 const PORT = process.env.PORT || 3000;
+const ORDERS_DIR = path.join(__dirname, 'orders');
+
+// Ensure orders directory exists
+// The fs.mkdirSync with recursive:true handles the case where the directory
+// already exists, so the fs.existsSync check is not needed.
+try {
+  fs.mkdirSync(ORDERS_DIR, { recursive: true });
+} catch (e) {
+  console.warn('Could not ensure orders dir', e);
+}
 
 app.use(bodyParser.json());
 app.use(express.static(path.join(__dirname)));
