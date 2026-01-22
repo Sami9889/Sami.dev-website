@@ -79,7 +79,7 @@ permissions:
 env:
   MAX_BRANCH_AGE_DAYS: 30
   STALE_BRANCH_WARNING_DAYS: 21
-  SPECIAL_ADMINS: 'kinsta,getsentry,thnxdev,vercel,wasmer,coderabbit-ai,coderabbitai[bot],dependabot[bot],renovate[bot],github-actions[bot]'
+  SPECIAL_ADMINS: 'kinsta,getsentry,thnxdev,vercel,wasmer,coderabbit-ai,coderabbitai[bot],dependabot[bot],renovate[bot],github-actions[bot],slack[bot]'
   PROTECTED_BRANCHES: 'main,master,develop,staging,production'
   SECURITY_SCAN_VERSION: 'v2.1.0'
 
