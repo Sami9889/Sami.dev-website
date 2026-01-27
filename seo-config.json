@@ -1,10 +1,9 @@
-<script type="application/ld+json">
 {
   "@context": "https://schema.org",
   "@graph": [
     {
       "@type": "WebSite",
-      "@id": "https://sami.is-a.dev#website",
+      "@id": "https://sami.is-a.dev",
       "url": "https://sami.is-a.dev",
       "name": "Sami Singh Portfolio",
       "inLanguage": "en-AU"
@@ -38,7 +37,7 @@
       "name": "Home - Sami Singh",
       "description": "Full-Stack Developer portfolio and contact information",
       "inLanguage": "en-AU",
-      "isPartOf": { "@id": "https://sami.is-a.dev#website" },
+      "isPartOf": { "@id": "https://sami.is-a.dev" },
       "author": { "@id": "https://sami.is-a.dev#person" }
     },
     {
@@ -48,7 +47,7 @@
       "name": "About - Sami Singh",
       "description": "Learn about Samrath 'Sami' Singh's background and experience",
       "inLanguage": "en-AU",
-      "isPartOf": { "@id": "https://sami.is-a.dev#website" },
+      "isPartOf": { "@id": "https://sami.is-a.dev" },
       "author": { "@id": "https://sami.is-a.dev#person" }
     },
     {
@@ -58,7 +57,7 @@
       "name": "Skills - Sami Singh",
       "description": "Technical skills and expertise in web development",
       "inLanguage": "en-AU",
-      "isPartOf": { "@id": "https://sami.is-a.dev#website" },
+      "isPartOf": { "@id": "https://sami.is-a.dev" },
       "author": { "@id": "https://sami.is-a.dev#person" }
     },
     {
@@ -68,7 +67,7 @@
       "name": "Projects - Sami Singh",
       "description": "Portfolio of development projects and GitHub repositories",
       "inLanguage": "en-AU",
-      "isPartOf": { "@id": "https://sami.is-a.dev#website" },
+      "isPartOf": { "@id": "https://sami.is-a.dev" },
       "author": { "@id": "https://sami.is-a.dev#person" }
     },
     {
@@ -78,9 +77,8 @@
       "name": "Contact - Sami Singh",
       "description": "Get in touch for project inquiries and collaborations",
       "inLanguage": "en-AU",
-      "isPartOf": { "@id": "https://sami.is-a.dev#website" },
+      "isPartOf": { "@id": "https://sami.is-a.dev" },
       "author": { "@id": "https://sami.is-a.dev#person" }
     }
   ]
 }
-</script>
