@@ -2,10 +2,10 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8">
-  <title>Human Verification</title>
+  <title>Verifying...</title>
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
-  <script src="https://www.google.com/recaptcha/api.js" async defer></script>
+  <script src="https://www.google.com/recaptcha/api.js?render=6Lep_HYsAAAAAAerNedHFNuVPuaF5JpH-dFxF6ft"></script>
 
   <style>
     body {
@@ -17,36 +17,22 @@
       align-items: center;
       height: 100vh;
       margin: 0;
-    }
-
-    .box {
-      background: #020617;
-      border: 1px solid #1e293b;
-      padding: 30px;
-      border-radius: 12px;
       text-align: center;
-      width: 320px;
-      box-shadow: 0 0 40px rgba(0,0,0,.6);
     }
   </style>
 </head>
 
 <body>
-  <div class="box">
-    <h2>Verify you're human</h2>
-    <p>Please complete the CAPTCHA</p>
-
-    <div class="g-recaptcha"
-         data-sitekey="6Lep_HYsAAAAAAerNedHFNuVPuaF5JpH-dFxF6ft"
-         data-callback="verified">
-    </div>
-  </div>
+  <h2>Verifying you're human...</h2>
 
   <script>
-    function verified() {
-      sessionStorage.setItem("captcha_ok", "true");
-      window.location.replace("/index.html");
-    }
+    grecaptcha.ready(() => {
+      grecaptcha.execute("6Lep_HYsAAAAAAerNedHFNuVPuaF5JpH-dFxF6ft", { action: "verify" })
+        .then(token => {
+          sessionStorage.setItem("captcha_ok", "true");
+          window.location.replace("/index.html");
+        });
+    });
   </script>
 </body>
 </html>
