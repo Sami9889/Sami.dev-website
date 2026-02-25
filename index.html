@@ -11,54 +11,6 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <script>
-/* Recaptcha Verification - Bypassed for Search Engine Bots */
-(function(){
-  // Detect search engine bots
-  const userAgent = navigator.userAgent.toLowerCase();
-  const isBot = /googlebot|bingbot|slurp|duckduckbot|baiduspider|yandexbot|facebookexternalhit|twitterbot|linkedinbot|whatsapp|crawler|spider/i.test(userAgent);
-  
-  // Skip verification for bots
-  if (isBot) {
-    return;
-  }
-  
-  function getCookie(name){
-    const pairs=document.cookie.split(';').map(s=>s.trim());
-    for(const p of pairs) if(p.startsWith(name + '=')) return p.split('=')[1];
-    return null;
-  }
-  const COOKIE_NAME = 'sami_verified';
-  const params = new URLSearchParams(window.location.search);
-  
-  const hasCookie = getCookie(COOKIE_NAME) === 'true';
-  const hasLocalStorage = localStorage.getItem(COOKIE_NAME) === 'true';
-  const hasUrlParam = params.get('verified') === '1';
-  
-  const isVerified = hasCookie || hasLocalStorage || hasUrlParam;
-  
-  if (!isVerified) {
-    window.location.replace('/recaptcha.html');
-  } else {
-    if (hasUrlParam) {
-      const d = new Date();
-      d.setTime(d.getTime() + (7*24*60*60*1000));
-      document.cookie = `${COOKIE_NAME}=true;expires=${d.toUTCString()};path=/;SameSite=Lax`;
-      try {
-        localStorage.setItem(COOKIE_NAME, 'true');
-      }
-      catch(e) {
-        void(0);
-      }
-      const u = new URL(window.location);
-      u.searchParams.delete('verified');
-      u.searchParams.delete('ts');
-      history.replaceState(null, '', u.toString());
-    }
-  }
-})();
-</script>
-  
   <!-- Google Tag Manager -->
   <script>(function(w,d,s,l,i){w[l]=w[l]||[];w[l].push({'gtm.start':
   new Date().getTime(),event:'gtm.js'});var f=d.getElementsByTagName(s)[0],
