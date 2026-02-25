@@ -2,16 +2,17 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8">
-  <title>Verifying...</title>
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Verifying...</title>
 
+  <!-- Load reCAPTCHA v3 -->
   <script src="https://www.google.com/recaptcha/api.js?render=6Lep_HYsAAAAAAerNedHFNuVPuaF5JpH-dFxF6ft"></script>
 
   <style>
     body {
-      background: #020617;
-      color: white;
       font-family: system-ui, -apple-system, BlinkMacSystemFont, sans-serif;
+      background: #0f172a;
+      color: white;
       display: flex;
       justify-content: center;
       align-items: center;
@@ -19,20 +20,31 @@
       margin: 0;
       text-align: center;
     }
+    h2 { margin-bottom: 20px; }
   </style>
 </head>
-
 <body>
-  <h2>Verifying you're human...</h2>
+  <div>
+    <h2>Verifying you're human...</h2>
+    <p>Please wait, this only takes a second.</p>
+  </div>
 
   <script>
-    grecaptcha.ready(() => {
-      grecaptcha.execute("6Lep_HYsAAAAAAerNedHFNuVPuaF5JpH-dFxF6ft", { action: "verify" })
-        .then(token => {
+    // Prevent infinite redirect loops
+    if (!sessionStorage.getItem("captcha_ok")) {
+      grecaptcha.ready(function() {
+        grecaptcha.execute('6Lep_HYsAAAAAAerNedHFNuVPuaF5JpH-dFxF6ft', {action: 'homepage'})
+        .then(function(token) {
+          // You can optionally send the token to a backend for verification here
+          // For GitHub Pages static site, we just store locally
           sessionStorage.setItem("captcha_ok", "true");
           window.location.replace("/index.html");
         });
-    });
+      });
+    } else {
+      // Already verified
+      window.location.replace("/index.html");
+    }
   </script>
 </body>
 </html>
