@@ -2,8 +2,9 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8">
-  <title>Verify you're human</title>
+  <title>Human Verification</title>
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
   <script src="https://www.google.com/recaptcha/api.js" async defer></script>
 
   <style>
@@ -37,26 +38,14 @@
 
     <div class="g-recaptcha"
          data-sitekey="6Lep_HYsAAAAAAerNedHFNuVPuaF5JpH-dFxF6ft"
-         data-callback="onVerify">
+         data-callback="verified">
     </div>
   </div>
 
   <script>
-    async function onVerify(token) {
-      const res = await fetch("https://captcha.sami-s.dev/verify", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ token })
-      });
-
-      const data = await res.json();
-
-      if (data.success) {
-        sessionStorage.setItem("captcha_ok", "true");
-        window.location.replace("/index.html");
-      } else {
-        alert("Captcha failed. Try again.");
-      }
+    function verified() {
+      sessionStorage.setItem("captcha_ok", "true");
+      window.location.replace("/index.html");
     }
   </script>
 </body>
