@@ -2,14 +2,13 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8">
-  <title>Human Verification</title>
+  <title>Verify you're human</title>
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-
   <script src="https://www.google.com/recaptcha/api.js" async defer></script>
 
   <style>
     body {
-      background: #0f172a;
+      background: #020617;
       color: white;
       font-family: system-ui, -apple-system, BlinkMacSystemFont, sans-serif;
       display: flex;
@@ -21,15 +20,12 @@
 
     .box {
       background: #020617;
+      border: 1px solid #1e293b;
       padding: 30px;
       border-radius: 12px;
       text-align: center;
-      box-shadow: 0 0 30px rgba(0,0,0,0.6);
       width: 320px;
-    }
-
-    h2 {
-      margin-bottom: 15px;
+      box-shadow: 0 0 40px rgba(0,0,0,.6);
     }
   </style>
 </head>
@@ -39,18 +35,28 @@
     <h2>Verify you're human</h2>
     <p>Please complete the CAPTCHA</p>
 
-    <form onsubmit="return false;">
-      <div class="g-recaptcha"
-           data-sitekey="6Lep_HYsAAAAAAerNedHFNuVPuaF5JpH-dFxF6ft"
-           data-callback="verified">
-      </div>
-    </form>
+    <div class="g-recaptcha"
+         data-sitekey="6Lep_HYsAAAAAAerNedHFNuVPuaF5JpH-dFxF6ft"
+         data-callback="onVerify">
+    </div>
   </div>
 
   <script>
-    function verified() {
-      sessionStorage.setItem("captcha_passed", "true");
-      window.location.replace("/index.html");
+    async function onVerify(token) {
+      const res = await fetch("https://captcha.sami-s.dev/verify", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ token })
+      });
+
+      const data = await res.json();
+
+      if (data.success) {
+        sessionStorage.setItem("captcha_ok", "true");
+        window.location.replace("/index.html");
+      } else {
+        alert("Captcha failed. Try again.");
+      }
     }
   </script>
 </body>
