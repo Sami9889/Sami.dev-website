@@ -1,0 +1,57 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Human Verification</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+  <script src="https://www.google.com/recaptcha/api.js" async defer></script>
+
+  <style>
+    body {
+      background: #0f172a;
+      color: white;
+      font-family: system-ui, -apple-system, BlinkMacSystemFont, sans-serif;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      height: 100vh;
+      margin: 0;
+    }
+
+    .box {
+      background: #020617;
+      padding: 30px;
+      border-radius: 12px;
+      text-align: center;
+      box-shadow: 0 0 30px rgba(0,0,0,0.6);
+      width: 320px;
+    }
+
+    h2 {
+      margin-bottom: 15px;
+    }
+  </style>
+</head>
+
+<body>
+  <div class="box">
+    <h2>Verify you're human</h2>
+    <p>Please complete the CAPTCHA</p>
+
+    <form onsubmit="return false;">
+      <div class="g-recaptcha"
+           data-sitekey="6Lep_HYsAAAAAAerNedHFNuVPuaF5JpH-dFxF6ft"
+           data-callback="verified">
+      </div>
+    </form>
+  </div>
+
+  <script>
+    function verified() {
+      sessionStorage.setItem("captcha_passed", "true");
+      window.location.replace("/index.html");
+    }
+  </script>
+</body>
+</html>
