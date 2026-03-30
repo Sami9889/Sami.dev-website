@@ -1,363 +1,561 @@
-<!DOCTYPE html>
+!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="utf-8">
+  <meta name="robots" content="index, follow">
+  <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <meta name="robots" content="index, follow, max-snippet:-1, max-image-preview:large, max-video-preview:-1">
-  <meta name="googlebot" content="index, follow">
-  <meta name="description" content="Sami Singh Merch Store - Exclusive apparel & accessories by @sami9889 (Samrath Singh). Fast shipping available. Browse our collection of high-quality merchandise.">
-  <meta name="keywords" content="Sami Singh merch, @sami9889 merchandise, Samrath Singh store, Sami9889 apparel, official merch, t-shirts, accessories, Point Cook, Australia">
-  <meta name="author" content="Samrath Singh">
-  <meta name="application-name" content="Sami Singh Merch Store">
-  <meta name="theme-color" content="#007bff">
-  
-  <!-- Open Graph / Social Media -->
-  <meta property="og:type" content="website">
-  <meta property="og:url" content="https://sami.is-a.dev/merch.html">
-  <meta property="og:title" content="Sami Singh Merch Store - @sami9889 Official Shop">
-  <meta property="og:description" content="Exclusive apparel and accessories by Samrath Singh. Fast and secure checkout with Stripe.">
-  <meta property="og:site_name" content="Sami Singh Merch">
-  <meta property="og:locale" content="en_AU">
-  
-  <!-- Twitter Card -->
-  <meta name="twitter:card" content="summary_large_image">
-  <meta name="twitter:title" content="Sami Singh Merch Store - @sami9889">
-  <meta name="twitter:description" content="Official merchandise by Samrath Singh. High-quality apparel and accessories.">
-  
-  <link rel="canonical" href="https://sami.is-a.dev/merch.html">
-  
-  <title>Sami Singh Merch Store - @sami9889 Official Shop</title>
-  <script src="https://js.stripe.com/v3/"></script>
-  <style>
-    /* Copied from index page to match look & feel */
-    * { margin: 0; padding: 0; box-sizing: border-box; }
-    :root { --accent: #007bff; --success: #28a745; }
-    body { font-family: system-ui, Arial, sans-serif; padding: 2rem; background: linear-gradient(135deg, #f8f9fa 0%, #e3f2fd 50%, #f3e5f5 100%); background-size: 400% 400%; animation: gradientShift 15s ease infinite; color: #000; }
-    @keyframes gradientShift { 0% { background-position: 0% 50%; } 50% { background-position: 100% 50%; } 100% { background-position: 0% 50%; } }
-    .floating-shapes { position: fixed; top: 0; left: 0; width: 100%; height: 100%; pointer-events: none; z-index: 0; overflow: hidden; }
-    .shape { position: absolute; opacity: 0.15; animation: float 20s infinite; }
+  <title>Sami Merch — Shop | sami-s.dev</title>
+  <meta name="description" content="Official merch from Samrath 'Sami' Singh (@sami9889). Hoodies, tees, and accessories. Powered by Printify.">
+  <link rel="canonical" href="https://sami-s.dev/merch.html">
+  <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'><rect width='32' height='32' rx='6' fill='%23007bff'/><text x='50%25' y='54%25' dominant-baseline='middle' text-anchor='middle' font-size='18' fill='white' font-family='monospace' font-weight='bold'>S</text></svg>">
 
-    /* Page container and layout improvements to avoid overlap */
-    .main-container { max-width: 1100px; margin: 0 auto; position: relative; z-index: 2; }
-    h1 { margin-bottom: 1rem; font-size: 1.8rem }
-    
-    /* IMPROVED GRID: Fixed card overlap issue */
-    .grid { 
-      display: grid; 
-      grid-template-columns: repeat(auto-fill, minmax(240px, 1fr)); 
-      gap: 2rem; 
-      grid-auto-rows: max-content;
-      position: relative; 
-      z-index: 2;
+  <meta property="og:title" content="Sami Merch — Official Store">
+  <meta property="og:description" content="Shop official Sami Singh merch. Hoodies, tees & more.">
+  <meta property="og:url" content="https://sami-s.dev/merch.html">
+  <meta property="og:image" content="https://avatars.githubusercontent.com/Sami9889?s=400">
+  <meta property="og:type" content="website">
+
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+
+  <style>
+    *, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; }
+
+    :root {
+      --primary-font: 'Space Grotesk', system-ui, -apple-system, sans-serif;
+      --mono-font: 'JetBrains Mono', monospace;
+      --accent: #007bff;
+      --black: #000;
+      --white: #fff;
+      --gray-100: #f8f9fa;
+      --gray-200: #e9ecef;
+      --gray-300: #dee2e6;
+      --gray-600: #6c757d;
+      --gray-700: #495057;
+      --gray-800: #343a40;
+      --shadow: 0 4px 20px rgba(0,0,0,0.1);
+      --transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+      --bg-gradient-1: #f8f9fa;
+      --bg-gradient-2: #e3f2fd;
+      --bg-gradient-3: #f3e5f5;
     }
-    .card { 
-      border: 1px solid #e0e0e0; 
-      padding: 1.25rem; 
-      border-radius: 12px; 
-      background: linear-gradient(135deg, rgba(255,255,255,0.98) 0%, rgba(255,255,255,0.95) 100%); 
-      transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
-      display: flex; 
-      flex-direction: column;
-      height: 100%;
-      overflow: hidden;
-      box-shadow: 0 2px 8px rgba(0,0,0,0.06);
+
+    [data-theme="dark"] {
+      --black: #fff;
+      --white: #1a1a1a;
+      --gray-100: #2a2a2a;
+      --gray-200: #3a3a3a;
+      --gray-300: #4a4a4a;
+      --gray-600: #b0b0b0;
+      --gray-700: #d0d0d0;
+      --gray-800: #e0e0e0;
+      --accent: #4da3ff;
+      --shadow: 0 4px 20px rgba(0,0,0,0.5);
+      --bg-gradient-1: #1a1a2e;
+      --bg-gradient-2: #16213e;
+      --bg-gradient-3: #0f3460;
     }
-    .card:hover {
-      transform: translateY(-8px);
-      box-shadow: 0 12px 24px rgba(0,0,0,0.12);
-      border-color: var(--accent);
+
+    body {
+      font-family: var(--primary-font);
+      background: linear-gradient(135deg, var(--bg-gradient-1) 0%, var(--bg-gradient-2) 50%, var(--bg-gradient-3) 100%);
+      background-size: 400% 400%;
+      animation: gradientShift 15s ease infinite;
+      color: var(--black);
+      overflow-x: hidden;
+      line-height: 1.6;
+      min-height: 100vh;
+      transition: background 0.3s ease, color 0.3s ease;
     }
-    .card img { 
-      width: 100%; 
-      height: 160px; 
-      object-fit: cover; 
-      border-radius: 8px; 
-      flex-shrink: 0;
+
+    @keyframes gradientShift {
+      0% { background-position: 0% 50%; }
+      50% { background-position: 100% 50%; }
+      100% { background-position: 0% 50%; }
+    }
+
+    nav {
+      background: rgba(255, 255, 255, 0.85);
+      padding: 1.25rem 0;
+      border-bottom: 1px solid var(--gray-200);
+      position: sticky;
+      top: 0;
+      z-index: 100;
+      backdrop-filter: blur(20px);
+      box-shadow: 0 2px 20px rgba(0,0,0,0.05);
+      transition: var(--transition);
+    }
+
+    [data-theme="dark"] nav {
+      background: rgba(26, 26, 26, 0.95);
+      border-bottom: 1px solid var(--gray-300);
+    }
+
+    .nav-inner {
+      max-width: 1200px;
+      margin: 0 auto;
+      padding: 0 40px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      flex-wrap: wrap;
+      gap: 1rem;
+    }
+
+    .logo {
+      font-family: var(--mono-font);
+      font-size: 1.5rem;
+      font-weight: 600;
+      color: var(--black);
+      text-decoration: none;
+      letter-spacing: -0.02em;
+      transition: var(--transition);
+    }
+    .logo:hover { color: var(--accent); }
+
+    .nav-links {
+      display: flex;
+      list-style: none;
+      gap: 2.5rem;
+      flex-wrap: wrap;
+    }
+
+    .nav-links a {
+      color: var(--gray-600);
+      text-decoration: none;
+      font-size: 0.95rem;
+      font-weight: 500;
+      transition: var(--transition);
+      position: relative;
+      padding: 0.3rem 0;
+    }
+
+    .nav-links a::after {
+      content: '';
+      position: absolute;
+      bottom: 0; left: 0;
+      width: 0; height: 2px;
+      background: var(--accent);
+      transition: width 0.3s ease;
+    }
+
+    .nav-links a:hover::after, .nav-links a.active::after { width: 100%; }
+    .nav-links a:hover, .nav-links a.active { color: var(--black); }
+
+    .container {
+      max-width: 1200px;
+      margin: 0 auto;
+      padding: 0 40px;
+    }
+
+    .hero {
+      text-align: center;
+      padding: 5rem 0 3rem;
+    }
+
+    .hero h1 {
+      font-size: clamp(2.5rem, 5vw, 4rem);
+      font-weight: 700;
+      letter-spacing: -0.04em;
+      line-height: 1.1;
       margin-bottom: 1rem;
-      transition: transform 0.3s ease;
+      background: linear-gradient(135deg, #ff0080, #7928ca, #0070f3);
+      background-size: 200% auto;
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+      animation: textShimmer 3s linear infinite;
     }
-    .card:hover img {
-      transform: scale(1.05);
+
+    @keyframes textShimmer {
+      0% { background-position: 0% center; }
+      100% { background-position: 200% center; }
     }
-    .card h3 { 
-      margin: 0 0 0.5rem 0; 
+
+    .hero p {
+      font-size: 1.2rem;
+      color: var(--gray-600);
+      max-width: 560px;
+      margin: 0 auto 2rem;
+    }
+
+    .badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.4rem;
+      background: rgba(0,123,255,0.1);
+      border: 1px solid rgba(0,123,255,0.25);
+      color: var(--accent);
+      font-size: 0.85rem;
+      font-weight: 600;
+      padding: 0.4rem 1rem;
+      border-radius: 999px;
+      margin-bottom: 1.5rem;
+    }
+
+    #products-section {
+      margin: 2rem 0 4rem;
+    }
+
+    .products-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
+      gap: 1.75rem;
+    }
+
+    .product-card {
+      background: var(--white);
+      border: 1px solid var(--gray-200);
+      border-radius: 16px;
+      overflow: hidden;
+      box-shadow: 0 2px 12px rgba(0,0,0,0.06);
+      transition: var(--transition);
+      display: flex;
+      flex-direction: column;
+    }
+
+    .product-card:hover {
+      transform: translateY(-5px);
+      box-shadow: var(--shadow);
+    }
+
+    .product-card img {
+      width: 100%;
+      aspect-ratio: 1;
+      object-fit: cover;
+      display: block;
+      background: var(--gray-100);
+    }
+
+    .product-card-body {
+      padding: 1.25rem 1.4rem 1.4rem;
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      gap: 0.6rem;
+    }
+
+    .product-card h3 {
+      font-size: 1.05rem;
+      font-weight: 600;
+      color: var(--black);
+      line-height: 1.3;
+    }
+
+    .product-tags {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 0.35rem;
+    }
+
+    .product-tag {
+      font-size: 0.7rem;
+      font-weight: 500;
+      padding: 0.2rem 0.55rem;
+      border-radius: 999px;
+      background: rgba(0,123,255,0.08);
+      color: var(--accent);
+      border: 1px solid rgba(0,123,255,0.15);
+    }
+
+    .product-meta {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-top: auto;
+      padding-top: 0.6rem;
+    }
+
+    .product-price {
+      font-family: var(--mono-font);
       font-size: 1.1rem;
       font-weight: 600;
-      line-height: 1.4;
-      color: #000;
+      color: var(--black);
     }
-    .card .price-info {
-      margin: 0.75rem 0;
-      font-weight: 700;
-      color: var(--accent);
-      font-size: 1.2rem;
-    }
-    .card > div.muted { 
-      margin-top: auto;
-      font-size: 0.85rem;
-      color: #666;
-      line-height: 1.5;
-    }
-    
-    /* ensure modals and overlays are above floating shapes and cursor */
-    #cartModal, #productModal { z-index: 10002 }
-    #cartModal .panel, #productModal .panel { max-height: 80vh; overflow: auto; }
 
-    @media (max-width: 600px){
-      body { padding: 1rem; }
-      .grid { grid-template-columns: repeat(auto-fill, minmax(160px, 1fr)); gap: 1rem; }
-      .card img { height: 120px; }
-      .cursor-outline, .cursor-dot { display: none; }
+    .product-variants {
+      font-size: 0.8rem;
+      color: var(--gray-600);
     }
-    
-    .shape:nth-child(1){ width:80px;height:80px;background:linear-gradient(135deg,var(--accent),var(--success));border-radius:50%; top:20%; left:10%; animation-duration:25s; }
-    .shape:nth-child(2){ width:60px;height:60px;background:linear-gradient(135deg,var(--success),#ffc107);border-radius:30% 70% 70% 30% / 30% 30% 70% 70%; top:60%; right:15%; animation-duration:30s; }
-    .shape:nth-child(3){ width:100px;height:100px;background:linear-gradient(135deg,#ffc107,var(--accent));border-radius:50% 50% 0 50%; bottom:20%; left:20%; animation-duration:35s; }
-    .shape:nth-child(4){ width:70px;height:70px;background:linear-gradient(135deg,var(--accent),#dc3545);border-radius:50%; top:40%; right:30%; animation-duration:28s; }
-    @keyframes float { 0%,100%{transform:translate(0,0) rotate(0deg);} 25%{transform:translate(30px,-30px) rotate(90deg);} 50%{transform:translate(-20px,20px) rotate(180deg);} 75%{transform:translate(40px,10px) rotate(270deg);} }
 
-    .grid { display:grid; grid-template-columns: repeat(auto-fill,minmax(200px,1fr)); gap:1rem; position: relative; z-index: 1 }
-    .card { border:1px solid rgba(0,0,0,0.06); padding:1rem; border-radius:6px; background: rgba(255,255,255,0.9); transition:transform .15s ease, box-shadow .15s ease }
-    .card:hover{ transform: translateY(-4px); box-shadow: 0 8px 24px rgba(0,0,0,0.08) }
-    .card img { width:100%; height:150px; object-fit:cover; border-radius:4px }
-    .cart-btn { position:fixed; right:1rem; bottom:1rem; background:#000;color:#fff;padding:.75rem 1rem;border-radius:999px;cursor:pointer; box-shadow: 0 6px 18px rgba(0,0,0,0.12) }
-    #cartModal { display:none; opacity:0; transition:opacity .18s ease; position:fixed; left:0; top:0; right:0; bottom:0; background:rgba(0,0,0,.6); align-items:center; justify-content:center }
-    #cartModal.open { display:flex; opacity:1 }
-    #cartModal .panel { background:#fff; max-width:720px; width:100%; padding:1rem; border-radius:8px }
-    #productModal .panel { background:#fff; max-width:720px; width:100%; padding:1rem; border-radius:8px }
-    #productModal { display:none; opacity:0; transition:opacity .18s ease; position:fixed; left:0; top:0; right:0; bottom:0; background:rgba(0,0,0,.6); align-items:center; justify-content:center }
-    #productModal.open { display:flex; opacity:1 }
-    .cart-list { max-height:300px; overflow:auto }
-    .row { display:flex; gap:1rem; align-items:center }
-    .muted { color:#666 }
-    .btn { background:#0070f3;color:#fff;padding:.5rem .75rem;border-radius:6px;border:0;cursor:pointer }
-    .btn.secondary { background:#6c757d }
-    #toastContainer .toast { background: #111; color:#fff; padding:.6rem .8rem; border-radius:6px; margin-top:.5rem; box-shadow: 0 8px 20px rgba(0,0,0,0.12) }
-
-    /* custom cursor elements */
-    .cursor-dot { width: 18px; height: 18px; background: radial-gradient(circle, #ff0080, #7928ca, #0070f3); border-radius: 50%; position: fixed; pointer-events: none; transform: translate(-50%, -50%); transition: transform 0.15s ease; z-index: 10000; box-shadow: 0 0 30px rgba(255,0,128,0.6); }
-    .cursor-outline { width: 48px; height: 48px; border: 3px solid #ff0080; border-radius: 50%; position: fixed; pointer-events: none; transform: translate(-50%, -50%); transition: transform 0.2s ease; z-index: 9999; opacity: 0.9; }
-    
-    /* Coming Soon Section */
-    .coming-soon-section {
-      background: linear-gradient(135deg, rgba(255,193,7,0.1) 0%, rgba(255,152,0,0.1) 100%);
-      border: 2px solid #ffc107;
-      border-radius: 12px;
-      padding: 2rem;
-      margin-bottom: 3rem;
+    #store-status {
       text-align: center;
-      position: relative;
-      z-index: 2;
+      padding: 4rem 1rem;
+      color: var(--gray-600);
     }
-    .coming-soon-section h2 {
-      color: #ff6f00;
-      font-size: 1.8rem;
-      margin-bottom: 0.5rem;
-      font-weight: 700;
+
+    #store-status .spinner {
+      width: 40px; height: 40px;
+      border: 3px solid var(--gray-200);
+      border-top-color: var(--accent);
+      border-radius: 50%;
+      animation: spin 0.8s linear infinite;
+      margin: 0 auto 1.2rem;
     }
-    .coming-soon-section p {
-      color: #666;
-      font-size: 1rem;
-      margin-bottom: 1rem;
-      line-height: 1.6;
+
+    @keyframes spin { to { transform: rotate(360deg); } }
+
+    .store-error {
+      background: var(--white);
+      border: 1px solid var(--gray-200);
+      border-radius: 16px;
+      padding: 3rem 2rem;
+      text-align: center;
+      box-shadow: var(--shadow);
+      max-width: 580px;
+      margin: 0 auto;
     }
-    .badge-soon {
-      display: inline-block;
-      background: #ffc107;
-      color: #000;
-      padding: 0.5rem 1rem;
-      border-radius: 20px;
-      font-weight: 600;
-      font-size: 0.85rem;
-      margin-top: 0.5rem;
-    }
-    
-    /* Shipping Policy Section */
-    .shipping-policy {
-      background: #f9f9f9;
-      border: 1px solid #e0e0e0;
+    .store-error h2 { font-size: 1.5rem; font-weight: 700; margin-bottom: 0.75rem; }
+    .store-error p { color: var(--gray-600); margin-bottom: 1.5rem; }
+
+    .btn-primary {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.5rem;
+      background: var(--accent);
+      color: #fff;
+      text-decoration: none;
+      padding: 0.9rem 2.2rem;
       border-radius: 8px;
-      padding: 1.5rem;
-      margin-bottom: 2rem;
-      position: relative;
-      z-index: 2;
-    }
-    .shipping-policy h3 {
-      color: #000;
-      font-size: 1.3rem;
-      margin-bottom: 1rem;
-      font-weight: 700;
-    }
-    .shipping-policy ul {
-      list-style: none;
-      padding: 0;
-      margin: 0;
-    }
-    .shipping-policy li {
-      padding: 0.75rem 0;
-      color: #333;
-      font-size: 0.95rem;
-      line-height: 1.6;
-      border-bottom: 1px solid #e0e0e0;
-    }
-    .shipping-policy li:last-child {
-      border-bottom: none;
-    }
-    .shipping-policy strong {
-      color: var(--accent);
       font-weight: 600;
+      font-size: 1.05rem;
+      transition: var(--transition);
+      border: 2px solid transparent;
+      cursor: pointer;
+    }
+
+    .btn-primary:hover {
+      background: linear-gradient(135deg, #ff0080, #7928ca);
+      transform: translateY(-2px);
+      box-shadow: 0 6px 20px rgba(0,123,255,0.35);
+    }
+
+    .btn-secondary {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.5rem;
+      background: transparent;
+      color: var(--accent);
+      text-decoration: none;
+      padding: 0.9rem 2.2rem;
+      border-radius: 8px;
+      font-weight: 600;
+      font-size: 1.05rem;
+      transition: var(--transition);
+      border: 2px solid var(--accent);
+      margin-left: 1rem;
+    }
+
+    .btn-secondary:hover {
+      background: var(--accent);
+      color: #fff;
+      transform: translateY(-2px);
+    }
+
+    .perks {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+      gap: 1.5rem;
+      margin: 3rem 0 5rem;
+    }
+
+    .perk {
+      background: var(--white);
+      border: 1px solid var(--gray-200);
+      border-radius: 12px;
+      padding: 1.75rem 1.5rem;
+      text-align: center;
+      transition: var(--transition);
+      box-shadow: 0 2px 8px rgba(0,0,0,0.05);
+    }
+
+    .perk:hover {
+      transform: translateY(-4px);
+      box-shadow: var(--shadow);
+    }
+
+    .perk .perk-icon,
+    .perk svg.perk-icon { width: 2rem; height: 2rem; margin: 0 auto 0.75rem; display: block; color: var(--accent); }
+    .perk h3 { font-size: 1rem; font-weight: 600; margin-bottom: 0.4rem; color: var(--black); }
+    .perk p { font-size: 0.9rem; color: var(--gray-600); }
+
+    footer {
+      background: var(--gray-100);
+      border-top: 1px solid var(--gray-200);
+      padding: 2.5rem 0;
+      text-align: center;
+    }
+
+    footer p {
+      color: var(--gray-600);
+      font-size: 0.9rem;
+      margin-bottom: 0.4rem;
+    }
+
+    footer a {
+      color: var(--accent);
+      text-decoration: none;
+      font-weight: 500;
+    }
+
+    footer a:hover { text-decoration: underline; }
+
+    .theme-toggle {
+      background: none;
+      border: 1.5px solid var(--gray-300);
+      border-radius: 50%;
+      width: 38px; height: 38px;
+      cursor: pointer;
+      font-size: 1.1rem;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      transition: var(--transition);
+      color: var(--black);
+    }
+    .theme-toggle:hover { background: var(--gray-100); }
+
+    @media (max-width: 768px) {
+      .nav-inner, .container { padding: 0 20px; }
+      .hero { padding: 3rem 0 2rem; }
+      .btn-secondary { margin-left: 0; margin-top: 0.75rem; }
+      .store-cta { padding: 2.5rem 1.5rem; }
+    }
+
+    @media (max-width: 480px) {
+      .nav-inner, .container { padding: 0 16px; }
+      .nav-links { gap: 1.5rem; }
+      .btn-secondary { display: block; text-align: center; margin-left: 0; }
     }
   </style>
 </head>
 <body>
-  <div class="floating-shapes" aria-hidden="true">
-    <div class="shape"></div>
-    <div class="shape"></div>
-    <div class="shape"></div>
-    <div class="shape"></div>
-  </div>
-  <div class="cursor-dot" id="cursorDot"></div>
-  <div class="cursor-outline" id="cursorOutline"></div>
-
-  <h1>Merch Store</h1>
-  <div id="shopStatus" class="muted" style="margin-bottom:1rem">Checking Printify status…</div>
-  <div style="display:flex; gap:1rem; align-items:center; margin-bottom:1rem">
-    <label style="font-size:0.95rem">Currency: 
-      <select id="currencySelector" aria-label="Choose currency">
-        <option value="USD">USD</option>
-        <option value="AUD">AUD</option>
-        <option value="JPY">JPY</option>
-        <option value="EUR">EUR</option>
-        <option value="GBP">GBP</option>
-      </select>
-    </label>
-    <label style="font-size:0.95rem">Show: <select id="productFilter" aria-label="Product filter"><option value="all">All</option><option value="shirt">T-Shirts</option></select></label>
-    <div style="margin-left:auto"><button id="clearCartBtn" class="btn">Clear cart</button></div>
-  </div>
-
-  <button id="viewCart" class="cart-btn" style="box-shadow: 0 4px 12px rgba(0,0,0,0.2);">Cart (<span id="cartCount" style="background: #dc3545; padding: 0.25rem 0.5rem; border-radius: 50%; font-weight: bold;">0</span>)</button>
-
-  <div id="cartModal">
-    <div class="panel">
-      <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.5rem;">
-        <h2 style="margin: 0;">Shopping Cart</h2>
-        <button id="closeCart" class="btn" style="background: #6c757d;">Close</button>
-      </div>
-      <div id="cartList" class="cart-list"></div>
-      <div style="background: #f9f9f9; padding: 1rem; border-radius: 8px; margin-bottom: 1.5rem;">
-        <div style="margin-bottom: 1rem;">
-          <label style="display: block; font-weight: 600; margin-bottom: 0.5rem;">Shipping Method:</label>
-          <select id="shippingSelector" aria-label="Select shipping method" style="width: 100%; padding: 0.75rem; border: 1px solid #ddd; border-radius: 6px; font-size: 1rem;">
-            <option value="standard">Standard (5-7 days)</option>
-            <option value="express">Express (2-3 days)</option>
-          </select>
-          <div style="margin-top: 0.5rem; font-size: 0.9rem; color: #666;">Shipping cost: <strong id="shippingCost">—</strong></div>
-        </div>
-        <div style="font-size: 1.1rem; font-weight: 700; text-align: right; color: var(--accent); border-top: 2px solid #ddd; padding-top: 1rem;">
-          Total: <span id="cartTotal" style="font-size: 1.3rem;">0.00</span>
-        </div>
-      </div>
-      <div class="row" style="justify-content:space-between;margin-top:1rem">
-        <button id="checkoutBtn" class="btn" style="flex: 1; font-size: 1.05rem; padding: 1rem;">Proceed to Checkout</button>
-      </div>      <div id="checkoutForm" style="display:none;margin-top:1rem">
-        <h3>Checkout — Secure Payment via Stripe</h3>
-        <form id="form">
-          <div>
-            <label for="first_name">First name</label><br>
-            <input id="first_name" name="first_name" required>
-          </div>
-          <div>
-            <label for="last_name">Last name</label><br>
-            <input id="last_name" name="last_name" required>
-          </div>
-          <div>
-            <label for="country">Country<br>
-              <select id="country" name="country" required>
-                <option value="US">United States</option>
-                <option value="CA">Canada</option>
-                <option value="GB">United Kingdom</option>
-                <option value="AU">Australia</option>
-                <option value="">Other</option>
-              </select>
-            </label>
-          </div>
-          <div style="margin-top:.5rem">
-            <label><input type="checkbox" name="send_confirmation_email" checked> Send confirmation email</label>
-          </div>
-          <div style="margin-top:1rem">
-            <label>Email<br><input name="email" type="email" required></label>
-          </div>
-          <div style="margin-top:1rem">
-            <label>Address<br><input name="address1" required></label>
-          </div>
-          <div style="display:grid; grid-template-columns:1fr 1fr; gap:1rem; margin-top:1rem;">
-            <div>
-              <label>City<br><input name="city" required></label>
-            </div>
-            <div>
-              <label>ZIP<br><input name="zip" required></label>
-            </div>
-          </div>
-          <div style="display:grid; grid-template-columns:1fr 1fr; gap:1rem; margin-top:1rem;">
-            <div>
-              <label>Country<br><input name="country" required placeholder="AU"></label>
-            </div>
-            <div>
-              <label>State<br><input name="state" required placeholder="VIC"></label>
-            </div>
-          </div>
-
-          <!-- Stripe Card Element -->
-          <div style="margin-top:1.5rem">
-            <label style="display:block; font-weight:600; margin-bottom:0.5rem;">Card Details</label>
-            <div id="card-element" style="padding:0.75rem; border:1px solid #ddd; border-radius:4px;"></div>
-            <div id="card-errors" class="error-message"></div>
-          </div>
-
-          <div style="margin-top:1rem">
-            <label id="confirmLabel"><input type="checkbox" id="confirmOrder" name="confirm_real" required> I confirm this will place a real order and charge my card.</label>
-            <div style="margin-top:1rem">
-              <button type="submit" class="btn" style="width:100%;">Complete Purchase</button>
-            </div>
-          </div>
-        </form>
-        <div id="orderResult" style="margin-top:1rem"></div>
-      </div>
-
+  <nav>
+    <div class="nav-inner">
+      <a class="logo" href="/">sami-s.dev</a>
+      <ul class="nav-links">
+        <li><a href="/">Home</a></li>
+        <li><a href="/#about" onclick="sessionStorage.setItem('goto','about')">About</a></li>
+        <li><a href="/#projects" onclick="sessionStorage.setItem('goto','projects')">Projects</a></li>
+        <li><a href="/merch.html" class="active" style="color: var(--accent);">Merch</a></li>
+        <li><a href="/#contact" onclick="sessionStorage.setItem('goto','contact')">Contact</a></li>
+      </ul>
+      <button class="theme-toggle" id="theme-toggle" onclick="toggleTheme()" aria-label="Toggle dark mode">
+        <svg id="theme-icon-sun" xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="display:none"><circle cx="12" cy="12" r="5"/><line x1="12" y1="1" x2="12" y2="3"/><line x1="12" y1="21" x2="12" y2="23"/><line x1="4.22" y1="4.22" x2="5.64" y2="5.64"/><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"/><line x1="1" y1="12" x2="3" y2="12"/><line x1="21" y1="12" x2="23" y2="12"/><line x1="4.22" y1="19.78" x2="5.64" y2="18.36"/><line x1="18.36" y1="5.64" x2="19.78" y2="4.22"/></svg>
+        <svg id="theme-icon-moon" xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/></svg>
+      </button>
     </div>
-  </div>
+  </nav>
 
-  <div id="toastContainer" aria-live="polite" style="position:fixed; right:1rem; bottom:4rem; z-index:10001"></div>
-
-  <div id="productModal">
-    <div class="panel" id="productPanel" style="max-width:720px; position:relative;">
-      <button id="closeProduct" class="btn" style="position:absolute; right:1rem; top:1rem;">Close</button>
-      <h2 id="productTitle"></h2>
-      <img id="productImage" src="" style="width:100%; height:260px; object-fit:cover; border-radius:6px"/>
-      <div id="productDescription" class="muted" style="margin-top:0.5rem"></div>
-      <h4 style="margin-top:1rem">Shipping</h4>
-      <pre id="productShipping" class="muted" style="white-space:pre-wrap"></pre>
+  <main class="container">
+    <div class="hero">
+      <span class="badge">Official Store</span>
+      <h1>Sami Merch</h1>
+      <p>Rep the grind. Official merch from Samrath "Sami" Singh — hoodies, tees, accessories & more. Print-on-demand via Printify.</p>
     </div>
-  </div>
+
+    <div id="products-section">
+      <div id="store-status">
+        <div class="spinner"></div>
+        <p>Loading products…</p>
+      </div>
+      <div class="products-grid" id="products-grid" style="display:none;"></div>
+    </div>
+
+    <div class="perks">
+      <div class="perk">
+        <svg class="perk-icon" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 6 2 18 2 18 9"/><path d="M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2"/><rect x="6" y="14" width="12" height="8"/></svg>
+        <h3>Print-on-Demand</h3>
+        <p>Every item is made fresh when you order. No waste, high quality.</p>
+      </div>
+      <div class="perk">
+        <svg class="perk-icon" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="2" y1="12" x2="22" y2="12"/><path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"/></svg>
+        <h3>Worldwide Shipping</h3>
+        <p>Ships globally, including Australia. Tracked delivery on every order.</p>
+      </div>
+      <div class="perk">
+        <svg class="perk-icon" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg>
+        <h3>Quality Guaranteed</h3>
+        <p>Premium blanks. If you're not happy, we'll make it right.</p>
+      </div>
+      <div class="perk">
+        <svg class="perk-icon" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><rect x="1" y="4" width="22" height="16" rx="2" ry="2"/><line x1="1" y1="10" x2="23" y2="10"/></svg>
+        <h3>Secure Checkout</h3>
+        <p>Safe, encrypted payments via Printify's trusted checkout system.</p>
+      </div>
+    </div>
+  </main>
+
+  <footer>
+    <div class="container">
+      <p>© 2024 Samrath Singh | <a href="/">sami-s.dev</a> | ABN: 72 925 087 373</p>
+      <p>Merch powered by <a href="https://printify.com" target="_blank" rel="noopener noreferrer">Printify</a></p>
+    </div>
+  </footer>
+
   <script>
-    // Minimal cursor movement to match index feel
-    (function(){
-      const dot = document.getElementById('cursorDot');
-      const outline = document.getElementById('cursorOutline');
-      if(!dot || !outline) return;
-      document.addEventListener('mousemove', (e)=>{
-        dot.style.left = e.clientX + 'px'; dot.style.top = e.clientY + 'px';
-        outline.style.left = e.clientX + 'px'; outline.style.top = e.clientY + 'px';
-      });
-      document.addEventListener('mousedown', ()=>{ dot.classList.add('click'); outline.classList.add('click'); });
-      document.addEventListener('mouseup', ()=>{ dot.classList.remove('click'); outline.classList.remove('click'); });
-      // hover effect on buttons
-      document.querySelectorAll('button, a, .card').forEach(el=>{
-        el.addEventListener('mouseenter', ()=>{ dot.classList.add('hover'); outline.classList.add('hover'); });
-        el.addEventListener('mouseleave', ()=>{ dot.classList.remove('hover'); outline.classList.remove('hover'); });
-      });
+    function setThemeIcons(theme) {
+      document.getElementById('theme-icon-sun').style.display  = theme === 'dark'  ? 'block' : 'none';
+      document.getElementById('theme-icon-moon').style.display = theme === 'light' ? 'block' : 'none';
+    }
+
+    function toggleTheme() {
+      const current = document.documentElement.getAttribute('data-theme') || 'light';
+      const next = current === 'dark' ? 'light' : 'dark';
+      document.documentElement.setAttribute('data-theme', next);
+      localStorage.setItem('theme', next);
+      setThemeIcons(next);
+    }
+
+    (function applyTheme() {
+      const saved = localStorage.getItem('theme') || 'light';
+      document.documentElement.setAttribute('data-theme', saved);
+      setThemeIcons(saved);
     })();
+
+    async function loadProducts() {
+      const status = document.getElementById('store-status');
+      const grid   = document.getElementById('products-grid');
+
+      try {
+        const res  = await fetch('/api/merch');
+        if (!res.ok) throw new Error('API error ' + res.status);
+        const { products } = await res.json();
+
+        if (!products || products.length === 0) {
+          status.innerHTML = '<div class="store-error"><h2>No products yet</h2><p>Check back soon — new drops coming.</p></div>';
+          return;
+        }
+
+        grid.innerHTML = products.map(p => `
+          <div class="product-card">
+            ${p.image ? `<img src="/api/merch/image?url=${encodeURIComponent(p.image)}" alt="${p.title}" loading="lazy">` : '<div style="aspect-ratio:1;background:var(--gray-100);"></div>'}
+            <div class="product-card-body">
+              <h3>${p.title}</h3>
+              ${p.tags && p.tags.length ? `<div class="product-tags">${p.tags.slice(0,4).map(t => `<span class="product-tag">${t}</span>`).join('')}</div>` : ''}
+              <div class="product-meta">
+                <span class="product-price">$${p.price} AUD</span>
+                <span class="product-variants">${p.variants} option${p.variants !== 1 ? 's' : ''}</span>
+              </div>
+            </div>
+          </div>
+        `).join('');
+
+        status.style.display = 'none';
+        grid.style.display   = 'grid';
+
+      } catch (err) {
+        status.innerHTML = `
+          <div class="store-error">
+            <h2>Could not load products</h2>
+            <p>Something went wrong fetching the store. Try refreshing the page.</p>
+            <button class="btn-primary" onclick="location.reload()">Retry</button>
+          </div>`;
+      }
+    }
+
+    loadProducts();
   </script>
-  <script src="/assets/merch.js"></script>
 </body>
 </html>
