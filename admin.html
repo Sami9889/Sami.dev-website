@@ -1,0 +1,43 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <title>Admin — Orders</title>
+  <style>
+    body{font-family:system-ui,Arial,sans-serif;padding:1.5rem;background:#f6f8fb}
+    .panel{max-width:980px;margin:0 auto;background:#fff;padding:1rem;border-radius:8px;box-shadow:0 8px 30px rgba(20,30,60,0.06)}
+    .row{display:flex;gap:1rem;align-items:center}
+    .btn{background:#0070f3;color:#fff;padding:.5rem .75rem;border-radius:6px;border:0;cursor:pointer}
+    table{width:100%;border-collapse:collapse;margin-top:1rem}
+    th,td{padding:.5rem;border-bottom:1px solid #eee;text-align:left}
+    #orderDetail pre{white-space:pre-wrap;background:#f8f9fb;padding:.5rem;border-radius:6px}
+    input[type=password]{padding:.5rem;border:1px solid #ddd;border-radius:6px}
+  </style>
+</head>
+<body>
+  <div class="panel">
+    <h2>Admin — Orders</h2>
+    <p class="muted">Enter your admin token (kept in session only) to view orders. The token must be set in server's <code>ADMIN_TOKEN</code>.</p>
+    <div class="row" style="margin-top:.5rem;">
+      <input id="adminToken" type="password" placeholder="Paste admin token here" style="flex:1" />
+      <button id="authBtn" class="btn">Load orders</button>
+    </div>
+    <div id="authStatus" style="margin-top:.75rem;color:#666"></div>
+    <div id="ordersArea" style="display:none">
+      <h3 style="margin-top:1rem">Orders</h3>
+      <div style="display:flex; gap: .5rem; align-items:center; margin-top:.5rem">
+        <input id="orderSearch" placeholder="Search order id..." style="flex:1; padding:.5rem; border:1px solid #ddd; border-radius:6px" />
+        <button id="refreshOrders" class="btn">Refresh</button>
+      </div>
+      <table id="ordersTable"><thead><tr><th>Id</th><th>Created</th><th>Total</th><th>Action</th></tr></thead><tbody></tbody></table>
+    </div>
+    <div id="orderDetail" style="display:none;margin-top:1rem">
+      <h3>Order detail</h3>
+      <pre id="orderJson"></pre>
+      <div style="margin-top:.5rem"><button id="closeDetail" class="btn">Close</button></div>
+    </div>
+  </div>
+  <script src="/assets/admin.js"></script>
+</body>
+</html>

@@ -1,6 +1,7 @@
 (function(){
   // --- Sentry initialization (metrics) ---
-  const _SENTRY_DSN = "https://19f914da843ff91848281a5e4be175e8@o4510440292220928.ingest.de.sentry.io/4510440295563344";
+  // Sentry DSN should not be hardcoded in source. If present, it should be injected via server-side config
+  // (e.g., window.SENTRY_DSN or CONFIG.sentryDsn). We avoid initializing Sentry from this module.
   // Do not initialize Sentry from this page. If Sentry is present (initialized elsewhere), mark it available so metrics will use it.
   function initSentry(){
     try{
@@ -45,7 +46,15 @@
 
   // Cart helpers
   const CART_KEY = 'site_cart_v1';
-  function readCart(){ return JSON.parse(localStorage.getItem(CART_KEY) || '[]'); }
+  function readCart(){
+    try {
+      return JSON.parse(localStorage.getItem(CART_KEY) || '[]');
+    } catch(e) {
+      console.warn('Cart data corrupted or invalid JSON, resetting cart', e);
+      localStorage.removeItem(CART_KEY);
+      return [];
+    }
+  }
   function writeCart(cart){ localStorage.setItem(CART_KEY, JSON.stringify(cart)); }
 
   // Currency support
@@ -60,6 +69,8 @@
   };
   const CURRENCY_SYMBOL = { USD: '$', AUD: 'A$', JPY: '¥', EUR: '€', GBP: '£' };
   let CURRENT_CURRENCY = DEFAULT_CURRENCY;
+  // cache products to avoid refetching on every user action
+  let cachedProducts = null;
 
   function setCurrency(code){
     if(!SUPPORTED_RATES[code]) code = 'USD';
@@ -109,24 +120,34 @@
 
   // UI
   async function render(){
-    const products = await fetchProducts();
+    // Ensure products are cached and apply UI filter
+    if(!cachedProducts) cachedProducts = await fetchProducts();
+    let products = (cachedProducts || []).slice();
+    const filterEl = document.getElementById('productFilter');
+    const filterVal = filterEl ? filterEl.value : 'all';
+    if(filterVal === 'shirt') products = products.filter(p => /shirt|tee/i.test(p.title || ''));
+
     const grid = document.getElementById('productGrid');
     grid.innerHTML = '';
     products.forEach(p => {
       const card = document.createElement('div'); card.className='card';
-      card.innerHTML = `
-        <img src="${p.image}" alt="${p.title}" />
-        <h3>${p.title}</h3>
-        <div class="muted">${formatPrice(p.price)}</div>
-        <div style="margin-top:.5rem">
-          <button class="btn add" data-id="${p.id}" data-pid="${p.product_id}">Add to cart</button>
-          <button class="btn view" data-pid="${p.product_id}">View</button>
-        </div>
-      `;
+      // image
+      const img = document.createElement('img'); img.src = p.image || ''; img.alt = p.title || 'product image';
+      // title
+      const h3 = document.createElement('h3'); h3.textContent = p.title || '';
+      // price
+      const priceDiv = document.createElement('div'); priceDiv.className = 'muted'; priceDiv.textContent = formatPrice(p.price);
+      // buttons
+      const btnWrap = document.createElement('div'); btnWrap.style.marginTop = '.5rem';
+      const addBtn = document.createElement('button'); addBtn.className = 'btn add'; addBtn.dataset.id = p.id; addBtn.dataset.pid = p.product_id; addBtn.textContent = 'Add to cart';
+      const viewBtn = document.createElement('button'); viewBtn.className = 'btn view'; viewBtn.dataset.pid = p.product_id; viewBtn.textContent = 'View';
+      btnWrap.appendChild(addBtn); btnWrap.appendChild(viewBtn);
+
+      card.appendChild(img); card.appendChild(h3); card.appendChild(priceDiv); card.appendChild(btnWrap);
       grid.appendChild(card);
+
       // image fallback: try alternate URLs from product.images then local copies
       try{
-        const img = card.querySelector('img');
         if(img){
           const altSrcs = (p.images && p.images.slice()) || [];
           let idx = 0;
@@ -139,19 +160,25 @@
       }catch(e){/* ignore */}
     });
 
-    // Add to cart handlers
+    // Add to cart handlers (disable briefly to avoid accidental double-adds)
     grid.querySelectorAll('button.add').forEach(btn => {
-      btn.addEventListener('click', async (e)=>{
+      btn.addEventListener('click', (e)=>{
+        const button = e.currentTarget;
+        if(button.disabled) return;
+        button.disabled = true; const orig = button.textContent; button.textContent = 'Added ✓';
+        setTimeout(()=>{ button.disabled = false; button.textContent = orig; }, 700);
+
         sendMetric('count', 'button_click', 1);
         sendMetric('count', 'add_to_cart', 1);
         const id = e.currentTarget.dataset.id;
-        const product = (await fetchProducts()).find(x=>x.id===id);
-        if(!product) return alert('Product not found');
+        const product = (cachedProducts || []).find(x=>x.id===id);
+        if(!product){ alert('Product not found'); button.disabled = false; button.textContent = orig; return; }
         const cart = readCart();
         const found = cart.find(i=>i.id===product.id);
         if(found) found.quantity += 1; else cart.push({ id: product.id, title: product.title, price: product.price, product_id: product.product_id, variant_id: product.variant_id, quantity: 1 });
         writeCart(cart);
         updateCartBadge();
+        showToast('Added to cart');
       });
     });
 
@@ -174,6 +201,16 @@
     document.getElementById('cartCount').textContent = count;
   }
 
+  // Toasts for small transient notifications
+  function showToast(message, timeout=2500){
+    try{
+      const cont = document.getElementById('toastContainer'); if(!cont) return;
+      const t = document.createElement('div'); t.className = 'toast'; t.textContent = message;
+      cont.appendChild(t);
+      setTimeout(()=>{ t.style.opacity = '0'; setTimeout(()=> t.remove(), 200); }, timeout);
+    }catch(e){ console.warn('Toast failed', e); }
+  }
+
   // Cart modal
   const cartModal = document.getElementById('cartModal');
   document.getElementById('viewCart').addEventListener('click', openCart);
@@ -182,30 +219,38 @@
 
   function openCart(){
     renderCart();
-    cartModal.style.display = 'flex';
+    cartModal.classList.add('open');
   }
-  function closeCart(){ cartModal.style.display = 'none'; document.getElementById('checkoutForm').style.display = 'none'; }
+  function closeCart(){ cartModal.classList.remove('open'); document.getElementById('checkoutForm').style.display = 'none'; }
 
   function renderCart(){
     const list = document.getElementById('cartList'); list.innerHTML = '';
     const cart = readCart();
-    if(cart.length===0){ list.innerHTML = '<div>Your cart is empty</div>'; document.getElementById('cartTotal').textContent = formatPrice(0); updateShippingDisplay(); return; }
+    if(cart.length===0){
+      const empty = document.createElement('div'); empty.textContent = 'Your cart is empty'; list.appendChild(empty);
+      document.getElementById('cartTotal').textContent = formatPrice(0); updateShippingDisplay(); return; }
     cart.forEach(item => {
       const row = document.createElement('div'); row.className='row';
       row.style.justifyContent = 'space-between';
-      row.innerHTML = `<div><strong>${item.title}</strong><div class="muted">${formatPrice(item.price)}</div></div><div><button data-id="${item.id}" class="btn dec">-</button> <span>${item.quantity}</span> <button data-id="${item.id}" class="btn inc">+</button> <button data-id="${item.id}" class="btn rm">Remove</button></div>`;
-      list.appendChild(row);
-    });
+      const left = document.createElement('div');
+      const strong = document.createElement('strong'); strong.textContent = item.title || '';
+      const muted = document.createElement('div'); muted.className = 'muted'; muted.textContent = formatPrice(item.price);
+      left.appendChild(strong); left.appendChild(muted);
 
-    list.querySelectorAll('.inc').forEach(b=>b.addEventListener('click', e=>{
-      const id = e.currentTarget.dataset.id; const cart = readCart(); const it = cart.find(i=>i.id===id); it.quantity++; writeCart(cart); renderCart(); updateCartBadge();
-    }));
-    list.querySelectorAll('.dec').forEach(b=>b.addEventListener('click', e=>{
-      const id = e.currentTarget.dataset.id; const cart = readCart(); const it = cart.find(i=>i.id===id); if(it.quantity>1) it.quantity--; else { const idx = cart.findIndex(i=>i.id===id); cart.splice(idx,1); } writeCart(cart); renderCart(); updateCartBadge();
-    }));
-    list.querySelectorAll('.rm').forEach(b=>b.addEventListener('click', e=>{
-      const id = e.currentTarget.dataset.id; const cart = readCart(); const idx = cart.findIndex(i=>i.id===id); cart.splice(idx,1); writeCart(cart); renderCart(); updateCartBadge();
-    }));
+      const right = document.createElement('div');
+      const dec = document.createElement('button'); dec.className = 'btn dec'; dec.dataset.id = item.id; dec.textContent = '-';
+      const qty = document.createElement('span'); qty.textContent = item.quantity;
+      const inc = document.createElement('button'); inc.className = 'btn inc'; inc.dataset.id = item.id; inc.textContent = '+';
+      const rm = document.createElement('button'); rm.className = 'btn rm'; rm.dataset.id = item.id; rm.textContent = 'Remove';
+
+      right.appendChild(dec); right.appendChild(qty); right.appendChild(inc); right.appendChild(rm);
+      row.appendChild(left); row.appendChild(right);
+      list.appendChild(row);
+
+      dec.addEventListener('click', ()=>{ const id = dec.dataset.id; const cart = readCart(); const it = cart.find(i=>i.id===id); if(!it) return; if(it.quantity>1){ it.quantity--; showToast('Quantity decreased'); } else { const idx = cart.findIndex(i=>i.id===id); cart.splice(idx,1); showToast('Item removed'); } writeCart(cart); renderCart(); updateCartBadge(); });
+      inc.addEventListener('click', ()=>{ const id = inc.dataset.id; const cart = readCart(); const it = cart.find(i=>i.id===id); if(!it) return; it.quantity++; writeCart(cart); renderCart(); updateCartBadge(); showToast('Quantity increased'); });
+      rm.addEventListener('click', ()=>{ const id = rm.dataset.id; const cart = readCart(); const idx = cart.findIndex(i=>i.id===id); if(idx>-1) cart.splice(idx,1); writeCart(cart); renderCart(); updateCartBadge(); showToast('Item removed'); });
+    });
 
     const subtotal = cart.reduce((s,i)=>s + i.price * i.quantity, 0);
     const shippingUsdCents = getShippingUsdCents();
@@ -224,7 +269,7 @@
     titleEl.textContent = 'Loading…';
     descEl.textContent = '';
     shipEl.textContent = '';
-    modal.style.display = 'flex';
+    modal.classList.add('open');
 
     try{
       const start = Date.now();
@@ -245,7 +290,8 @@
       else imgSrc = product.image || product.preview_url || '';
       if(imgSrc){ imgEl.src = imgSrc; imgEl.style.display = 'block'; } else { imgEl.style.display = 'none'; }
 
-      descEl.innerHTML = product.description || product.body_html || product.meta_description || product.title || 'No description available.';
+      // Use textContent to avoid rendering untrusted HTML in product descriptions
+      descEl.textContent = product.description || product.body_html || product.meta_description || product.title || 'No description available.';
 
       const shipping = json.shipping;
       if(!shipping) shipEl.textContent = 'Shipping info not available or credentials are missing on server.';
@@ -261,18 +307,18 @@
       shipEl.textContent = '';
       console.error(err);
       // Attempt to show local product fallbacks (e.g., sami-tee)
-      const local = (await fetchProducts()).find(p=>p.product_id===productId || p.id===productId);
+      const local = (cachedProducts || (await fetchProducts())).find(p=>p.product_id===productId || p.id===productId);
       if(local){
         titleEl.textContent = local.title;
         if(local.images && local.images.length) { imgEl.src = local.images[0]; imgEl.style.display = 'block'; }
-        descEl.innerHTML = local.description || '';
+        descEl.textContent = local.description || '';
         shipEl.textContent = 'Local product — shipping/price may vary.';
         sendMetric('count', 'product_view_local', 1);
       }
     }
   }
 
-  document.getElementById('closeProduct').addEventListener('click', ()=>{ document.getElementById('productModal').style.display = 'none'; });
+  document.getElementById('closeProduct').addEventListener('click', ()=>{ document.getElementById('productModal').classList.remove('open'); });
 
   // Load config (background, safeMode, printifyConfigured)
   let CONFIG = {};
@@ -285,20 +331,28 @@
       // show confirmation checkbox if printify configured and not safeMode
       if(CONFIG.printifyConfigured && !CONFIG.safeMode){ document.getElementById('confirmLabel').style.display = 'block'; }
       if(statusEl){
-        if(CONFIG.printifyConfigured) statusEl.innerHTML = 'Printify: <strong>configured</strong> — <button id="testCreds" class="btn">Test credentials</button>';
-        else statusEl.textContent = 'Printify: not configured (set PRINTIFY_TOKEN & SHOP_ID to enable live products and real checkout)';
+        if(CONFIG.printifyConfigured){
+          // build content with safe DOM APIs rather than innerHTML
+          statusEl.textContent = 'Printify: ';
+          const strong = document.createElement('strong'); strong.textContent = 'configured'; statusEl.appendChild(strong);
+          statusEl.appendChild(document.createTextNode(' — '));
+          const btn = document.createElement('button'); btn.id = 'testCreds'; btn.className = 'btn'; btn.textContent = 'Test credentials';
+          statusEl.appendChild(btn);
+          // attach handler immediately
+          btn.addEventListener('click', async ()=>{
+            btn.textContent = 'Testing…';
+            try{
+              const r = await fetch('/api/printify/test');
+              const j = await r.json();
+              if(r.ok) btn.textContent = 'Success ✓'; else btn.textContent = 'Failed ✕';
+              setTimeout(()=> btn.textContent = 'Test credentials', 2500);
+              console.log('printify test', j);
+            }catch(e){ btn.textContent = 'Failed ✕'; setTimeout(()=> btn.textContent = 'Test credentials', 2500); console.error(e); }
+          });
+        } else {
+          statusEl.textContent = 'Printify: not configured (set PRINTIFY_TOKEN & SHOP_ID to enable live products and real checkout)';
+        }
       }
-      // test credentials button
-      setTimeout(()=>{
-        const btn = document.getElementById('testCreds'); if(btn) btn.addEventListener('click', async ()=>{
-          btn.textContent = 'Testing…';
-          const r = await fetch('/api/printify/test');
-          const j = await r.json();
-          if(r.ok) btn.textContent = 'Success ✓'; else btn.textContent = 'Failed ✕';
-          setTimeout(()=> btn.textContent = 'Test credentials', 2500);
-          console.log('printify test', j);
-        });
-      }, 100);
 
       // Initialize currency selector UI
       try{
@@ -309,6 +363,25 @@
     }catch(e){ console.warn('Could not load config', e); }
   }
   loadConfig();
+
+  // UI initialization (one-time)
+  let uiInitialized = false;
+  function initUI(){
+    if(uiInitialized) return; uiInitialized = true;
+    const filter = document.getElementById('productFilter'); if(filter) filter.addEventListener('change', ()=>{ render(); });
+    const clearBtn = document.getElementById('clearCartBtn'); if(clearBtn) clearBtn.addEventListener('click', ()=>{ if(confirm('Clear cart?')){ localStorage.removeItem(CART_KEY); updateCartBadge(); renderCart(); showToast('Cart cleared'); } });
+
+    // overlay click to close modals
+    if(cartModal) cartModal.addEventListener('click', (e)=>{ if(e.target === cartModal) closeCart(); });
+    const pModal = document.getElementById('productModal'); if(pModal) pModal.addEventListener('click', (e)=>{ if(e.target === pModal) pModal.classList.remove('open'); });
+
+    // ESC to close
+    document.addEventListener('keydown', (e)=>{ if(e.key === 'Escape'){ closeCart(); const pm = document.getElementById('productModal'); if(pm) pm.classList.remove('open'); } });
+
+    // ensure cart badge correct
+    updateCartBadge();
+  }
+  initUI();
 
   // Checkout submission
   document.getElementById('form').addEventListener('submit', async (ev)=>{
@@ -328,14 +401,15 @@
     const shippingUsdCents = getShippingUsdCents();
 
     const payload = {
-      address_to: { first_name: data.first_name, email: data.email, address1: data.address1 || data.address, city: data.city, zip: data.zip, country: 'US' },
+      address_to: { first_name: data.first_name, last_name: data.last_name, email: data.email, address1: data.address1 || data.address, city: data.city, zip: data.zip, country: (data.country || CONFIG.defaultCountry || '') },
       line_items: cart.map(i=>({ product_id: i.product_id, variant_id: i.variant_id, quantity: i.quantity })),
       order_subtotal_cents: subtotal,
       shipping_cost_usd_cents: shippingUsdCents,
       shipping_method: getSelectedShippingMethod(),
       send_shipping_notification: false,
       display_currency: CURRENT_CURRENCY,
-      confirm_real: (CONFIG.printifyConfigured && !CONFIG.safeMode) ? true : false
+      confirm_real: (CONFIG.printifyConfigured && !CONFIG.safeMode) ? true : false,
+      send_confirmation_email: data.send_confirmation_email === 'on' || data.send_confirmation_email === 'true' || data.send_confirmation_email === '1'
     };
 
     const resEl = document.getElementById('orderResult'); resEl.textContent = 'Placing order…';
@@ -346,7 +420,7 @@
     const rxDur = Date.now() - rxStart; sendMetric('distribution', 'response_time', rxDur);
     const json = await res.json();
     if(!res.ok){ sendMetric('count', 'checkout_failed', 1); throw json; }
-    resEl.innerHTML = `<div style="color:green">Order placed — id: ${json.id || json.external_id || json.order_id}</div>`;
+    resEl.style.color = 'green'; resEl.textContent = `Order placed — id: ${json.id || json.external_id || json.order_id || json}`;
     sendMetric('count', 'order_placed', 1);
     // send order total as gauge in USD cents and in display currency cents if available
     try{
@@ -356,10 +430,11 @@
       const converted = convertCentsToCurrency(totalUsd, CURRENT_CURRENCY);
       sendMetric('gauge', `order_total_${CURRENT_CURRENCY}_cents`, converted);
     }catch(e){}
-    localStorage.removeItem(CART_KEY); updateCartBadge(); renderCart();
+    localStorage.removeItem(CART_KEY); updateCartBadge(); renderCart(); showToast('Order placed — id: ' + (json.id || json.external_id || json.order_id || json));
     }catch(err){ sendMetric('count', 'checkout_failed', 1);
       console.error(err);
-      resEl.innerHTML = `<div style="color:red">Failed: ${err.message || JSON.stringify(err)}</div>`;
+      resEl.style.color = 'red'; resEl.textContent = `Failed: ${err.message || JSON.stringify(err)}`;
+      showToast('Order failed');
     }
   });
 
@@ -370,10 +445,8 @@
   try{
     sendMetric('count', 'page_view', 1);
     let loadTime = Math.round(performance.now());
-    if(performance.timing && performance.timing.loadEventEnd && performance.timing.navigationStart){
-      const t = performance.timing.loadEventEnd - performance.timing.navigationStart;
-      if(t > 0) loadTime = t;
-    }
+    const navEntry = (performance.getEntriesByType && performance.getEntriesByType('navigation') && performance.getEntriesByType('navigation')[0]) || null;
+    if(navEntry && navEntry.loadEventEnd > 0){ loadTime = Math.round(navEntry.loadEventEnd); }
     sendMetric('gauge', 'page_load_time', loadTime);
   }catch(e){/* ignore */}
 })();

@@ -1,0 +1,5 @@
+[
+  { "id": "p1", "title": "T-Shirt — Minimal", "price": 1999, "product_id": "5bfd0b66a342bcc9b5563216", "variant_id": 17887, "image": "https://via.placeholder.com/600x600?text=T-Shirt", "description": "Minimal tee — comfy and simple." },
+  { "id": "p2", "title": "Sticker Pack", "price": 499, "product_id": "5bfd0b66a342bcc9b5563217", "variant_id": 17888, "image": "https://via.placeholder.com/600x600?text=Sticker", "description": "A pack of stickers with logo art." },
+  { "id": "sami-tee", "title": "Sami.dev tee — Unisex", "price": 4999, "product_id": "sami-tee-prod", "variant_id": 1001, "image": "https://sami.is-a.dev/IMG_2231.jpeg", "images": ["https://sami.is-a.dev/IMG_2231.jpeg","https://sami.is-a.dev/IMG_2230.jpeg","https://sami.is-a.dev/IMG_2229.jpeg"], "description": "This long sleeve tee feels like a worn-in favorite from the moment you put it on." }
+]

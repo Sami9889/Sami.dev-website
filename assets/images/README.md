@@ -2,9 +2,9 @@ The merch page prefers to serve images from the provided remote host by default 
 
 Remote image URLs currently used for the Sami tee:
 
-- https://imagesami.is-a.dev/sIMG_2231.jpeg
-- https://sami.is-a.dev/IMG_2230.jpeg
-- https://sami.is-a.dev/IMG_2229.jpeg
+- <https://sami.is-a.dev/IMG_2231.jpeg>  (was previously `imagesami.is-a.dev` — verify if that was intentional)
+- <https://sami.is-a.dev/IMG_2230.jpeg>
+- <https://sami.is-a.dev/IMG_2229.jpeg>
 
 Local fallback filenames (place here if you prefer local storage):
 
