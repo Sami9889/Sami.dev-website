@@ -36,6 +36,15 @@
     }catch(e){
       const dur = Date.now() - start; sendMetric('distribution', 'response_time', dur);
       console.warn('Falling back to local products', e);
+      try {
+        const res = await fetch('/assets/products.json');
+        if (res.ok) {
+          return res.json();
+        }
+      } catch (fallbackErr) {
+        console.warn('Fallback fetch failed', fallbackErr);
+      }
+      // Hardcoded fallback if local fetch also fails
       return [
         { id: 'p1', title: 'T-Shirt — Minimal', price: 1999, product_id: '5bfd0b66a342bcc9b5563216', variant_id: 17887, image: 'https://via.placeholder.com/600x600?text=T-Shirt' },
         { id: 'p2', title: 'Sticker Pack', price: 499, product_id: '5bfd0b66a342bcc9b5563217', variant_id: 17888, image: 'https://via.placeholder.com/600x600?text=Sticker' },

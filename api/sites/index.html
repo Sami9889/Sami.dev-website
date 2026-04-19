@@ -163,6 +163,11 @@ index.html
 
     <div id="status" class="status"></div>
 
+    <div id="projects" style="margin-top: 20px;">
+      <h2 style="font-size: 1.2rem; margin-bottom: 10px;">Your Projects</h2>
+      <div id="projectsList"></div>
+    </div>
+
     <footer>
       © 2026 sami-s.dev — Client Hosting Platform
     </footer>
@@ -171,6 +176,23 @@ index.html
   <script>
     const form = document.getElementById('createForm');
     const status = document.getElementById('status');
+    const projectsList = document.getElementById('projectsList');
+
+    async function loadProjects() {
+      try {
+        const res = await fetch('https://sami-s.dev/api/projects');
+        const data = await res.json();
+        if (res.ok && data.projects) {
+          projectsList.innerHTML = data.projects.length ? 
+            data.projects.map(p => `<div style="margin: 5px 0;"><a href="${p.url}" target="_blank">${p.name}.sami-s.dev</a></div>`).join('') :
+            '<div>No projects yet.</div>';
+        } else {
+          projectsList.innerHTML = '<div>Failed to load projects.</div>';
+        }
+      } catch (err) {
+        projectsList.innerHTML = '<div>Network error loading projects.</div>';
+      }
+    }
 
     form.addEventListener('submit', async (e) => {
       e.preventDefault();
@@ -188,7 +210,7 @@ index.html
 
         const data = await res.json();
 
-        if (!res.ok || data.message?.toLowerCase().includes('invalid')) {
+        if (!res.ok || data.message?.toLowerCase().includes('invalid') || data.message?.toLowerCase().includes('already exists')) {
           status.textContent = data.message || 'Failed to create subdomain.';
           status.classList.add('err');
           return;
@@ -196,11 +218,15 @@ index.html
 
         status.textContent = data.message;
         status.classList.add('ok');
+        loadProjects(); // Reload projects after creation
       } catch (err) {
         status.textContent = 'Network error. Please try again.';
         status.classList.add('err');
       }
     });
+
+    // Load projects on page load
+    loadProjects();
   </script>
 
 </body>

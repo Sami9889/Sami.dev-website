@@ -201,4 +201,40 @@ app.get('/admin/orders/:id', (req,res)=>{
   }catch(e){ console.error('Admin read order error', e); return res.status(500).json({ message: 'Could not read order' }); }
 });
 
+// Projects endpoint — returns list of created subdomains
+app.get('/api/projects', (req, res) => {
+  try {
+    const subdomains = JSON.parse(fs.readFileSync(path.join(__dirname, 'subdomains.json'), 'utf8'));
+    res.json({ projects: subdomains.map(name => ({ name, url: `https://${name}.sami-s.dev` })) });
+  } catch (err) {
+    console.error('Error reading subdomains:', err);
+    res.status(500).json({ message: 'Server error' });
+  }
+});
+
+// Create subdomain endpoint
+app.post('/api/create', (req, res) => {
+  const { name } = req.body || {};
+  if (!name || typeof name !== 'string' || name.trim().length === 0) {
+    return res.status(400).json({ message: 'Invalid name provided' });
+  }
+  const trimmedName = name.trim();
+  if (!/^[a-z0-9-]{3,30}$/.test(trimmedName)) {
+    return res.status(400).json({ message: 'Invalid subdomain name. Use only lowercase letters, numbers, and hyphens (3-30 characters).' });
+  }
+  try {
+    const subdomains = JSON.parse(fs.readFileSync(path.join(__dirname, 'subdomains.json'), 'utf8'));
+    if (subdomains.includes(trimmedName)) {
+      return res.status(400).json({ message: 'Subdomain already exists' });
+    }
+    subdomains.push(trimmedName);
+    fs.writeFileSync(path.join(__dirname, 'subdomains.json'), JSON.stringify(subdomains, null, 2));
+    console.log(`Subdomain created: ${trimmedName}.sami-s.dev`);
+    res.json({ message: `Subdomain ${trimmedName}.sami-s.dev created successfully` });
+  } catch (err) {
+    console.error('Error managing subdomains:', err);
+    res.status(500).json({ message: 'Server error' });
+  }
+});
+
 app.listen(PORT, ()=> console.log(`Server started on http://localhost:${PORT}`));
