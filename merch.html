@@ -116,7 +116,7 @@
     .shape:nth-child(4){ width:70px;height:70px;background:linear-gradient(135deg,var(--accent),#dc3545);border-radius:50%; top:40%; right:30%; animation-duration:28s; }
     @keyframes float { 0%,100%{transform:translate(0,0) rotate(0deg);} 25%{transform:translate(30px,-30px) rotate(90deg);} 50%{transform:translate(-20px,20px) rotate(180deg);} 75%{transform:translate(40px,10px) rotate(270deg);} }
 
-    .grid { display:grid; grid-template-columns: repeat(auto-fill,minmax(200px,1fr)); gap:1rem; position: relative; z-index: 1 }
+    .grid { display:grid; grid-template-columns: repeat(auto-fill,minmax(240px,1fr)); gap:1rem; position: relative; z-index: 1 }
     .card { border:1px solid rgba(0,0,0,0.06); padding:1rem; border-radius:6px; background: rgba(255,255,255,0.9); transition:transform .15s ease, box-shadow .15s ease }
     .card:hover{ transform: translateY(-4px); box-shadow: 0 8px 24px rgba(0,0,0,0.08) }
     .card img { width:100%; height:150px; object-fit:cover; border-radius:4px }
@@ -130,8 +130,13 @@
     .cart-list { max-height:300px; overflow:auto }
     .row { display:flex; gap:1rem; align-items:center }
     .muted { color:#666 }
-    .btn { background:#0070f3;color:#fff;padding:.5rem .75rem;border-radius:6px;border:0;cursor:pointer }
+    .btn { background:#0070f3;color:#fff;padding:.5rem .75rem;border-radius:6px;border:0;cursor:pointer; transition: background .15s ease }
     .btn.secondary { background:#6c757d }
+    .btn.add { background: #28a745; }
+    .btn.add:hover { background: #218838; }
+    .btn.view { background: #007bff; }
+    .btn.view:hover { background: #0056b3; }
+    .btn:hover { opacity: 0.9; }
     #toastContainer .toast { background: #111; color:#fff; padding:.6rem .8rem; border-radius:6px; margin-top:.5rem; box-shadow: 0 8px 20px rgba(0,0,0,0.12) }
 
     /* custom cursor elements */

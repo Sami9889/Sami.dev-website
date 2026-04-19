@@ -147,7 +147,7 @@
       // price
       const priceDiv = document.createElement('div'); priceDiv.className = 'muted'; priceDiv.textContent = formatPrice(p.price);
       // buttons
-      const btnWrap = document.createElement('div'); btnWrap.style.marginTop = '.5rem';
+      const btnWrap = document.createElement('div'); btnWrap.style.marginTop = '.5rem'; btnWrap.style.display = 'flex'; btnWrap.style.gap = '0.5rem';
       const addBtn = document.createElement('button'); addBtn.className = 'btn add'; addBtn.dataset.id = p.id; addBtn.dataset.pid = p.product_id; addBtn.textContent = 'Add to cart';
       const viewBtn = document.createElement('button'); viewBtn.className = 'btn view'; viewBtn.dataset.pid = p.product_id; viewBtn.textContent = 'View';
       btnWrap.appendChild(addBtn); btnWrap.appendChild(viewBtn);
