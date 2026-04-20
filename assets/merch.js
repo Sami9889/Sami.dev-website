@@ -29,28 +29,31 @@
   async function fetchProducts(){
     const start = Date.now();
     try{
+      // Try local products first (works on static hosting)
+      const res = await fetch('/assets/products.json');
+      const dur = Date.now() - start; sendMetric('distribution', 'response_time', dur);
+      if(res.ok) return res.json();
+    }catch(e){
+      console.warn('Local products fetch failed', e);
+    }
+    
+    try{
+      // Fallback to API if available
       const res = await fetch('/api/products');
       const dur = Date.now() - start; sendMetric('distribution', 'response_time', dur);
       if(!res.ok) throw new Error('Failed to fetch products');
       return res.json();
     }catch(e){
       const dur = Date.now() - start; sendMetric('distribution', 'response_time', dur);
-      console.warn('Falling back to local products', e);
-      try {
-        const res = await fetch('/assets/products.json');
-        if (res.ok) {
-          return res.json();
-        }
-      } catch (fallbackErr) {
-        console.warn('Fallback fetch failed', fallbackErr);
-      }
-      // Hardcoded fallback if local fetch also fails
-      return [
-        { id: 'p1', title: 'T-Shirt — Minimal', price: 1999, product_id: '5bfd0b66a342bcc9b5563216', variant_id: 17887, image: 'https://via.placeholder.com/600x600?text=T-Shirt' },
-        { id: 'p2', title: 'Sticker Pack', price: 499, product_id: '5bfd0b66a342bcc9b5563217', variant_id: 17888, image: 'https://via.placeholder.com/600x600?text=Sticker' },
-        { id: 'sami-tee', title: 'Sami.dev tee — Unisex', price: 4999, product_id: 'sami-tee-prod', variant_id: 1001, image: 'https://imagesami.is-a.dev/sIMG_2231.jpeg', images: ['https://imagesami.is-a.dev/sIMG_2231.jpeg','https://sami.is-a.dev/IMG_2230.jpeg','https://sami.is-a.dev/IMG_2229.jpeg'], description: `This long sleeve tee feels like a worn-in favorite from the moment you put it on. Environmentally-friendly heavier cotton with vintage feel. Production cost (AUD): 50.30, Shipping (AUD): 9.85, Taxes (AUD): 6.01 — Total (AUD): 66.16. Contact to add to store or change price.`, remoteImages: true }
-      ];
+      console.warn('API fetch failed, using hardcoded fallback', e);
     }
+    
+    // Last resort hardcoded fallback
+    return [
+      { id: 'p1', title: 'Classic T-Shirt', price: 1999, product_id: '5bfd0b66a342bcc9b5563216', variant_id: 17887, image: 'https://images.unsplash.com/photo-1521572163474-6864f9cf17ab?w=600&h=600&fit=crop', description: 'Comfortable cotton t-shirt with a classic fit. Perfect for everyday wear.' },
+      { id: 'p2', title: 'Logo Sticker Pack', price: 499, product_id: '5bfd0b66a342bcc9b5563217', variant_id: 17888, image: 'https://images.unsplash.com/photo-1578662996442-48f60103fc96?w=600&h=600&fit=crop', description: 'High-quality vinyl stickers featuring unique designs. Weather-resistant and durable.' },
+      { id: 'sami-tee', title: 'Sami.dev Premium Tee', price: 4999, product_id: 'sami-tee-prod', variant_id: 1001, image: 'https://imagesami.is-a.dev/sIMG_2231.jpeg', images: ['https://imagesami.is-a.dev/sIMG_2231.jpeg','https://sami.is-a.dev/IMG_2230.jpeg','https://sami.is-a.dev/IMG_2229.jpeg'], description: 'Premium long-sleeve tee with Sami.dev branding. Made from high-quality, environmentally-friendly cotton with a vintage feel.' }
+    ];
   }
 
   // Cart helpers
