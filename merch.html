@@ -280,6 +280,129 @@
       .card img { height: 150px; }
       h1 { font-size: 2rem; }
     }
+
+    /* Header Controls */
+    .page-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 2rem;
+      padding: 1.5rem;
+      background: rgba(255,255,255,0.9);
+      border-radius: 12px;
+      box-shadow: var(--shadow);
+    }
+
+    .header-left h1 {
+      margin: 0;
+      font-size: 2.5rem;
+      font-weight: 700;
+      color: var(--black);
+    }
+
+    .header-right {
+      display: flex;
+      gap: 1rem;
+      align-items: center;
+    }
+
+    .control-group {
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+    }
+
+    .control-group label {
+      font-weight: 600;
+      color: var(--gray-700);
+      font-size: 0.9rem;
+    }
+
+    .control-group select {
+      padding: 0.5rem;
+      border: 1px solid var(--gray-300);
+      border-radius: 6px;
+      background: var(--white);
+      font-family: var(--primary-font);
+    }
+
+    /* Coming Soon Section */
+    .coming-soon-section {
+      background: linear-gradient(135deg, rgba(255,193,7,0.1) 0%, rgba(255,152,0,0.1) 100%);
+      border: 2px solid #ffc107;
+      border-radius: 12px;
+      padding: 2rem;
+      margin-bottom: 3rem;
+      text-align: center;
+      position: relative;
+      z-index: 2;
+    }
+
+    .coming-soon-section h2 {
+      color: #ff6f00;
+      font-size: 1.8rem;
+      margin-bottom: 0.5rem;
+      font-weight: 700;
+    }
+
+    .coming-soon-section p {
+      color: #666;
+      font-size: 1rem;
+      margin-bottom: 1rem;
+      line-height: 1.6;
+    }
+
+    .badge-soon {
+      display: inline-block;
+      background: #ffc107;
+      color: #000;
+      padding: 0.5rem 1rem;
+      border-radius: 20px;
+      font-weight: 600;
+      font-size: 0.85rem;
+      margin-top: 0.5rem;
+    }
+
+    /* Shipping Policy Section */
+    .shipping-policy {
+      background: #f9f9f9;
+      border: 1px solid #e0e0e0;
+      border-radius: 8px;
+      padding: 1.5rem;
+      margin-bottom: 2rem;
+      position: relative;
+      z-index: 2;
+    }
+
+    .shipping-policy h3 {
+      color: #000;
+      font-size: 1.3rem;
+      margin-bottom: 1rem;
+      font-weight: 700;
+    }
+
+    .shipping-policy ul {
+      list-style: none;
+      padding: 0;
+      margin: 0;
+    }
+
+    .shipping-policy li {
+      padding: 0.75rem 0;
+      color: #333;
+      font-size: 0.95rem;
+      line-height: 1.6;
+      border-bottom: 1px solid #e0e0e0;
+    }
+
+    .shipping-policy li:last-child {
+      border-bottom: none;
+    }
+
+    .shipping-policy strong {
+      color: var(--accent);
+      font-weight: 600;
+    }
   </style>
       text-align: center;
       position: relative;
@@ -353,18 +476,52 @@
     <div class="shape"></div>
   </div>
 
-  <h1>Merch Store</h1>
-  <div style="display:flex; gap:1rem; align-items:center; margin-bottom:1rem">
-    <label style="font-size:0.95rem">Currency: 
-      <select id="currencySelector" aria-label="Choose currency">
-        <option value="USD">USD</option>
-        <option value="AUD">AUD</option>
-        <option value="JPY">JPY</option>
-        <option value="EUR">EUR</option>
-        <option value="GBP">GBP</option>
-      </select>
-    </label>
-    <label style="font-size:0.95rem">Show: <select id="productFilter" aria-label="Product filter"><option value="all">All</option><option value="shirt">T-Shirts</option></select></label>
+  <div class="main-container">
+    <div class="page-header">
+      <div class="header-left">
+        <h1>Merch Store</h1>
+      </div>
+      <div class="header-right">
+        <div class="control-group">
+          <label for="currencySelector">Currency:</label>
+          <select id="currencySelector" aria-label="Choose currency">
+            <option value="USD">USD</option>
+            <option value="AUD">AUD</option>
+            <option value="EUR">EUR</option>
+          </select>
+        </div>
+        <div class="control-group">
+          <label for="productFilter">Show:</label>
+          <select id="productFilter" aria-label="Filter products">
+            <option value="all">All Products</option>
+            <option value="t-shirts">T-Shirts</option>
+            <option value="stickers">Stickers</option>
+          </select>
+        </div>
+      </div>
+    </div>
+
+    <div class="coming-soon-section">
+      <h2>🚀 New Products Coming Soon!</h2>
+      <p>We're working on exciting new merchandise. Stay tuned for hoodies, mugs, and more!</p>
+      <div class="badge-soon">Coming Q2 2026</div>
+    </div>
+
+    <div class="grid" id="productGrid">
+      <!-- Products will be loaded here -->
+    </div>
+
+    <div class="shipping-policy">
+      <h3>🚚 Shipping & Returns</h3>
+      <ul>
+        <li><strong>Free Shipping</strong> on orders over $50 worldwide</li>
+        <li>Standard shipping: 5-7 business days</li>
+        <li>Express shipping: 2-3 business days (+$10)</li>
+        <li>30-day return policy with free return shipping</li>
+        <li>All products printed on demand - no minimum order</li>
+      </ul>
+    </div>
+  </div>
     <div style="margin-left:auto"><button id="clearCartBtn" class="btn">Clear cart</button></div>
   </div>
 
