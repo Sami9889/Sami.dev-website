@@ -33,7 +33,7 @@ app.get('/api/config', (req, res) => {
   res.json({
     backgroundImage: process.env.BACKGROUND_IMAGE || null,
     safeMode: process.env.SAFE_MODE === '1',
-    printifyConfigured: !!(process.env.PRINTIFY_TOKEN && process.env.SHOP_ID),
+    printifyConfigured: !!(process.env.PRINTIFY_API && process.env.PRINTIFY_SHOP_ID),
     stripeConfigured: !!process.env.STRIPE_PUBLISHABLE_KEY,
     stripePublishableKey: process.env.STRIPE_PUBLISHABLE_KEY || null
   });
@@ -120,7 +120,7 @@ app.get('/api/printify/products/:productId', async (req, res) => {
   }
 });
 
-// Checkout — places an order via Printify if PRINTIFY_TOKEN & SHOP_ID are set.
+// Checkout — places an order via Printify if PRINTIFY_API & PRINTIFY_SHOP_ID are set.
 // If credentials are missing, simulate an order so developers can test checkout & shipping locally.
 app.post('/api/checkout', async (req, res)=>{
   // Local-only checkout: write an order file to `orders/` and optionally send confirmation email (if SENDGRID configured and client requested it)
