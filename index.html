@@ -4,6 +4,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="theme-color" content="#007bff">
 
   <title>Samrath "Sami" Singh — Full-Stack Developer</title>
 
@@ -15,42 +16,39 @@
 
   <!-- Open Graph -->
   <meta property="og:type" content="profile">
-  <meta property="og:title" content="Samrath 'Sami' Singh — Developer">
+  <meta property="og:title" content="Samrath 'Sami' Singh — Full-Stack Developer">
   <meta property="og:description" content="Full-stack developer building SaaS tools, Minecraft plugins, Shopify systems, and maker projects.">
   <meta property="og:url" content="https://sami-s.dev/">
   <meta property="og:image" content="https://github.com/Sami9889.png">
+  <meta property="og:image:width" content="460">
+  <meta property="og:image:height" content="460">
 
   <!-- Twitter -->
   <meta name="twitter:card" content="summary_large_image">
-  <meta name="twitter:title" content="Sami Singh — Developer">
+  <meta name="twitter:title" content="Samrath 'Sami' Singh — Full-Stack Developer">
   <meta name="twitter:description" content="Full-stack developer from Australia building SaaS, Minecraft plugins, and maker projects.">
   <meta name="twitter:image" content="https://github.com/Sami9889.png">
 
   <!-- Favicon -->
   <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>💻</text></svg>">
 
-  <!-- Structured Data -->
+  <!-- Structured Data: Person -->
   <script type="application/ld+json">
   {
     "@context": "https://schema.org",
     "@type": "Person",
     "@id": "https://sami-s.dev/#person",
-
     "name": "Samrath Singh",
     "alternateName": ["Sami Singh", "Sami9889"],
-
     "url": "https://sami-s.dev",
     "image": "https://github.com/Sami9889.png",
-
     "jobTitle": "Full-Stack Developer",
-
     "address": {
       "@type": "PostalAddress",
       "addressLocality": "Melbourne",
       "addressRegion": "VIC",
       "addressCountry": "AU"
     },
-
     "sameAs": [
       "https://github.com/Sami9889",
       "https://www.linkedin.com/in/samrath-singh-400705297",
@@ -60,7 +58,6 @@
       "https://orcid.org/0009-0001-2178-4604",
       "https://sami-s.is-a.dev"
     ],
-
     "knowsAbout": [
       "Web Development",
       "JavaScript",
@@ -74,50 +71,75 @@
   }
   </script>
 
-</head>
+  <!-- Structured Data: WebSite -->
+  <script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@type": "WebSite",
+    "@id": "https://sami-s.dev/#website",
+    "url": "https://sami-s.dev",
+    "name": "Samrath Singh — Full-Stack Developer",
+    "description": "Portfolio of Samrath 'Sami' Singh, a full-stack developer from Australia.",
+    "author": { "@id": "https://sami-s.dev/#person" }
+  }
+  </script>
 
-<body>
+  <!-- Structured Data: FAQPage -->
+  <script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@type": "FAQPage",
+    "mainEntity": [
+      {
+        "@type": "Question",
+        "name": "What services do you offer?",
+        "acceptedAnswer": {
+          "@type": "Answer",
+          "text": "I specialize in custom web development, Minecraft plugin development, eCommerce solutions (especially Shopify), API integration, and automation. I also provide technical support and troubleshooting services."
+        }
+      },
+      {
+        "@type": "Question",
+        "name": "How long does a typical project take?",
+        "acceptedAnswer": {
+          "@type": "Answer",
+          "text": "Project timelines vary based on complexity and scope. Simple websites can take 1-2 weeks, while custom applications may take 4-8 weeks."
+        }
+      },
+      {
+        "@type": "Question",
+        "name": "How much do you charge?",
+        "acceptedAnswer": {
+          "@type": "Answer",
+          "text": "Pricing depends on project scope, complexity, and requirements. I offer both hourly rates and project-based pricing. Contact me for a free consultation and estimate."
+        }
+      },
+      {
+        "@type": "Question",
+        "name": "Do you work with clients outside Australia?",
+        "acceptedAnswer": {
+          "@type": "Answer",
+          "text": "Absolutely! While I'm based in Point Cook, VIC, Australia, I work with clients globally and am comfortable with remote collaboration across different time zones."
+        }
+      },
+      {
+        "@type": "Question",
+        "name": "What technologies do you work with?",
+        "acceptedAnswer": {
+          "@type": "Answer",
+          "text": "I work with HTML, CSS, JavaScript, Python, PHP, REST APIs, Cloudflare Workers, and various frameworks."
+        }
+      }
+    ]
+  }
+  </script>
 
-  <header>
-    <h1>Samrath "Sami" Singh</h1>
-    <p>Full-stack developer from Australia building SaaS tools, Minecraft plugins, Shopify systems, and maker projects.</p>
-  </header>
+  <!-- Google Fonts -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
 
-  <main>
-
-    <section>
-      <h2>About</h2>
-      <p>
-        I’m Samrath Singh (Sami9889), a full-stack developer focused on building practical software, SaaS tools, Minecraft plugins, Shopify solutions, and creative maker projects.
-      </p>
-    </section>
-
-    <section>
-      <h2>Projects</h2>
-      <ul>
-        <li>Minecraft / PocketMine Plugins</li>
-        <li>SaaS Applications</li>
-        <li>Shopify Development</li>
-        <li>3D Printing Projects</li>
-      </ul>
-    </section>
-
-    <section>
-      <h2>Contact</h2>
-      <p>Available for freelance and collaboration work.</p>
-    </section>
-
-  </main>
-
-</body>
-</html>
-    
-    <!-- Google Fonts -->
-    <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
-    
-    <style>
+  <style>
         * {
             margin: 0;
             padding: 0;
@@ -1377,9 +1399,126 @@
                 --gray-700: #3a3a3a;
             }
         }
-    </style>
+
+        /* Scroll progress bar */
+        #scroll-progress-bar {
+            position: fixed;
+            top: 0;
+            left: 0;
+            height: 3px;
+            background: linear-gradient(90deg, var(--accent), var(--success));
+            z-index: 9999;
+            width: 0%;
+            transition: width 0.1s ease;
+        }
+
+        /* Theme toggle button */
+        #theme-toggle {
+            background: none;
+            border: 2px solid var(--gray-300);
+            border-radius: 50%;
+            width: 40px;
+            height: 40px;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.2rem;
+            transition: var(--transition);
+            color: var(--black);
+        }
+
+        #theme-toggle:hover {
+            border-color: var(--accent);
+            transform: rotate(20deg);
+        }
+
+        /* Timeline styles */
+        .timeline {
+            position: relative;
+            padding-left: 2rem;
+        }
+
+        .timeline::before {
+            content: '';
+            position: absolute;
+            left: 0;
+            top: 0;
+            bottom: 0;
+            width: 2px;
+            background: linear-gradient(180deg, var(--accent), var(--success));
+        }
+
+        .timeline-item {
+            position: relative;
+            margin-bottom: 3rem;
+            padding-left: 2rem;
+        }
+
+        .timeline-dot {
+            position: absolute;
+            left: -2.4rem;
+            top: 0.5rem;
+            width: 14px;
+            height: 14px;
+            border-radius: 50%;
+            background: var(--accent);
+            border: 2px solid var(--white);
+            box-shadow: 0 0 0 2px var(--accent);
+        }
+
+        .timeline-dot.active {
+            background: var(--success);
+            box-shadow: 0 0 0 2px var(--success);
+        }
+
+        .timeline-content {
+            background: var(--white);
+            border: 1px solid var(--gray-200);
+            padding: 2rem;
+            border-radius: 8px;
+            transition: var(--transition);
+        }
+
+        .timeline-content:hover {
+            border-color: var(--accent);
+            transform: translateX(4px);
+            box-shadow: var(--shadow);
+        }
+
+        .timeline-date {
+            font-size: 0.8rem;
+            color: var(--accent);
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            margin-bottom: 0.5rem;
+        }
+
+        .timeline-content h3 {
+            font-size: 1.3rem;
+            font-weight: 600;
+            margin-bottom: 1rem;
+            color: var(--black);
+        }
+
+        .timeline-content p {
+            color: var(--gray-700);
+            line-height: 1.6;
+            margin-bottom: 1rem;
+        }
+
+        .timeline-tags {
+            display: flex;
+            gap: 0.5rem;
+            flex-wrap: wrap;
+        }
+  </style>
 </head>
 <body>
+    <!-- Scroll Progress Bar -->
+    <div id="scroll-progress-bar"></div>
+
     <!-- Floating Background Shapes -->
     <div class="floating-shapes">
         <div class="shape"></div>
@@ -1404,16 +1543,17 @@
                     <li><a href="#" onclick="showPage('projects'); return false;" aria-label="Go to projects page">Projects</a></li>
                     <li><a href="#" onclick="showPage('contact'); return false;" aria-label="Go to contact page">Contact</a></li>
                 </ul>
+                <button id="theme-toggle" onclick="toggleTheme()" aria-label="Toggle dark/light theme">
+                    <span id="theme-icon">🌙</span>
+                </button>
             </div>
         </div>
     </nav>
 
     <script src="https://browser.sentry-cdn.com/10.30.0/bundle.min.js" crossorigin="anonymous"></script>
     <script>
-      // Initialize Sentry on the main site (index page) only
       try{
         if(window.Sentry){
-          // Do not hardcode DSNs in source. Prefer injecting via server-side config (e.g., window.SENTRY_DSN or window.CONFIG.sentryDsn).
           const sentryDsn = (window.SENTRY_DSN || (window.CONFIG && window.CONFIG.sentryDsn) || '');
           if(sentryDsn) {
             Sentry.init({ dsn: sentryDsn });
@@ -1858,7 +1998,6 @@
             
             <div id="loading" class="loading">
                 <div class="projects-grid">
-                    <!-- Loading Skeleton -->
                     <div class="skeleton-card">
                         <div class="skeleton skeleton-title"></div>
                         <div class="skeleton skeleton-text"></div>
@@ -1887,7 +2026,6 @@
             
             <div class="projects-grid" id="projects-container"></div>
             
-            <!-- GitHub Contribution Graph -->
             <div style="margin-top: 4rem; text-align: center;">
                 <h2 style="margin-bottom: 2rem; font-size: 2rem;">GitHub Activity</h2>
                 <div style="background: var(--white); padding: 2rem; border-radius: 12px; box-shadow: var(--shadow); display: inline-block; max-width: 100%;">
@@ -2163,27 +2301,27 @@
                     
                     <h3 style="margin-bottom: 1.5rem; color: var(--black); font-size: 1.3rem;">Sponsorship Tiers</h3>
                     <div style="display: grid; gap: 1rem; margin-bottom: 2rem;">
-                        <div style="padding: 1.5rem; background: var(--gray-50); border-radius: 8px; border-left: 4px solid var(--accent);">
+                        <div style="padding: 1.5rem; background: var(--gray-100); border-radius: 8px; border-left: 4px solid var(--accent);">
                             <strong style="color: var(--black);">☕ $1-5 - Coffee supporter</strong>
                             <p style="color: var(--gray-600); margin: 0.5rem 0 0 0; font-size: 0.95rem;">Help keep me caffeinated while coding</p>
                         </div>
-                        <div style="padding: 1.5rem; background: var(--gray-50); border-radius: 8px; border-left: 4px solid var(--accent);">
+                        <div style="padding: 1.5rem; background: var(--gray-100); border-radius: 8px; border-left: 4px solid var(--accent);">
                             <strong style="color: var(--black);">🌟 $10 - Backer</strong>
                             <p style="color: var(--gray-600); margin: 0.5rem 0 0 0; font-size: 0.95rem;">Show your support for open source</p>
                         </div>
-                        <div style="padding: 1.5rem; background: var(--gray-50); border-radius: 8px; border-left: 4px solid #cd7f32;">
+                        <div style="padding: 1.5rem; background: var(--gray-100); border-radius: 8px; border-left: 4px solid #cd7f32;">
                             <strong style="color: var(--black);">🥉 $25 - Bronze</strong>
                             <p style="color: var(--gray-600); margin: 0.5rem 0 0 0; font-size: 0.95rem;">Priority support on issues</p>
                         </div>
-                        <div style="padding: 1.5rem; background: var(--gray-50); border-radius: 8px; border-left: 4px solid #c0c0c0;">
+                        <div style="padding: 1.5rem; background: var(--gray-100); border-radius: 8px; border-left: 4px solid #c0c0c0;">
                             <strong style="color: var(--black);">🥈 $50 - Silver</strong>
                             <p style="color: var(--gray-600); margin: 0.5rem 0 0 0; font-size: 0.95rem;">Listed in project READMEs</p>
                         </div>
-                        <div style="padding: 1.5rem; background: var(--gray-50); border-radius: 8px; border-left: 4px solid #ffd700;">
+                        <div style="padding: 1.5rem; background: var(--gray-100); border-radius: 8px; border-left: 4px solid #ffd700;">
                             <strong style="color: var(--black);">🥇 $100 - Gold</strong>
                             <p style="color: var(--gray-600); margin: 0.5rem 0 0 0; font-size: 0.95rem;">Your logo in documentation</p>
                         </div>
-                        <div style="padding: 1.5rem; background: var(--gray-50); border-radius: 8px; border-left: 4px solid #e5e4e2;">
+                        <div style="padding: 1.5rem; background: var(--gray-100); border-radius: 8px; border-left: 4px solid #e5e4e2;">
                             <strong style="color: var(--black);">💎 $250+ - Platinum</strong>
                             <p style="color: var(--gray-600); margin: 0.5rem 0 0 0; font-size: 0.95rem;">Sponsor badge + Prominent logo placement</p>
                         </div>
@@ -2292,7 +2430,6 @@ The more details you provide, the better I can understand your needs and provide
                 </form>
                 
                 <script>
-                // Generate ticket number when form loads
                 const ticketNum = 'SAMI-' + Date.now().toString(36).toUpperCase() + '-' + Math.random().toString(36).substr(2, 4).toUpperCase();
                 document.getElementById('ticketNumber').value = ticketNum;
                 document.getElementById('ticketSubject').value = '🎫 New Contact Form Submission - Ticket #' + ticketNum;
@@ -2359,7 +2496,7 @@ The more details you provide, the better I can understand your needs and provide
                 </div>
                 
                 <div style="border-top: 1px solid var(--gray-300); padding-top: 2rem; margin-top: 3rem; text-align: center;">
-                    <p style="color: var(--gray-700); margin-bottom: 0.5rem; font-size: 0.95rem;">&copy; 2024 Samrath Singh. All Rights Reserved.</p>
+                    <p style="color: var(--gray-700); margin-bottom: 0.5rem; font-size: 0.95rem;">&copy; <span id="footer-year"></span> Samrath Singh. All Rights Reserved.</p>
                     <p style="color: var(--gray-600); margin-bottom: 0.5rem; font-size: 0.9rem;">ABN: 72 925 087 373 | Point Cook, VIC, Australia</p>
                     <p style="margin-top: 1rem; color: var(--gray-600); font-size: 0.85rem;">Built with care using pure HTML, CSS & JavaScript. No frameworks, just clean code.</p>
                     <p style="margin-top: 0.5rem; color: var(--gray-500); font-size: 0.8rem;">This website and its contents are protected by copyright law. Unauthorized reproduction is prohibited.</p>
@@ -2378,7 +2515,21 @@ The more details you provide, the better I can understand your needs and provide
         </svg>
     </a>
 
+    <!-- Cookie Consent Banner -->
+    <div id="cookieBanner" style="position: fixed; bottom: 0; left: 0; right: 0; background: var(--gray-900); color: white; padding: 1.5rem 2rem; z-index: 9998; display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 1rem; transform: translateY(100%); transition: transform 0.4s ease; box-shadow: 0 -4px 20px rgba(0,0,0,0.3);">
+        <p style="margin: 0; font-size: 0.9rem; max-width: 700px; color: #e0e0e0;">
+            🍪 This website uses cookies for essential functionality and optional analytics. See our <a href="#" onclick="showPage('privacy'); document.getElementById('cookieBanner').style.transform='translateY(100%)'; return false;" style="color: var(--accent); text-decoration: underline;">Privacy Policy</a> for details.
+        </p>
+        <div style="display: flex; gap: 1rem; flex-shrink: 0;">
+            <button onclick="declineCookies()" style="padding: 0.5rem 1.25rem; border: 1px solid #666; background: transparent; color: #ccc; border-radius: 4px; cursor: pointer; font-size: 0.9rem;">Decline</button>
+            <button onclick="acceptCookies()" style="padding: 0.5rem 1.25rem; background: var(--accent); color: white; border: none; border-radius: 4px; cursor: pointer; font-size: 0.9rem; font-weight: 600;">Accept</button>
+        </div>
+    </div>
+
     <script>
+        // Set dynamic footer year
+        document.getElementById('footer-year').textContent = new Date().getFullYear();
+
         // Define showPage IMMEDIATELY in global scope
         window.showPage = function(pageId, updateHistory) {
             updateHistory = (typeof updateHistory === 'undefined') ? true : updateHistory;
@@ -2394,8 +2545,8 @@ The more details you provide, the better I can understand your needs and provide
             var activeLink = document.querySelector('.nav-links a[onclick*="' + pageId + '"]');
             if (activeLink) activeLink.classList.add('active');
 
-                const navLinksEl = document.getElementById('nav-links');
-                if (navLinksEl) navLinksEl.classList.remove('open');
+            const navLinksEl = document.getElementById('nav-links');
+            if (navLinksEl) navLinksEl.classList.remove('open');
 
             if (pageId === 'projects' && !window.projectsLoaded) {
                 loadGitHubProjects();
@@ -2435,13 +2586,10 @@ The more details you provide, the better I can understand your needs and provide
             document.getElementById('nav-links').classList.toggle('open');
         };
 
-        // Custom cursor removed for better performance
         const prefersReducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
         const isTouchDevice = 'ontouchstart' in window || navigator.maxTouchPoints > 0;
 
-        // Optimized cursor with better performance
         if (!isTouchDevice && !prefersReducedMotion) {
-            // Create cursor elements
             dot = document.createElement('div');
             dot.className = 'cursor-dot';
             document.body.appendChild(dot);
@@ -2452,13 +2600,10 @@ The more details you provide, the better I can understand your needs and provide
             
             let mouseX = 0, mouseY = 0;
 
-            // Use direct transform for instant cursor movement (no lag)
             window.addEventListener('mousemove', (e) => {
                 mouseX = e.clientX;
                 mouseY = e.clientY;
                 
-                // Update cursor position immediately using transform (GPU accelerated)
-                // Add null checks to prevent ReferenceError
                 if (dot && dot.style) {
                     dot.style.transform = `translate(${mouseX}px, ${mouseY}px) translate(-50%, -50%)`;
                 }
@@ -2467,30 +2612,20 @@ The more details you provide, the better I can understand your needs and provide
                 }
             }, { passive: true });
 
-            // Add hover effects - capture dot and outline in closure to prevent reference errors
             const cursorDot = dot;
             const cursorOutline = outline;
             const interactiveElements = document.querySelectorAll('a, button, .nav-links a, .project-card, .skill-category, .logo, .hero-stats, .stat-item');
             interactiveElements.forEach(el => {
                 el.addEventListener('mouseenter', () => {
-                    if (cursorDot && cursorDot.classList) {
-                        cursorDot.classList.add('hover');
-                    }
-                    if (cursorOutline && cursorOutline.classList) {
-                        cursorOutline.classList.add('hover');
-                    }
+                    if (cursorDot && cursorDot.classList) cursorDot.classList.add('hover');
+                    if (cursorOutline && cursorOutline.classList) cursorOutline.classList.add('hover');
                 }, { passive: true });
                 el.addEventListener('mouseleave', () => {
-                    if (cursorDot && cursorDot.classList) {
-                        cursorDot.classList.remove('hover');
-                    }
-                    if (cursorOutline && cursorOutline.classList) {
-                        cursorOutline.classList.remove('hover');
-                    }
+                    if (cursorDot && cursorDot.classList) cursorDot.classList.remove('hover');
+                    if (cursorOutline && cursorOutline.classList) cursorOutline.classList.remove('hover');
                 }, { passive: true });
             });
         } else {
-            // Hide cursor on touch devices or if reduced motion preferred
             document.body.style.cursor = 'auto';
         }
 
@@ -2563,7 +2698,6 @@ The more details you provide, the better I can understand your needs and provide
                     const repoName = formatRepoName(repo.name);
                     const description = repo.description || generateDescription(repo.name, repo.language);
                     
-                    // Add placeholder for screenshot/demo visual
                     const hasVisual = repo.homepage || repo.has_pages;
                     const visualPlaceholder = hasVisual ? 
                         `<div style="width: 100%; height: 180px; background: linear-gradient(135deg, var(--gray-200) 0%, var(--gray-100) 100%); border-radius: 6px; margin-bottom: 1rem; display: flex; align-items: center; justify-content: center; color: var(--gray-600); font-size: 3rem;">🖼️</div>` : '';
@@ -2594,19 +2728,16 @@ The more details you provide, the better I can understand your needs and provide
                 projectsLoaded = true;
                 loadingAttempts = 0;
                 
-            }
-            catch (err) {
+            } catch (err) {
                 loading.style.display = 'none';
                 error.style.display = 'block';
                 
                 var errorElement = error.querySelector('p');
                 if (err.name === 'AbortError') { 
                     errorElement.textContent = 'Request timed out. Please check your connection and try again.';
-                }
-                else if (err.message.includes('rate limit')) { 
+                } else if (err.message.includes('rate limit')) { 
                     errorElement.textContent = err.message;
-                }
-                else { 
+                } else { 
                     errorElement.textContent = 'Failed to load projects: ' + err.message;
                 }
             }
@@ -2661,25 +2792,16 @@ The more details you provide, the better I can understand your needs and provide
 
         function attachProjectEventListeners() {
             if (!prefersReducedMotion && !isTouchDevice && dot && outline) {
-                // Capture dot and outline in closure to prevent reference errors
                 const cursorDot = dot;
                 const cursorOutline = outline;
                 document.querySelectorAll('.project-card').forEach(card => {
                     card.addEventListener('mouseenter', () => { 
-                        if (cursorDot && cursorDot.classList) {
-                            cursorDot.classList.add('hover');
-                        }
-                        if (cursorOutline && cursorOutline.classList) {
-                            cursorOutline.classList.add('hover');
-                        }
+                        if (cursorDot && cursorDot.classList) cursorDot.classList.add('hover');
+                        if (cursorOutline && cursorOutline.classList) cursorOutline.classList.add('hover');
                     }, { passive: true });
                     card.addEventListener('mouseleave', () => { 
-                        if (cursorDot && cursorDot.classList) {
-                            cursorDot.classList.remove('hover');
-                        }
-                        if (cursorOutline && cursorOutline.classList) {
-                            cursorOutline.classList.remove('hover');
-                        }
+                        if (cursorDot && cursorDot.classList) cursorDot.classList.remove('hover');
+                        if (cursorOutline && cursorOutline.classList) cursorOutline.classList.remove('hover');
                     }, { passive: true });
                 });
             }
@@ -2700,8 +2822,6 @@ The more details you provide, the better I can understand your needs and provide
             }
         }
 
-        // Contact form - Let it submit naturally without JavaScript interference
-
         createParticles();
         
         // ============================================
@@ -2715,18 +2835,15 @@ The more details you provide, the better I can understand your needs and provide
             html.setAttribute('data-theme', newTheme);
             localStorage.setItem('theme', newTheme);
             
-            // Update icon
             const icon = document.getElementById('theme-icon');
             icon.textContent = newTheme === 'dark' ? '☀️' : '🌙';
             
-            // Add smooth transition animation
             document.getElementById('theme-toggle').style.transform = 'rotate(360deg)';
             setTimeout(() => {
                 document.getElementById('theme-toggle').style.transform = 'rotate(0deg)';
             }, 300);
         }
         
-        // Load saved theme on page load
         window.addEventListener('load', function() {
             const savedTheme = localStorage.getItem('theme') || 'light';
             document.documentElement.setAttribute('data-theme', savedTheme);
@@ -2734,8 +2851,6 @@ The more details you provide, the better I can understand your needs and provide
             if (icon) {
                 icon.textContent = savedTheme === 'dark' ? '☀️' : '🌙';
             }
-            
-            // Animate stats on load with a small delay to ensure DOM is ready
             setTimeout(animateStats, 100);
         });
         
@@ -2744,13 +2859,11 @@ The more details you provide, the better I can understand your needs and provide
         // ============================================
         function animateStats() {
             const stats = document.querySelectorAll('.stat-number[data-count]');
-            
             stats.forEach(stat => {
                 const target = parseInt(stat.getAttribute('data-count'));
-                const duration = 2000; // 2 seconds
-                const increment = target / (duration / 16); // 60fps
+                const duration = 2000;
+                const increment = target / (duration / 16);
                 let current = 0;
-                
                 const timer = setInterval(() => {
                     current += increment;
                     if (current >= target) {
@@ -2768,7 +2881,6 @@ The more details you provide, the better I can understand your needs and provide
         // ============================================
         function animateSkillBars() {
             const progressBars = document.querySelectorAll('.skill-progress-fill');
-            
             progressBars.forEach(bar => {
                 const targetProgress = bar.getAttribute('data-progress');
                 setTimeout(() => {
@@ -2777,9 +2889,6 @@ The more details you provide, the better I can understand your needs and provide
             });
         }
         
-        // Trigger skill bar animation when Skills page is shown
-        // (This wrapper will be extended below to include scroll-reveal functionality)
-        
         // ============================================
         // SCROLL PROGRESS BAR
         // ============================================
@@ -2787,56 +2896,20 @@ The more details you provide, the better I can understand your needs and provide
             const winScroll = document.body.scrollTop || document.documentElement.scrollTop;
             const height = document.documentElement.scrollHeight - document.documentElement.clientHeight;
             const scrolled = (winScroll / height) * 100;
-            document.getElementById('scroll-progress').style.width = scrolled + '%';
+            document.getElementById('scroll-progress-bar').style.width = scrolled + '%';
         }
         
         window.addEventListener('scroll', updateScrollProgress);
-        
-        // ============================================
-        // TYPING ANIMATION
-        // ============================================
-        function typeWriter() {
-            const text = '// Building the web, one line of code at a time';
-            const element = document.getElementById('typing-text');
-            if (!element) return;
-            
-            element.textContent = '';
-            let i = 0;
-            
-            function type() {
-                if (i < text.length) {
-                    element.textContent += text.charAt(i);
-                    i++;
-                    setTimeout(type, 50);
-                } else {
-                    // Add blinking cursor
-                    element.style.borderRight = '2px solid var(--black)';
-                    element.style.paddingRight = '5px';
-                    setInterval(() => {
-                        element.style.borderRight = element.style.borderRight === '2px solid transparent' 
-                            ? '2px solid var(--black)' 
-                            : '2px solid transparent';
-                    }, 500);
-                }
-            }
-            
-            setTimeout(type, 500);
-        }
-        
-        // Start typing animation on load
-        window.addEventListener('load', typeWriter);
         
         // ============================================
         // SCROLL REVEAL ANIMATIONS
         // ============================================
         function revealOnScroll() {
             const reveals = document.querySelectorAll('.scroll-reveal');
-            
             reveals.forEach(element => {
                 const windowHeight = window.innerHeight;
                 const elementTop = element.getBoundingClientRect().top;
                 const elementVisible = 150;
-                
                 if (elementTop < windowHeight - elementVisible) {
                     element.classList.add('revealed');
                 }
@@ -2844,15 +2917,11 @@ The more details you provide, the better I can understand your needs and provide
         }
         
         window.addEventListener('scroll', revealOnScroll);
-        revealOnScroll(); // Initial check
+        revealOnScroll();
         
-        // Extend showPage function for scroll-reveal animations
         const baseShowPage = showPage;
         function showPageWithAnimations(pageId, updateHistory = true) {
-            // Call the original showPage function
             baseShowPage(pageId, updateHistory);
-            
-            // Add scroll-reveal class to main content sections
             setTimeout(() => {
                 const sections = document.querySelectorAll('.skill-category, .project-card, .timeline-item, .faq-item');
                 sections.forEach((section, index) => {
@@ -2861,14 +2930,11 @@ The more details you provide, the better I can understand your needs and provide
                 });
                 revealOnScroll();
             }, 100);
-            
-            // Trigger skill bar animation when Skills page is shown
             if (pageId === 'skills') {
                 setTimeout(animateSkillBars, 100);
             }
         }
         
-        // Replace showPage with the enhanced version
         showPage = showPageWithAnimations;
         
         // ============================================
@@ -2876,69 +2942,55 @@ The more details you provide, the better I can understand your needs and provide
         // ============================================
         function acceptCookies() {
             localStorage.setItem('cookieConsent', 'accepted');
-            document.getElementById('cookieBanner').classList.remove('show');
-            loadAnalytics(); // Load analytics after consent
+            document.getElementById('cookieBanner').style.transform = 'translateY(100%)';
         }
         
         function declineCookies() {
             localStorage.setItem('cookieConsent', 'declined');
-            document.getElementById('cookieBanner').classList.remove('show');
+            document.getElementById('cookieBanner').style.transform = 'translateY(100%)';
         }
         
-        // Show banner if user hasn't made a choice
         window.addEventListener('load', function() {
             const consent = localStorage.getItem('cookieConsent');
             if (!consent) {
                 setTimeout(() => {
                     document.getElementById('cookieBanner').classList.add('show');
-                }, 1000); // Show after 1 second
+                    document.getElementById('cookieBanner').style.transform = 'translateY(0)';
+                }, 1000);
             }
         });
         
         // ============================================
-        // URL ROUTING - Handle browser back/forward buttons
+        // URL ROUTING
         // ============================================
         window.addEventListener('popstate', function(event) {
             if (event.state && event.state.page) {
                 showPage(event.state.page, false);
             } else {
-                // If no state, determine page from URL
                 const path = window.location.pathname;
                 const pageId = path === '/' ? 'home' : path.substring(1);
                 showPage(pageId, false);
             }
         });
         
-        // ============================================
-        // INITIALIZE PAGE BASED ON URL ON LOAD
-        // ============================================
         window.addEventListener('DOMContentLoaded', function() {
-            // Check if we were redirected from 404 page
             let pageId;
             
             if (sessionStorage.redirect) {
-                // Handle 404 redirect
                 const redirect = sessionStorage.redirect;
                 delete sessionStorage.redirect;
-                
-                // Extract the page ID from the redirect path
                 pageId = redirect === '/' ? 'home' : redirect.substring(1).split('/')[0];
             } else {
-                // Normal URL-based routing
                 const path = window.location.pathname;
                 pageId = path === '/' ? 'home' : path.substring(1);
             }
             
-            // Valid page IDs
             const validPages = ['home', 'about', 'skills', 'services', 'experience', 'projects', 'faq', 'sponsors', 'contact', 'privacy', 'terms'];
             
             if (validPages.includes(pageId)) {
-                // Remove active class from home page
                 document.getElementById('home').classList.remove('active');
-                // Show the correct page without updating history
                 showPage(pageId, false);
             } else if (pageId !== 'home' && pageId !== '') {
-                // Invalid page, redirect to home
                 showPage('home', true);
             }
         });
