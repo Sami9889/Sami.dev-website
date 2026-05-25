@@ -3,5 +3,5 @@
   <title>sami-s.dev</title>
   <desc>Logo for sami-s.dev</desc>
   <rect width="96" height="96" fill="#1a1a2e"/>
-  <text x="48" y="60" font-family="sans-serif" font-size="48" font-weight="bold" fill="#e94560" text-anchor="middle">S</text>
+  <path d="M56 30c-2-2-5-3-8-3h-2c-5 0-9 4-9 9 0 4 3 7 6 8l8 3c4 2 7 5 7 9 0 5-5 10-10 10h-2c-4 0-7-2-9-4" fill="#e94560"/>
 </svg>
