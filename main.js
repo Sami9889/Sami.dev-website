@@ -1,0 +1,467 @@
+// Set dynamic footer year
+document.getElementById('footer-year').textContent = new Date().getFullYear();
+
+// Define showPage IMMEDIATELY in global scope
+window.showPage = function(pageId, updateHistory) {
+    updateHistory = (typeof updateHistory === 'undefined') ? true : updateHistory;
+    var pages = document.querySelectorAll('.page');
+    pages.forEach(function(page){ page.classList.remove('active'); });
+
+    var targetPage = document.getElementById(pageId);
+    if (targetPage) targetPage.classList.add('active');
+
+    var navLinks = document.querySelectorAll('.nav-links a');
+    navLinks.forEach(function(link){ link.classList.remove('active'); });
+
+    var activeLink = document.querySelector('.nav-links a[onclick*="' + pageId + '"]');
+    if (activeLink) activeLink.classList.add('active');
+
+    const navLinksEl = document.getElementById('nav-links');
+    if (navLinksEl) navLinksEl.classList.remove('open');
+
+    if (pageId === 'projects' && !window.projectsLoaded) {
+        loadGitHubProjects();
+        window.projectsLoaded = true;
+    }
+
+    var pageTitles = {
+        'home': 'Samrath "Sami" Singh - Full-Stack Developer',
+        'about': 'About - Samrath Singh',
+        'skills': 'Skills - Samrath Singh',
+        'services': 'Services - Samrath Singh',
+        'experience': 'Experience - Samrath Singh',
+        'projects': 'Projects - Samrath Singh',
+        'faq': 'FAQ - Samrath Singh',
+        'contact': 'Contact - Samrath Singh',
+        'privacy': 'Privacy Policy - Samrath Singh',
+        'terms': 'Terms of Service - Samrath Singh'
+    };
+    document.title = pageTitles[pageId] || 'Samrath Singh';
+
+    if (updateHistory) {
+        var path = (pageId === 'home') ? '/' : '/' + pageId;
+        history.pushState({ page: pageId }, document.title, path);
+    }
+
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+};
+
+// Global variables
+window.dot = null;
+window.outline = null;
+window.projectsLoaded = false;
+window.loadingAttempts = 0;
+window.maxRetries = 3;
+
+window.toggleMobileMenu = function() {
+    document.getElementById('nav-links').classList.toggle('open');
+};
+
+const prefersReducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+const isTouchDevice = 'ontouchstart' in window || navigator.maxTouchPoints > 0;
+
+if (!isTouchDevice && !prefersReducedMotion) {
+    window.dot = document.createElement('div');
+    window.dot.className = 'cursor-dot';
+    document.body.appendChild(window.dot);
+
+    window.outline = document.createElement('div');
+    window.outline.className = 'cursor-outline';
+    document.body.appendChild(window.outline);
+
+    let mouseX = 0, mouseY = 0;
+
+    window.addEventListener('mousemove', (e) => {
+        mouseX = e.clientX;
+        mouseY = e.clientY;
+
+        if (window.dot && window.dot.style) {
+            window.dot.style.transform = `translate(${mouseX}px, ${mouseY}px) translate(-50%, -50%)`;
+        }
+        if (window.outline && window.outline.style) {
+            window.outline.style.transform = `translate(${mouseX}px, ${mouseY}px) translate(-50%, -50%)`;
+        }
+    }, { passive: true });
+
+    const cursorDot = window.dot;
+    const cursorOutline = window.outline;
+    const interactiveElements = document.querySelectorAll('a, button, .nav-links a, .project-card, .skill-category, .logo, .hero-stats, .stat-item');
+    interactiveElements.forEach(el => {
+        el.addEventListener('mouseenter', () => {
+            if (cursorDot && cursorDot.classList) cursorDot.classList.add('hover');
+            if (cursorOutline && cursorOutline.classList) cursorOutline.classList.add('hover');
+        }, { passive: true });
+        el.addEventListener('mouseleave', () => {
+            if (cursorDot && cursorDot.classList) cursorDot.classList.remove('hover');
+            if (cursorOutline && cursorOutline.classList) cursorOutline.classList.remove('hover');
+        }, { passive: true });
+    });
+} else {
+    document.body.style.cursor = 'auto';
+}
+
+const navbar = document.getElementById('navbar');
+const scrollToTopBtn = document.getElementById('scroll-to-top');
+
+window.addEventListener('scroll', () => {
+    const scrollTop = window.pageYOffset || document.documentElement.scrollTop;
+
+    if (scrollTop > 100) {
+        navbar.classList.add('scrolled');
+        scrollToTopBtn.classList.add('visible');
+    } else {
+        navbar.classList.remove('scrolled');
+        scrollToTopBtn.classList.remove('visible');
+    }
+});
+
+window.scrollToTop = function() {
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+};
+
+async function loadGitHubProjects() {
+    const loading = document.getElementById('loading');
+    const error = document.getElementById('error');
+    const container = document.getElementById('projects-container');
+
+    loading.style.display = 'block';
+    error.style.display = 'none';
+    container.innerHTML = '';
+
+    try {
+        window.loadingAttempts++;
+
+        const controller = new AbortController();
+        const timeoutId = setTimeout(() => controller.abort(), 10000);
+
+        const response = await fetch('https://api.github.com/users/Sami9889/repos?sort=updated&per_page=100', {
+            signal: controller.signal,
+            headers: {
+                'Accept': 'application/vnd.github.v3+json',
+                'User-Agent': 'Portfolio-Website'
+            }
+        });
+
+        clearTimeout(timeoutId);
+
+        if (!response.ok) {
+            if (response.status === 403) throw new Error('GitHub API rate limit exceeded. Please try again later.');
+            throw new Error(`GitHub API error: ${response.status} ${response.statusText}`);
+        }
+
+        const repos = await response.json();
+        loading.style.display = 'none';
+
+        const filteredRepos = repos
+            .filter(repo => !repo.fork && repo.name !== 'Sami9889' && !repo.name.toLowerCase().includes('readme'))
+            .sort((a, b) => calculateRepoScore(b) - calculateRepoScore(a))
+            .slice(0, 12);
+
+        if (filteredRepos.length === 0) {
+            container.innerHTML = '<div style="grid-column: 1 / -1; text-align: center; padding: 3rem; color: var(--gray-600);"><h3>No public repositories found</h3><p>Projects are being updated. Check back soon!</p></div>';
+            return;
+        }
+
+        container.innerHTML = filteredRepos.map(repo => {
+            const updatedDate = new Date(repo.updated_at).toLocaleDateString('en-US', { year: 'numeric', month: 'short', day: 'numeric' });
+            const createdDate = new Date(repo.created_at).toLocaleDateString('en-US', { year: 'numeric', month: 'short' });
+            const languageColor = getLanguageColor(repo.language);
+            const repoName = formatRepoName(repo.name);
+            const description = repo.description || generateDescription(repo.name, repo.language);
+
+            const hasVisual = repo.homepage || repo.has_pages;
+            const visualPlaceholder = hasVisual ?
+                `<div style="width: 100%; height: 180px; background: linear-gradient(135deg, var(--gray-200) 0%, var(--gray-100) 100%); border-radius: 6px; margin-bottom: 1rem; display: flex; align-items: center; justify-content: center; color: var(--gray-600); font-size: 3rem;">🖼️</div>` : '';
+
+            return `
+                <article class="project-card" data-repo="${repo.name}">
+                    ${visualPlaceholder}
+                    <div class="project-date">Created ${createdDate} • Updated ${updatedDate}</div>
+                    <h3>${repoName}</h3>
+                    <p>${description}</p>
+                    ${repo.topics && repo.topics.length > 0 ? `<div class="project-tags">${repo.topics.slice(0, 5).map(topic => `<span class="tag">${topic}</span>`).join('')}</div>` : ''}
+                    <div class="project-stats">
+                        ${repo.language ? `<div class="project-stat"><span class="language-indicator" style="background-color: ${languageColor}"></span>${repo.language}</div>` : ''}
+                        ${repo.stargazers_count > 0 ? `<div class="project-stat" title="${repo.stargazers_count} stars">⭐ ${repo.stargazers_count}</div>` : ''}
+                        ${repo.forks_count > 0 ? `<div class="project-stat" title="${repo.forks_count} forks">🍴 ${repo.forks_count}</div>` : ''}
+                        ${repo.size > 0 ? `<div class="project-stat" title="Repository size">📦 ${formatFileSize(repo.size * 1024)}</div>` : ''}
+                    </div>
+                    <div class="project-links">
+                        <a href="${repo.html_url}" target="_blank" rel="noopener noreferrer" title="View source code">View Code</a>
+                        ${repo.homepage ? `<a href="${repo.homepage}" target="_blank" rel="noopener noreferrer" title="Live demo">Live Demo</a>` : ''}
+                        ${repo.has_pages ? `<a href="https://${repo.owner.login}.github.io/${repo.name}" target="_blank" rel="noopener noreferrer" title="GitHub Pages">Demo</a>` : ''}
+                    </div>
+                </article>
+            `;
+        }).join('');
+
+        attachProjectEventListeners();
+        window.projectsLoaded = true;
+        window.loadingAttempts = 0;
+
+    } catch (err) {
+        loading.style.display = 'none';
+        error.style.display = 'block';
+
+        var errorElement = error.querySelector('p');
+        if (err.name === 'AbortError') {
+            errorElement.textContent = 'Request timed out. Please check your connection and try again.';
+        } else if (err.message.includes('rate limit')) {
+            errorElement.textContent = err.message;
+        } else {
+            errorElement.textContent = 'Failed to load projects: ' + err.message;
+        }
+    }
+}
+
+function calculateRepoScore(repo) {
+    let score = repo.stargazers_count * 10 + repo.forks_count * 5;
+    const daysSinceUpdate = (Date.now() - new Date(repo.updated_at)) / (1000 * 60 * 60 * 24);
+    score += Math.max(0, 365 - daysSinceUpdate) / 10 + Math.min(repo.size / 1000, 10);
+    if (repo.description && repo.description.length > 10) score += 5;
+    if (repo.homepage) score += 3;
+    if (repo.topics && repo.topics.length > 0) score += repo.topics.length;
+    return score;
+}
+
+function formatRepoName(name) {
+    return name.split('-').map(word => word.charAt(0).toUpperCase() + word.slice(1)).join(' ').replace(/([a-z])([A-Z])/g, '$1 $2');
+}
+
+function generateDescription(name, language) {
+    const descriptions = {
+        'JavaScript': 'I built this JavaScript application to showcase interactive web development techniques. It demonstrates modern DOM manipulation, event handling, and responsive design patterns.',
+        'Python': 'I developed this Python project to demonstrate backend development and data processing capabilities. It includes error handling, data validation, and efficient algorithm implementation.',
+        'HTML': 'I created this web project featuring modern HTML5 and CSS3 design patterns. It showcases responsive layouts, semantic markup, and accessibility best practices.',
+        'TypeScript': 'I built this TypeScript application with enhanced type safety and modern ECMAScript features. It demonstrates strong typing, interfaces, and scalable architecture patterns.',
+        'PHP': 'I developed this PHP application for server-side functionality. It includes database interactions, form processing, and secure authentication implementations.',
+        'Java': 'I created this Java project demonstrating object-oriented programming principles. It includes design patterns, data structures, and robust error handling.',
+        'C++': 'I built this C++ project showcasing low-level programming and performance optimization. It demonstrates memory management, algorithms, and efficient data structures.'
+    };
+    return descriptions[language] || `I created this ${language || 'software'} project to showcase my development skills and problem-solving abilities. It demonstrates practical implementation of core programming concepts and best practices.`;
+}
+
+function formatFileSize(bytes) {
+    if (bytes === 0) return '0 B';
+    const k = 1024, sizes = ['B', 'KB', 'MB', 'GB'];
+    const i = Math.floor(Math.log(bytes) / Math.log(k));
+    return parseFloat((bytes / Math.pow(k, i)).toFixed(1)) + ' ' + sizes[i];
+}
+
+function getLanguageColor(language) {
+    const colors = { 'JavaScript': '#f1e05a', 'Python': '#3572A5', 'Java': '#b07219', 'TypeScript': '#2b7489', 'C++': '#f34b7d', 'HTML': '#e34c26', 'CSS': '#563d7c', 'Shell': '#89e051' };
+    return colors[language] || '#858585';
+}
+
+function retryLoadProjects() {
+    if (window.loadingAttempts < window.maxRetries) loadGitHubProjects();
+    else {
+        document.getElementById('error').querySelector('p').textContent = 'Maximum retry attempts reached. Please refresh the page.';
+        document.getElementById('error').querySelector('button').style.display = 'none';
+    }
+}
+
+function attachProjectEventListeners() {
+    if (!prefersReducedMotion && !isTouchDevice && window.dot && window.outline) {
+        const cursorDot = window.dot;
+        const cursorOutline = window.outline;
+        document.querySelectorAll('.project-card').forEach(card => {
+            card.addEventListener('mouseenter', () => {
+                if (cursorDot && cursorDot.classList) cursorDot.classList.add('hover');
+                if (cursorOutline && cursorOutline.classList) cursorOutline.classList.add('hover');
+            }, { passive: true });
+            card.addEventListener('mouseleave', () => {
+                if (cursorDot && cursorDot.classList) cursorDot.classList.remove('hover');
+                if (cursorOutline && cursorOutline.classList) cursorOutline.classList.remove('hover');
+            }, { passive: true });
+        });
+    }
+}
+
+function createParticles() {
+    const particlesContainer = document.getElementById('particles');
+    for (let i = 0; i < 50; i++) {
+        const particle = document.createElement('div');
+        particle.className = 'particle';
+        particle.style.left = Math.random() * 100 + '%';
+        particle.style.animationDelay = Math.random() * 15 + 's';
+        particle.style.animationDuration = (Math.random() * 15 + 8) + 's';
+        const size = Math.random() * 4 + 1;
+        particle.style.width = size + 'px';
+        particle.style.height = size + 'px';
+        particlesContainer.appendChild(particle);
+    }
+}
+
+createParticles();
+
+// ============================================
+// DARK MODE TOGGLE
+// ============================================
+window.toggleTheme = function() {
+    const html = document.documentElement;
+    const currentTheme = html.getAttribute('data-theme');
+    const newTheme = currentTheme === 'dark' ? 'light' : 'dark';
+
+    html.setAttribute('data-theme', newTheme);
+    localStorage.setItem('theme', newTheme);
+
+    const icon = document.getElementById('theme-icon');
+    icon.textContent = newTheme === 'dark' ? '☀️' : '🌙';
+
+    document.getElementById('theme-toggle').style.transform = 'rotate(360deg)';
+    setTimeout(() => {
+        document.getElementById('theme-toggle').style.transform = 'rotate(0deg)';
+    }, 300);
+}
+
+window.addEventListener('load', function() {
+    const savedTheme = localStorage.getItem('theme') || 'light';
+    document.documentElement.setAttribute('data-theme', savedTheme);
+    const icon = document.getElementById('theme-icon');
+    if (icon) {
+        icon.textContent = savedTheme === 'dark' ? '☀️' : '🌙';
+    }
+    setTimeout(animateStats, 100);
+});
+
+// ============================================
+// ANIMATED STATISTICS
+// ============================================
+function animateStats() {
+    const stats = document.querySelectorAll('.stat-number[data-count]');
+    stats.forEach(stat => {
+        const target = parseInt(stat.getAttribute('data-count'));
+        const duration = 2000;
+        const increment = target / (duration / 16);
+        let current = 0;
+        const timer = setInterval(() => {
+            current += increment;
+            if (current >= target) {
+                stat.textContent = target;
+                clearInterval(timer);
+            } else {
+                stat.textContent = Math.floor(current);
+            }
+        }, 16);
+    });
+}
+
+// ============================================
+// ANIMATE SKILL PROGRESS BARS
+// ============================================
+function animateSkillBars() {
+    const progressBars = document.querySelectorAll('.skill-progress-fill');
+    progressBars.forEach(bar => {
+        const targetProgress = bar.getAttribute('data-progress');
+        setTimeout(() => {
+            bar.style.width = targetProgress + '%';
+        }, 200);
+    });
+}
+
+// ============================================
+// SCROLL PROGRESS BAR
+// ============================================
+function updateScrollProgress() {
+    const winScroll = document.body.scrollTop || document.documentElement.scrollTop;
+    const height = document.documentElement.scrollHeight - document.documentElement.clientHeight;
+    const scrolled = (winScroll / height) * 100;
+    document.getElementById('scroll-progress-bar').style.width = scrolled + '%';
+}
+
+window.addEventListener('scroll', updateScrollProgress);
+
+// ============================================
+// SCROLL REVEAL ANIMATIONS
+// ============================================
+function revealOnScroll() {
+    const reveals = document.querySelectorAll('.scroll-reveal');
+    reveals.forEach(element => {
+        const windowHeight = window.innerHeight;
+        const elementTop = element.getBoundingClientRect().top;
+        const elementVisible = 150;
+        if (elementTop < windowHeight - elementVisible) {
+            element.classList.add('revealed');
+        }
+    });
+}
+
+window.addEventListener('scroll', revealOnScroll);
+revealOnScroll();
+
+const baseShowPage = window.showPage;
+function showPageWithAnimations(pageId, updateHistory = true) {
+    baseShowPage(pageId, updateHistory);
+    setTimeout(() => {
+        const sections = document.querySelectorAll('.skill-category, .project-card, .timeline-item, .faq-item');
+        sections.forEach((section, index) => {
+            section.classList.add('scroll-reveal');
+            section.style.transitionDelay = `${index * 0.1}s`;
+        });
+        revealOnScroll();
+    }, 100);
+    if (pageId === 'skills') {
+        setTimeout(animateSkillBars, 100);
+    }
+}
+
+window.showPage = showPageWithAnimations;
+
+// ============================================
+// COOKIE CONSENT BANNER
+// ============================================
+function acceptCookies() {
+    localStorage.setItem('cookieConsent', 'accepted');
+    document.getElementById('cookieBanner').style.transform = 'translateY(100%)';
+}
+
+function declineCookies() {
+    localStorage.setItem('cookieConsent', 'declined');
+    document.getElementById('cookieBanner').style.transform = 'translateY(100%)';
+}
+
+window.addEventListener('load', function() {
+    const consent = localStorage.getItem('cookieConsent');
+    if (!consent) {
+        setTimeout(() => {
+            document.getElementById('cookieBanner').classList.add('show');
+            document.getElementById('cookieBanner').style.transform = 'translateY(0)';
+        }, 1000);
+    }
+});
+
+// ============================================
+// URL ROUTING
+// ============================================
+window.addEventListener('popstate', function(event) {
+    if (event.state && event.state.page) {
+        window.showPage(event.state.page, false);
+    } else {
+        const path = window.location.pathname;
+        const pageId = path === '/' ? 'home' : path.substring(1);
+        window.showPage(pageId, false);
+    }
+});
+
+window.addEventListener('DOMContentLoaded', function() {
+    let pageId;
+
+    if (sessionStorage.redirect) {
+        const redirect = sessionStorage.redirect;
+        delete sessionStorage.redirect;
+        pageId = redirect === '/' ? 'home' : redirect.substring(1).split('/')[0];
+    } else {
+        const path = window.location.pathname;
+        pageId = path === '/' ? 'home' : path.substring(1);
+    }
+
+    const validPages = ['home', 'about', 'skills', 'services', 'experience', 'projects', 'faq', 'sponsors', 'contact', 'privacy', 'terms'];
+
+    if (validPages.includes(pageId)) {
+        document.getElementById('home').classList.remove('active');
+        window.showPage(pageId, false);
+    } else if (pageId !== 'home' && pageId !== '') {
+        window.showPage('home', true);
+    }
+});
