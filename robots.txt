@@ -1,21 +1,36 @@
 # robots.txt for sami.is-a.dev
-# Allow search engines and AI bots to learn about Samrath Singh
+# Comprehensive AI and search engine indexing for Samrath Singh
+# Last updated: 2026-06-06
 
-# Default behavior: Allow all crawling for better discoverability
+# ============================================================================
+# DEFAULT POLICY: Allow all legitimate crawlers for maximum discoverability
+# ============================================================================
 User-agent: *
 Content-Signal: search=yes,ai-train=yes
 Allow: /
 Disallow: /recaptcha.html
 Disallow: /maintenance.html
 Disallow: /maintenance-simple.html
+Crawl-delay: 1
 
-# Allow AI bots to index content (for personal branding and SEO)
+# ============================================================================
+# MAJOR AI BOTS - Explicitly allow for personal branding and SEO
+# ============================================================================
+
+# OpenAI (ChatGPT, GPT-4, GPT-5)
 User-agent: GPTBot
 Allow: /
 Disallow: /recaptcha.html
 Disallow: /maintenance.html
 Disallow: /maintenance-simple.html
 
+User-agent: ChatGPT-User
+Allow: /
+
+User-agent: OAI-SearchBot
+Allow: /
+
+# Anthropic (Claude)
 User-agent: ClaudeBot
 Allow: /
 Disallow: /recaptcha.html
@@ -24,80 +39,540 @@ Disallow: /maintenance-simple.html
 
 User-agent: anthropic-ai
 Allow: /
-Disallow: /recaptcha.html
-Disallow: /maintenance.html
-Disallow: /maintenance-simple.html
 
+# Google AI (Gemini, Bard, Google-Extended)
 User-agent: Google-Extended
 Allow: /
 Disallow: /recaptcha.html
 Disallow: /maintenance.html
 Disallow: /maintenance-simple.html
 
+User-agent: GoogleOther
+Allow: /
+
+User-agent: GoogleOther-Image
+Allow: /
+
+User-agent: GoogleOther-Video
+Allow: /
+
+User-agent: Gemini
+Allow: /
+
+# Perplexity AI
 User-agent: PerplexityBot
 Allow: /
 Disallow: /recaptcha.html
 Disallow: /maintenance.html
 Disallow: /maintenance-simple.html
 
+# Meta/Facebook AI
+User-agent: FacebookBot
+Allow: /
+Disallow: /recaptcha.html
+Disallow: /maintenance.html
+Disallow: /maintenance-simple.html
+
+User-agent: meta-externalagent
+Allow: /
+
+User-agent: Meta-ExternalFetcher
+Allow: /
+
+# Amazon (Alexa, Amazon AI)
+User-agent: Amazonbot
+Allow: /
+Disallow: /recaptcha.html
+Disallow: /maintenance.html
+Disallow: /maintenance-simple.html
+
+# Apple (Siri, Applebot)
+User-agent: Applebot
+Allow: /
+Disallow: /recaptcha.html
+Disallow: /maintenance.html
+Disallow: /maintenance-simple.html
+
+User-agent: Applebot-Extended
+Allow: /
+
+# Common Crawl (Research & AI training datasets)
 User-agent: CCBot
 Allow: /
 Disallow: /recaptcha.html
 Disallow: /maintenance.html
 Disallow: /maintenance-simple.html
 
-# Block only malicious or aggressive crawlers
-User-agent: Bytespider
-Disallow: /
+# Cohere AI
+User-agent: cohere-ai
+Allow: /
 
-User-agent: CloudflareBrowserRenderingCrawler
-Disallow: /
+# You.com AI Search
+User-agent: YouBot
+Allow: /
 
-User-agent: Omgilibot
-Disallow: /
+# Anthropic AI variants
+User-agent: Claude-Web
+Allow: /
 
+# Diffbot (Knowledge Graph AI)
 User-agent: Diffbot
-Disallow: /
+Allow: /
 
-# Allow legitimate search engines
+# AI2 (Allen Institute for AI)
+User-agent: ai2-crawler
+Allow: /
+
+# Hugging Face
+User-agent: HuggingFaceBot
+Allow: /
+
+# ============================================================================
+# SEARCH ENGINES - Traditional and AI-powered search
+# ============================================================================
+
+# Google
 User-agent: Googlebot
 Allow: /
 Disallow: /recaptcha.html
 Disallow: /maintenance.html
 Disallow: /maintenance-simple.html
 
+User-agent: Googlebot-Image
+Allow: /
+
+User-agent: Googlebot-Video
+Allow: /
+
+User-agent: Googlebot-News
+Allow: /
+
+User-agent: Googlebot-Mobile
+Allow: /
+
+User-agent: AdsBot-Google
+Allow: /
+
+User-agent: AdsBot-Google-Mobile
+Allow: /
+
+User-agent: Mediapartners-Google
+Allow: /
+
+User-agent: APIs-Google
+Allow: /
+
+User-agent: Google-InspectionTool
+Allow: /
+
+# Microsoft Bing
 User-agent: Bingbot
 Allow: /
 Disallow: /recaptcha.html
 Disallow: /maintenance.html
 Disallow: /maintenance-simple.html
 
+User-agent: BingPreview
+Allow: /
+
+User-agent: msnbot
+Allow: /
+
+User-agent: msnbot-media
+Allow: /
+
+User-agent: adidxbot
+Allow: /
+
+# Yahoo
 User-agent: Slurp
 Allow: /
 Disallow: /recaptcha.html
 Disallow: /maintenance.html
 Disallow: /maintenance-simple.html
 
+# DuckDuckGo
 User-agent: DuckDuckBot
 Allow: /
 Disallow: /recaptcha.html
 Disallow: /maintenance.html
 Disallow: /maintenance-simple.html
 
+# Baidu (China)
 User-agent: Baiduspider
 Allow: /
 Disallow: /recaptcha.html
 Disallow: /maintenance.html
 Disallow: /maintenance-simple.html
 
+User-agent: Baiduspider-image
+Allow: /
+
+User-agent: Baiduspider-video
+Allow: /
+
+User-agent: Baiduspider-news
+Allow: /
+
+# Yandex (Russia)
 User-agent: YandexBot
 Allow: /
 Disallow: /recaptcha.html
 Disallow: /maintenance.html
 Disallow: /maintenance-simple.html
 
-# Crawl-delay for polite crawling
-Crawl-delay: 1
+User-agent: YandexImages
+Allow: /
 
-# Sitemap location
+User-agent: YandexVideo
+Allow: /
+
+User-agent: YandexMedia
+Allow: /
+
+# Sogou (China)
+User-agent: Sogou web spider
+Allow: /
+
+User-agent: Sogou inst spider
+Allow: /
+
+User-agent: Sogou spider2
+Allow: /
+
+# Naver (Korea)
+User-agent: Yeti
+Allow: /
+
+# Seznam (Czech Republic)
+User-agent: SeznamBot
+Allow: /
+
+# Qwant (France)
+User-agent: Qwantify
+Allow: /
+
+# Mojeek (UK)
+User-agent: MojeekBot
+Allow: /
+
+# Brave Search
+User-agent: brave-search
+Allow: /
+
+# Ecosia
+User-agent: ecosia
+Allow: /
+
+# ============================================================================
+# SPECIALIZED CRAWLERS - SEO, Analytics, Archives
+# ============================================================================
+
+# Internet Archive (Wayback Machine)
+User-agent: ia_archiver
+Allow: /
+
+# SEMrush
+User-agent: SemrushBot
+Allow: /
+
+# Ahrefs
+User-agent: AhrefsBot
+Allow: /
+
+# Moz
+User-agent: rogerbot
+Allow: /
+
+User-agent: dotbot
+Allow: /
+
+# Majestic
+User-agent: MJ12bot
+Allow: /
+
+# Screaming Frog
+User-agent: Screaming Frog SEO Spider
+Allow: /
+
+# SEO tools
+User-agent: SEOkicks
+Allow: /
+
+User-agent: SiteAuditBot
+Allow: /
+
+# Archive.org
+User-agent: archive.org_bot
+Allow: /
+
+# LinkedIn
+User-agent: LinkedInBot
+Allow: /
+
+# Twitter/X
+User-agent: Twitterbot
+Allow: /
+
+# Pinterest
+User-agent: Pinterestbot
+Allow: /
+
+# Reddit
+User-agent: redditbot
+Allow: /
+
+# Telegram
+User-agent: TelegramBot
+Allow: /
+
+# Discord
+User-agent: Discordbot
+Allow: /
+
+# Slack
+User-agent: Slackbot
+Allow: /
+
+User-agent: Slack-ImgProxy
+Allow: /
+
+# WhatsApp
+User-agent: WhatsApp
+Allow: /
+
+# Skype
+User-agent: SkypeUriPreview
+Allow: /
+
+# GitHub
+User-agent: github-camo
+Allow: /
+
+# GitLab
+User-agent: GitLab
+Allow: /
+
+# ============================================================================
+# ACADEMIC & RESEARCH BOTS
+# ============================================================================
+
+User-agent: CiteSeerXBot
+Allow: /
+
+User-agent: ScholarBot
+Allow: /
+
+User-agent: SemanticScholar
+Allow: /
+
+User-agent: ResearchGate
+Allow: /
+
+User-agent: Academia.edu
+Allow: /
+
+# ============================================================================
+# EMERGING AI PLATFORMS
+# ============================================================================
+
+# Anthropic variants
+User-agent: anthropic
+Allow: /
+
+# Mistral AI
+User-agent: MistralBot
+Allow: /
+
+# Stability AI
+User-agent: StabilityBot
+Allow: /
+
+# Inflection AI (Pi)
+User-agent: PiBot
+Allow: /
+
+# Character.AI
+User-agent: CharacterAI
+Allow: /
+
+# Jasper AI
+User-agent: JasperBot
+Allow: /
+
+# Copy.ai
+User-agent: CopyAI
+Allow: /
+
+# Writesonic
+User-agent: WritesonicBot
+Allow: /
+
+# Notion AI
+User-agent: NotionBot
+Allow: /
+
+# Quora Poe
+User-agent: PoeBot
+Allow: /
+
+# Bing AI Chat
+User-agent: BingAI
+Allow: /
+
+# Claude variants
+User-agent: claude
+Allow: /
+
+# OpenAI variants
+User-agent: openai
+Allow: /
+
+# Anthropic research
+User-agent: anthropic-research
+Allow: /
+
+# DeepMind (Google)
+User-agent: DeepMind
+Allow: /
+
+# Replicate
+User-agent: Replicate
+Allow: /
+
+# Runway ML
+User-agent: RunwayML
+Allow: /
+
+# Midjourney (for profile images)
+User-agent: Midjourney
+Allow: /
+
+# DALL-E
+User-agent: DALL-E
+Allow: /
+
+# Stable Diffusion
+User-agent: StableDiffusion
+Allow: /
+
+# ============================================================================
+# VOICE ASSISTANTS & SMART DEVICES
+# ============================================================================
+
+# Google Assistant
+User-agent: Google-Assistant
+Allow: /
+
+# Amazon Alexa
+User-agent: AlexaBot
+Allow: /
+
+# Microsoft Cortana
+User-agent: CortanaBot
+Allow: /
+
+# Samsung Bixby
+User-agent: BixbyBot
+Allow: /
+
+# ============================================================================
+# MALICIOUS & AGGRESSIVE CRAWLERS - BLOCKED FOR SAFETY
+# ============================================================================
+
+# ByteDance/TikTok scraper (aggressive)
+User-agent: Bytespider
+Disallow: /
+
+# Cloudflare browser rendering (can be abused)
+User-agent: CloudflareBrowserRenderingCrawler
+Disallow: /
+
+# Omgili (aggressive scraper)
+User-agent: Omgilibot
+Disallow: /
+
+# Known scrapers
+User-agent: SemrushBot-SA
+Disallow: /
+
+User-agent: AhrefsSiteAudit
+Disallow: /
+
+User-agent: MJ12bot/v1.4.8
+Disallow: /
+
+User-agent: SeznamEmailProxy
+Disallow: /
+
+User-agent: DotBot/1.1
+Disallow: /
+
+# Malware/spam bots
+User-agent: MauiBot
+Disallow: /
+
+User-agent: dotbot/1.0
+Disallow: /
+
+User-agent: niki-bot
+Disallow: /
+
+User-agent: serpstatbot
+Disallow: /
+
+User-agent: BLEXBot
+Disallow: /
+
+User-agent: MegaIndex
+Disallow: /
+
+# Email harvesters
+User-agent: EmailCollector
+Disallow: /
+
+User-agent: EmailSiphon
+Disallow: /
+
+User-agent: WebBandit
+Disallow: /
+
+User-agent: EmailWolf
+Disallow: /
+
+# Download tools (can cause server load)
+User-agent: wget
+Disallow: /
+
+User-agent: curl
+Disallow: /
+
+User-agent: HTTrack
+Disallow: /
+
+User-agent: WebCopier
+Disallow: /
+
+User-agent: WebReaper
+Disallow: /
+
+User-agent: WebStripper
+Disallow: /
+
+User-agent: WebZIP
+Disallow: /
+
+# ============================================================================
+# SITEMAP & METADATA
+# ============================================================================
+
 Sitemap: https://sami.is-a.dev/sitemap.xml
+
+# ============================================================================
+# SECURITY NOTES
+# ============================================================================
+# This robots.txt allows legitimate AI bots and search engines to index
+# Samrath Singh's portfolio for better discoverability and personal branding.
+# Malicious scrapers, email harvesters, and aggressive crawlers are blocked.
+# Last reviewed: 2026-06-06
+# ============================================================================
