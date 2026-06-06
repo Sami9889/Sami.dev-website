@@ -3,17 +3,32 @@ const fetch = require('node-fetch');
 const bodyParser = require('body-parser');
 const path = require('path');
 const fs = require('fs');
+const compression = require('compression');
 const stripe = require('stripe')(process.env.STRIPE_SECRET_KEY || 'sk_test_dummy');
 const nodemailer = require('nodemailer');
 
 const app = express();
 const PORT = process.env.PORT || 3000;
 
+// Add gzip compression middleware
+app.use(compression());
+
 app.use(bodyParser.json());
 app.use(express.static(path.join(__dirname)));
 
+// Set caching headers for static assets
+app.use((req, res, next) => {
+  // Cache static assets for 1 week
+  if (req.url.match(/\.(js|css|png|jpg|jpeg|gif|ico|svg|woff|woff2)$/)) {
+    res.setHeader('Cache-Control', 'public, max-age=604800'); // 1 week
+  } else {
+    // Don't cache HTML
+    res.setHeader('Cache-Control', 'public, max-age=0, must-revalidate');
+  }
+  next();
+});
+
 // Products endpoint — local-only implementation (no external Printify calls). Reads `assets/products.json`.
-const fs = require('fs');
 const ORDERS_DIR = path.join(__dirname, 'orders');
 if(!fs.existsSync(ORDERS_DIR)) try{ fs.mkdirSync(ORDERS_DIR, { recursive: true }); }catch(e){ console.warn('Could not ensure orders dir', e); }
 
