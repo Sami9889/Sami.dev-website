@@ -10,6 +10,58 @@ const nodemailer = require('nodemailer');
 const app = express();
 const PORT = process.env.PORT || 3000;
 
+// Security Headers Middleware - MUST be before other middleware
+app.use((req, res, next) => {
+  // Content Security Policy - Prevent XSS, injection attacks
+  res.setHeader('Content-Security-Policy',
+    "default-src 'self'; " +
+    "script-src 'self' 'unsafe-inline' https://fonts.googleapis.com https://cdn.jsdelivr.net https://github.com https://api.github.com; " +
+    "style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; " +
+    "img-src 'self' https: data:; " +
+    "font-src 'self' https://fonts.gstatic.com data:; " +
+    "connect-src 'self' https://api.github.com https://ghchart.rshah.org; " +
+    "frame-ancestors 'none'; " +
+    "base-uri 'self'; " +
+    "form-action 'self' https://formsubmit.co; " +
+    "upgrade-insecure-requests"
+  );
+
+  // X-Frame-Options - Prevent clickjacking
+  res.setHeader('X-Frame-Options', 'DENY');
+
+  // X-Content-Type-Options - Prevent MIME sniffing
+  res.setHeader('X-Content-Type-Options', 'nosniff');
+
+  // X-XSS-Protection - Enable XSS protection in older browsers
+  res.setHeader('X-XSS-Protection', '1; mode=block');
+
+  // Referrer-Policy - Control referrer information
+  res.setHeader('Referrer-Policy', 'strict-origin-when-cross-origin');
+
+  // Permissions-Policy - Control browser features
+  res.setHeader('Permissions-Policy',
+    'geolocation=(), ' +
+    'microphone=(), ' +
+    'camera=(), ' +
+    'payment=(), ' +
+    'usb=(), ' +
+    'magnetometer=(), ' +
+    'gyroscope=(), ' +
+    'accelerometer=()'
+  );
+
+  // Strict-Transport-Security - Force HTTPS
+  res.setHeader('Strict-Transport-Security', 'max-age=31536000; includeSubDomains; preload');
+
+  // Expect-CT - Certificate Transparency
+  res.setHeader('Expect-CT', 'max-age=86400, enforce');
+
+  // Remove powered-by header for security
+  res.removeHeader('X-Powered-By');
+
+  next();
+});
+
 // Add gzip compression middleware
 app.use(compression());
 
