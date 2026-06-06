@@ -286,16 +286,16 @@
     <nav id="navbar">
         <div class="container">
             <div class="nav-container">
-                <div class="logo" onclick="showPage('home')" style="cursor: pointer;">sami.dev</div>
-                <button class="mobile-menu-toggle" onclick="toggleMobileMenu()" aria-label="Toggle navigation menu">☰</button>
+                <div class="logo" data-page="home" style="cursor: pointer;">sami.dev</div>
+                <button class="mobile-menu-toggle" data-action="toggle-menu" aria-label="Toggle navigation menu">☰</button>
                 <ul class="nav-links" id="nav-links">
-                    <li><a href="#" onclick="showPage('home'); return false;" class="active" aria-label="Go to home page">Home</a></li>
-                    <li><a href="#" onclick="showPage('about'); return false;" aria-label="Go to about page">About</a></li>
-                    <li><a href="#" onclick="showPage('skills'); return false;" aria-label="Go to skills page">Skills</a></li>
-                    <li><a href="#" onclick="showPage('projects'); return false;" aria-label="Go to projects page">Projects</a></li>
-                    <li><a href="#" onclick="showPage('contact'); return false;" aria-label="Go to contact page">Contact</a></li>
+                    <li><a href="#" data-page="home" class="active" aria-label="Go to home page">Home</a></li>
+                    <li><a href="#" data-page="about" aria-label="Go to about page">About</a></li>
+                    <li><a href="#" data-page="skills" aria-label="Go to skills page">Skills</a></li>
+                    <li><a href="#" data-page="projects" aria-label="Go to projects page">Projects</a></li>
+                    <li><a href="#" data-page="contact" aria-label="Go to contact page">Contact</a></li>
                 </ul>
-                <button id="theme-toggle" onclick="toggleTheme()" aria-label="Toggle dark/light theme">
+                <button id="theme-toggle" data-action="toggle-theme" aria-label="Toggle dark/light theme">
                     <span id="theme-icon">🌙</span>
                 </button>
             </div>
@@ -433,7 +433,7 @@
                     <div style="margin-top: 1rem; padding-top: 1rem; border-top: 1px solid var(--gray-300);">
                         <p style="font-size: 0.85rem; color: var(--gray-600); margin-bottom: 0.5rem;">Examples:</p>
                         <div style="display: flex; gap: 0.5rem; flex-wrap: wrap;">
-                            <a href="#" onclick="showPage('projects'); return false;" style="font-size: 0.8rem; color: var(--accent); text-decoration: none; padding: 0.25rem 0.5rem; background: var(--gray-100); border-radius: 4px; transition: var(--transition);">View My Projects →</a>
+                            <a href="#" data-page="projects" style="font-size: 0.8rem; color: var(--accent); text-decoration: none; padding: 0.25rem 0.5rem; background: var(--gray-100); border-radius: 4px; transition: var(--transition);">View My Projects →</a>
                         </div>
                     </div>
                 </article>
@@ -504,7 +504,7 @@
                     <div style="margin-top: 1rem; padding-top: 1rem; border-top: 1px solid var(--gray-300);">
                         <p style="font-size: 0.85rem; color: var(--gray-600); margin-bottom: 0.5rem;">Implemented in:</p>
                         <div style="display: flex; gap: 0.5rem; flex-wrap: wrap;">
-                            <a href="#" onclick="showPage('services'); return false;" style="font-size: 0.8rem; color: var(--accent); text-decoration: none; padding: 0.25rem 0.5rem; background: var(--gray-100); border-radius: 4px; transition: var(--transition);">Client Projects →</a>
+                            <a href="#" data-page="services" style="font-size: 0.8rem; color: var(--accent); text-decoration: none; padding: 0.25rem 0.5rem; background: var(--gray-100); border-radius: 4px; transition: var(--transition);">Client Projects →</a>
                         </div>
                     </div>
                 </article>
@@ -527,7 +527,7 @@
                     <div style="margin-top: 1rem; padding-top: 1rem; border-top: 1px solid var(--gray-300);">
                         <p style="font-size: 0.85rem; color: var(--gray-600); margin-bottom: 0.5rem;">Applied in:</p>
                         <div style="display: flex; gap: 0.5rem; flex-wrap: wrap;">
-                            <a href="#" onclick="showPage('projects'); return false;" style="font-size: 0.8rem; color: var(--accent); text-decoration: none; padding: 0.25rem 0.5rem; background: var(--gray-100); border-radius: 4px; transition: var(--transition);">Data Projects →</a>
+                            <a href="#" data-page="projects" style="font-size: 0.8rem; color: var(--accent); text-decoration: none; padding: 0.25rem 0.5rem; background: var(--gray-100); border-radius: 4px; transition: var(--transition);">Data Projects →</a>
                         </div>
                     </div>
                 </article>
@@ -551,7 +551,7 @@
                     <div style="margin-top: 1rem; padding-top: 1rem; border-top: 1px solid var(--gray-300);">
                         <p style="font-size: 0.85rem; color: var(--gray-600); margin-bottom: 0.5rem;">Demonstrated through:</p>
                         <div style="display: flex; gap: 0.5rem; flex-wrap: wrap;">
-                            <a href="#" onclick="showPage('experience'); return false;" style="font-size: 0.8rem; color: var(--accent); text-decoration: none; padding: 0.25rem 0.5rem; background: var(--gray-100); border-radius: 4px; transition: var(--transition);">My Experience →</a>
+                            <a href="#" data-page="experience" style="font-size: 0.8rem; color: var(--accent); text-decoration: none; padding: 0.25rem 0.5rem; background: var(--gray-100); border-radius: 4px; transition: var(--transition);">My Experience →</a>
                         </div>
                     </div>
                 </article>
@@ -754,7 +754,7 @@
             
             <div id="error" class="error" style="display: none;">
                 <p>Failed to load projects. Please check your internet connection and try again.</p>
-                <button onclick="retryLoadProjects()" style="margin-top: 1rem; padding: 0.5rem 1rem; background: var(--accent); color: white; border: none; border-radius: 4px; cursor: pointer;">Retry</button>
+                <button data-action="retry-projects" style="margin-top: 1rem; padding: 0.5rem 1rem; background: var(--accent); color: white; border: none; border-radius: 4px; cursor: pointer;">Retry</button>
             </div>
             
             <div class="projects-grid" id="projects-container"></div>
@@ -1050,8 +1050,8 @@ The more details you provide, the better I can understand your needs and provide
                     <div>
                         <h3 style="margin-bottom: 1rem; font-size: 1.2rem; color: var(--black); font-weight: 600;">Legal</h3>
                         <div style="display: flex; flex-direction: column; gap: 0.5rem;">
-                            <a href="#" onclick="showPage('privacy'); return false;" style="color: var(--gray-600); text-decoration: none; transition: color 0.3s; font-size: 0.9rem; padding: 0.5rem 1rem;">Privacy Policy</a>
-                            <a href="#" onclick="showPage('terms'); return false;" style="color: var(--gray-600); text-decoration: none; transition: color 0.3s; font-size: 0.9rem; padding: 0.5rem 1rem;">Terms of Service</a>
+                            <a href="#" data-page="privacy" style="color: var(--gray-600); text-decoration: none; transition: color 0.3s; font-size: 0.9rem; padding: 0.5rem 1rem;">Privacy Policy</a>
+                            <a href="#" data-page="terms" style="color: var(--gray-600); text-decoration: none; transition: color 0.3s; font-size: 0.9rem; padding: 0.5rem 1rem;">Terms of Service</a>
                         </div>
                     </div>
                     
@@ -1065,11 +1065,11 @@ The more details you provide, the better I can understand your needs and provide
                     <div>
                         <h3 style="margin-bottom: 1rem; font-size: 1.2rem; color: var(--black); font-weight: 600;">Policies</h3>
                         <div style="display: flex; flex-direction: column; gap: 0.5rem;">
-                            <a href="#" onclick="showPage('privacy'); return false;" style="color: var(--gray-600); text-decoration: none; transition: color 0.3s; font-size: 0.85rem; padding: 0.5rem 1rem;">Cookie Policy</a>
-                            <a href="#" onclick="showPage('terms'); return false;" style="color: var(--gray-600); text-decoration: none; transition: color 0.3s; font-size: 0.85rem; padding: 0.5rem 1rem;">Refund & Cancellation</a>
-                            <a href="#" onclick="showPage('terms'); return false;" style="color: var(--gray-600); text-decoration: none; transition: color 0.3s; font-size: 0.85rem; padding: 0.5rem 1rem;">Acceptable Use</a>
-                            <a href="#" onclick="showPage('terms'); return false;" style="color: var(--gray-600); text-decoration: none; transition: color 0.3s; font-size: 0.85rem; padding: 0.5rem 1rem;">Copyright & IP</a>
-                            <a href="#" onclick="showPage('terms'); return false;" style="color: var(--gray-600); text-decoration: none; transition: color 0.3s; font-size: 0.85rem; padding: 0.5rem 1rem;">Disclaimer</a>
+                            <a href="#" data-page="privacy" style="color: var(--gray-600); text-decoration: none; transition: color 0.3s; font-size: 0.85rem; padding: 0.5rem 1rem;">Cookie Policy</a>
+                            <a href="#" data-page="terms" style="color: var(--gray-600); text-decoration: none; transition: color 0.3s; font-size: 0.85rem; padding: 0.5rem 1rem;">Refund & Cancellation</a>
+                            <a href="#" data-page="terms" style="color: var(--gray-600); text-decoration: none; transition: color 0.3s; font-size: 0.85rem; padding: 0.5rem 1rem;">Acceptable Use</a>
+                            <a href="#" data-page="terms" style="color: var(--gray-600); text-decoration: none; transition: color 0.3s; font-size: 0.85rem; padding: 0.5rem 1rem;">Copyright & IP</a>
+                            <a href="#" data-page="terms" style="color: var(--gray-600); text-decoration: none; transition: color 0.3s; font-size: 0.85rem; padding: 0.5rem 1rem;">Disclaimer</a>
                         </div>
                     </div>
                     <div style="display: none;">
@@ -1093,7 +1093,7 @@ The more details you provide, the better I can understand your needs and provide
         </footer>
     </div>
 
-    <button class="scroll-to-top" id="scroll-to-top" onclick="scrollToTop()" aria-label="Scroll to top">↑</button>
+    <button class="scroll-to-top" id="scroll-to-top" data-action="scroll-top" aria-label="Scroll to top">↑</button>
 
     <!-- Quick Contact Button -->
     <a href="mailto:samisingh988@gmail.com" class="quick-contact-btn" aria-label="Quick contact via email" title="Email me">
@@ -1106,11 +1106,11 @@ The more details you provide, the better I can understand your needs and provide
     <!-- Cookie Consent Banner -->
     <div id="cookieBanner" style="position: fixed; bottom: 0; left: 0; right: 0; background: var(--gray-900); color: white; padding: 1.5rem 2rem; z-index: 9998; display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 1rem; transform: translateY(100%); transition: transform 0.4s ease; box-shadow: 0 -4px 20px rgba(0,0,0,0.3);">
         <p style="margin: 0; font-size: 0.9rem; max-width: 700px; color: #e0e0e0;">
-            🍪 This website uses cookies for essential functionality and optional analytics. See our <a href="#" onclick="showPage('privacy'); document.getElementById('cookieBanner').style.transform='translateY(100%)'; return false;" style="color: var(--accent); text-decoration: underline;">Privacy Policy</a> for details.
+            🍪 This website uses cookies for essential functionality and optional analytics. See our <a href="#" data-action="privacy-hide-banner" style="color: var(--accent); text-decoration: underline;">Privacy Policy</a> for details.
         </p>
         <div style="display: flex; gap: 1rem; flex-shrink: 0;">
-            <button onclick="declineCookies()" style="padding: 0.5rem 1.25rem; border: 1px solid #666; background: transparent; color: #ccc; border-radius: 4px; cursor: pointer; font-size: 0.9rem;">Decline</button>
-            <button onclick="acceptCookies()" style="padding: 0.5rem 1.25rem; background: var(--accent); color: white; border: none; border-radius: 4px; cursor: pointer; font-size: 0.9rem; font-weight: 600;">Accept</button>
+            <button data-action="decline-cookies" style="padding: 0.5rem 1.25rem; border: 1px solid #666; background: transparent; color: #ccc; border-radius: 4px; cursor: pointer; font-size: 0.9rem;">Decline</button>
+            <button data-action="accept-cookies" style="padding: 0.5rem 1.25rem; background: var(--accent); color: white; border: none; border-radius: 4px; cursor: pointer; font-size: 0.9rem; font-weight: 600;">Accept</button>
         </div>
     </div>
 
