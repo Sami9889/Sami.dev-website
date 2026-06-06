@@ -23,8 +23,16 @@ app.use((req, res, next) => {
     "frame-ancestors 'none'; " +
     "base-uri 'self'; " +
     "form-action 'self' https://formsubmit.co; " +
-    "upgrade-insecure-requests"
+    "upgrade-insecure-requests; " +
+    "require-trusted-types-for 'script'; " +
+    "trusted-types default"
   );
+
+  // Cross-Origin-Opener-Policy - Prevent cross-origin attacks
+  res.setHeader('Cross-Origin-Opener-Policy', 'same-origin');
+
+  // Cross-Origin-Embedder-Policy - Enable cross-origin isolation
+  res.setHeader('Cross-Origin-Embedder-Policy', 'credentialless');
 
   // X-Frame-Options - Prevent clickjacking
   res.setHeader('X-Frame-Options', 'DENY');
