@@ -1,0 +1,70 @@
+================================================================
+CLOUDFLARE TRANSFORM RULES - QUICK REFERENCE
+================================================================
+
+Dashboard: https://dash.cloudflare.com
+Domain: sami-s.dev
+Location: Rules → Transform Rules → Modify Response Header → Create Rule
+
+Rule Name: Security Headers - Complete
+When: All incoming requests
+
+================================================================
+HEADERS TO ADD (Click "+ Set static" for each):
+================================================================
+
+1. Content-Security-Policy
+----------------------------------------------------------
+default-src 'self'; script-src 'self' 'unsafe-inline' https://fonts.googleapis.com https://api.github.com https://static.cloudflareinsights.com; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src 'self' https://fonts.gstatic.com data:; img-src 'self' data: https: blob:; connect-src 'self' https://api.github.com https://ghchart.rshah.org https://formsubmit.co https://fonts.googleapis.com https://fonts.gstatic.com https://cloudflareinsights.com; frame-src https://github.com; base-uri 'self'; form-action 'self' https://formsubmit.co; upgrade-insecure-requests
+
+2. Strict-Transport-Security
+----------------------------------------------------------
+max-age=31536000; includeSubDomains; preload
+
+3. X-Frame-Options
+----------------------------------------------------------
+SAMEORIGIN
+
+4. X-Content-Type-Options
+----------------------------------------------------------
+nosniff
+
+5. Referrer-Policy
+----------------------------------------------------------
+strict-origin-when-cross-origin
+
+6. Permissions-Policy
+----------------------------------------------------------
+geolocation=(), microphone=(), camera=()
+
+7. Cross-Origin-Opener-Policy
+----------------------------------------------------------
+same-origin
+
+8. Cross-Origin-Embedder-Policy
+----------------------------------------------------------
+credentialless
+
+================================================================
+AFTER DEPLOYMENT:
+================================================================
+
+Wait 2-3 minutes, then run:
+  ./verify-headers.sh
+
+Or manually check:
+  curl -I https://sami-s.dev | grep -i "strict-transport"
+
+Expected result: All 8 headers showing in HTTP response
+
+================================================================
+FIXES THESE ISSUES:
+================================================================
+✅ No HSTS header (High severity)
+✅ No COOP header (High severity)
+✅ No frame control policy (High severity)
+✅ CSP blocks Cloudflare Insights
+✅ CSP blocks GitHub frames
+✅ X-Frame-Options ignored (meta tag)
+
+================================================================
