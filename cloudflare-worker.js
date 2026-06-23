@@ -6,13 +6,9 @@ addEventListener('fetch', event => {
 })
 
 async function handleRequest(request) {
-  // Fetch the original response from GitHub Pages
-  const response = await fetch(request)
+  const url = new URL(request.url)
+  const pathname = url.pathname
 
-  // Create a new response with the same content but modified headers
-  const newResponse = new Response(response.body, response)
-
-  // Add security headers
   const securityHeaders = {
     'Strict-Transport-Security': 'max-age=31536000; includeSubDomains; preload',
     'Content-Security-Policy': "default-src 'self'; script-src 'self' 'unsafe-inline' https://fonts.googleapis.com https://api.github.com; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src 'self' https://fonts.gstatic.com; img-src 'self' data: https: blob:; connect-src 'self' https://api.github.com https://ghchart.rshah.org https://formsubmit.co; frame-ancestors 'none'; upgrade-insecure-requests; require-trusted-types-for 'script'; trusted-types default",
@@ -24,10 +20,35 @@ async function handleRequest(request) {
     'Cross-Origin-Embedder-Policy': 'credentialless'
   }
 
-  // Apply all security headers
-  Object.entries(securityHeaders).forEach(([key, value]) => {
-    newResponse.headers.set(key, value)
-  })
+  function applyHeaders(response) {
+    const headers = new Headers(response.headers)
+    Object.entries(securityHeaders).forEach(([key, value]) => {
+      headers.set(key, value)
+    })
+    return new Response(response.body, {
+      status: response.status,
+      statusText: response.statusText,
+      headers
+    })
+  }
 
-  return newResponse
+  if (pathname.match(/\.(md|markdown)$/i)) {
+    return new Response('Not found', {
+      status: 404,
+      headers: {
+        'Content-Type': 'text/plain;charset=UTF-8',
+        'X-Robots-Tag': 'noindex, nofollow',
+        ...securityHeaders
+      }
+    })
+  }
+
+  const response = await fetch(request)
+
+  if (response.status === 404 && request.method === 'GET' && !pathname.match(/\.[a-z0-9]+$/i)) {
+    const indexResponse = await fetch(new URL('/index.html', request.url))
+    return applyHeaders(indexResponse)
+  }
+
+  return applyHeaders(response)
 }

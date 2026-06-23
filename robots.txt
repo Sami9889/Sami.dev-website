@@ -8,6 +8,7 @@
 User-agent: *
 Content-Signal: search=yes,ai-train=yes
 Allow: /
+Disallow: /*.md$
 Disallow: /recaptcha.html
 Disallow: /maintenance.html
 Disallow: /maintenance-simple.html

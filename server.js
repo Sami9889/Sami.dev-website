@@ -74,6 +74,17 @@ app.use((req, res, next) => {
 app.use(compression());
 
 app.use(bodyParser.json());
+
+// Prevent markdown documents from being served as public site pages.
+// This keeps internal repo docs from being crawled or indexed as website content.
+app.use((req, res, next) => {
+  if (req.path.match(/\.(md|markdown)$/i)) {
+    res.setHeader('X-Robots-Tag', 'noindex, nofollow');
+    return res.status(404).end();
+  }
+  next();
+});
+
 app.use(express.static(path.join(__dirname)));
 
 // Set caching headers for static assets
@@ -310,6 +321,23 @@ app.post('/api/create', (req, res) => {
     console.error('Error managing subdomains:', err);
     res.status(500).json({ message: 'Server error' });
   }
+});
+
+// SPA fallback for client-side routes.
+// Serve index.html for unknown GET paths that are not API/admin endpoints or static assets.
+app.get('*', (req, res) => {
+  if (req.method !== 'GET') {
+    return res.status(404).sendFile(path.join(__dirname, '404.html'));
+  }
+
+  const isStaticFile = req.path.match(/\.[a-z0-9]+$/i);
+  const isApiRoute = req.path.startsWith('/api/') || req.path.startsWith('/admin') || req.path.startsWith('/orders');
+
+  if (isApiRoute || isStaticFile) {
+    return res.status(404).sendFile(path.join(__dirname, '404.html'));
+  }
+
+  return res.sendFile(path.join(__dirname, 'index.html'));
 });
 
 app.listen(PORT, ()=> console.log(`Server started on http://localhost:${PORT}`));
