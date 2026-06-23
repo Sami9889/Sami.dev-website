@@ -6,7 +6,7 @@
 
   <!-- Homepage -->
   <url>
-    <loc>https://sami.is-a.dev/</loc>
+    <loc>https://sami-s.dev/</loc>
     <lastmod>2024-12-18</lastmod>
     <changefreq>weekly</changefreq>
     <priority>1.0</priority>
@@ -14,7 +14,7 @@
 
   <!-- About Page -->
   <url>
-    <loc>https://sami.is-a.dev/about</loc>
+    <loc>https://sami-s.dev/about</loc>
     <lastmod>2024-12-18</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.8</priority>
@@ -78,7 +78,7 @@
 
   <!-- Privacy Policy -->
   <url>
-    <loc>https://sami.is-a.dev/privacy</loc>
+    <loc>https://sami-s.dev/privacy</loc>
     <lastmod>2024-12-18</lastmod>
     <changefreq>yearly</changefreq>
     <priority>0.3</priority>
@@ -86,7 +86,7 @@
 
   <!-- Terms of Service -->
   <url>
-    <loc>https://sami.is-a.dev/terms</loc>
+    <loc>https://sami-s.dev/terms</loc>
     <lastmod>2024-12-18</lastmod>
     <changefreq>yearly</changefreq>
     <priority>0.3</priority>

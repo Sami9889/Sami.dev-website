@@ -1,4 +1,4 @@
-# robots.txt for sami.is-a.dev
+# robots.txt for sami-s.dev
 # Comprehensive AI and search engine indexing for Samrath Singh
 # Last updated: 2026-06-06
 
@@ -567,7 +567,7 @@ Disallow: /
 # SITEMAP & METADATA
 # ============================================================================
 
-Sitemap: https://sami.is-a.dev/sitemap.xml
+Sitemap: https://sami-s.dev/sitemap.xml
 
 # ============================================================================
 # SECURITY NOTES
