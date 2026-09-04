@@ -11,8 +11,8 @@ if (!window.samiConsoleWelcomeShown) {
         '  Code:    https://github.com/Sami9889'
     ].join('\n');
 
-    const consoleColors = [
-        '#ff375f', '#ff9f0a', '#ffd60a', '#30d158', '#64d2ff', '#0a84ff', '#bf5af2'
+    const consoleGradientColors = [
+        '#e9d5ff', '#d8b4fe', '#c4b5fd', '#a5b4fc', '#93c5fd', '#7dd3fc', '#93c5fd', '#a5b4fc', '#c4b5fd'
     ];
     const consoleWordmark = 'SAMI.DEV';
 
@@ -21,7 +21,7 @@ if (!window.samiConsoleWelcomeShown) {
     const showConsoleWelcome = () => {
         const wordmarkFormat = consoleWordmark.split('').map(() => '%c%s').join('');
         const wordmarkArguments = consoleWordmark.split('').flatMap((letter, index) => [
-            `background:#101114;color:${consoleColors[(index + consoleFrame) % consoleColors.length]};font:bold 20px/1.2 monospace;padding:12px 0;`,
+            `background:#101114;color:${consoleGradientColors[(index + consoleFrame) % consoleGradientColors.length]};font:bold 20px/1.2 monospace;padding:12px 0;text-shadow:0 0 8px currentColor;`,
             letter
         ]);
         console.log(
