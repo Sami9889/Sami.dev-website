@@ -11,9 +11,7 @@ if (!window.samiConsoleWelcomeShown) {
         '  Code:    https://github.com/Sami9889'
     ].join('\n');
 
-    const consoleGradientColors = [
-        '#e9d5ff', '#d8b4fe', '#c4b5fd', '#a5b4fc', '#93c5fd', '#7dd3fc', '#93c5fd', '#a5b4fc', '#c4b5fd'
-    ];
+    const consoleGradientColors = ['#ffffff'];
     const consoleWordmark = 'SAMI.DEV';
 
     let consoleFrame = 0;
