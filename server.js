@@ -18,6 +18,7 @@ app.use((req, res, next) => {
     "script-src 'self' 'unsafe-inline' https://fonts.googleapis.com https://cdn.jsdelivr.net https://github.com https://api.github.com; " +
     "style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; " +
     "img-src 'self' https: data:; " +
+    "frame-src 'self' https://github.com; " +
     "font-src 'self' https://fonts.gstatic.com data:; " +
     "connect-src 'self' https://api.github.com https://ghchart.rshah.org; " +
     "frame-ancestors 'none'; " +
