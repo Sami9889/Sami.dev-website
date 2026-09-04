@@ -1,3 +1,27 @@
+if (!window.samiConsoleWelcomeShown) {
+    window.samiConsoleWelcomeShown = true;
+    console.log(
+        '%c' + String.raw`  _____              _
+ / ____|            (_)
+| (___   __ _ _ __  _
+ \___ \ / _| | '_ \| |
+  ___) | (_| | | | | |
+ |____/ \__,_|_| |_|_|
+                         sami.dev` + '%c\n' +
+        '  > building useful things for the web\n\n' +
+        '  You found the console. Nice to have you here.\n' +
+        '  Have an idea, a project, or just want to say hello?\n\n' +
+        '  Explore: %chttps://sami-s.dev%c\n' +
+        '  Code:    %chttps://github.com/Sami9889%c',
+        'color:#0a7a55;font-size:13px;font-weight:700;line-height:1.2;',
+        'color:#555;font-size:12px;line-height:1.6;',
+        'color:#0a7a55;font-weight:700;text-decoration:underline;',
+        'color:#555;font-size:12px;',
+        'color:#0a7a55;font-weight:700;text-decoration:underline;',
+        'color:#555;font-size:12px;'
+    );
+}
+
 
 // Font loading (moved from inline onload)
 window.addEventListener('load', function() {
