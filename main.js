@@ -20,6 +20,55 @@ if (!window.retryLoadProjects) {
     };
 }
 
+function escapeHTML(value) {
+    return String(value || '').replace(/[&<>'"]/g, (character) => ({
+        '&': '&amp;',
+        '<': '&lt;',
+        '>': '&gt;',
+        "'": '&#39;',
+        '"': '&quot;'
+    })[character]);
+}
+
+window.loadGitHubProjects = async function() {
+    const loading = document.getElementById('loading');
+    const error = document.getElementById('error');
+    const container = document.getElementById('projects-container');
+    if (!loading || !error || !container) {
+        return;
+    }
+
+    loading.style.display = 'block';
+    error.style.display = 'none';
+
+    try {
+        const response = await fetch('https://api.github.com/users/Sami9889/repos?sort=updated&per_page=6');
+        if (!response.ok) {
+            throw new Error(`GitHub returned ${response.status}`);
+        }
+
+        const repositories = await response.json();
+        container.innerHTML = repositories.length ? repositories.map((repository) => `
+            <article class="project-card github-project">
+                <span class="section-kicker">GitHub project</span>
+                <h3>${escapeHTML(repository.name)}</h3>
+                <p>${escapeHTML(repository.description || 'A project I am building and improving in public.')}</p>
+                <div class="project-meta">
+                    <span>${escapeHTML(repository.language || 'Code')}</span>
+                    <span>${repository.stargazers_count} stars</span>
+                </div>
+                <a class="text-link" href="${escapeHTML(repository.html_url)}" target="_blank" rel="noopener noreferrer">View on GitHub <span aria-hidden="true">↗</span></a>
+            </article>
+        `).join('') : '<p class="projects-empty">I am still adding projects here. Visit GitHub to see what I am working on now.</p>';
+        loading.style.display = 'none';
+    } catch (requestError) {
+        loading.style.display = 'none';
+        error.style.display = 'block';
+        error.querySelector('p').textContent = 'The project list could not load right now. You can still browse everything on GitHub.';
+        console.error('Could not load GitHub projects:', requestError);
+    }
+};
+
 const pageRoutes = {
     '/': 'home',
     '/about': 'about',
@@ -95,6 +144,7 @@ document.addEventListener('DOMContentLoaded', function() {
     const initialPage = pageRoutes[window.location.pathname] || 'home';
     window.showPage(initialPage, false);
     updateSkillProgress(document.getElementById('skills'));
+    window.loadGitHubProjects();
 
     window.addEventListener('popstate', function() {
         window.showPage(pageRoutes[window.location.pathname] || 'home', false);

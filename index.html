@@ -288,6 +288,17 @@
         .sponsor-embed p { max-width: 560px; margin: 0 auto 1.25rem; }
         .sponsor-card-frame { display: flex; justify-content: center; min-height: 225px; margin: 1.5rem auto 0; padding: 0.75rem; background: var(--gray-100); border: 1px solid var(--gray-200); border-radius: 8px; }
         .sponsor-embed iframe { display: block; width: min(600px, 100%); border: 0; border-radius: 4px; background: var(--white); }
+        .projects-page-content { max-width: 1000px; margin: 0 auto; }
+        .projects-page-content .projects-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 1.5rem; }
+        .projects-page-content .project-card { padding: 2rem; }
+        .github-project h3 { overflow-wrap: anywhere; }
+        .project-meta { display: flex; flex-wrap: wrap; gap: 0.5rem 1rem; margin-top: 1.25rem; color: var(--gray-600); font-family: var(--mono-font); font-size: 0.75rem; }
+        .project-meta span { padding: 0.35rem 0.55rem; background: var(--gray-100); border-radius: 4px; }
+        .projects-empty { grid-column: 1 / -1; padding: 2rem; color: var(--gray-600); text-align: center; }
+        .github-activity { margin-top: 2rem; padding: 2rem; text-align: center; }
+        .github-activity h3 { margin-bottom: 0.5rem; }
+        .github-activity p { max-width: 600px; margin: 0 auto; color: var(--gray-600); }
+        .github-activity img { display: block; width: min(500px, 100%); margin: 1.5rem auto 0; }
         .partner-layout { max-width: 1000px; margin: 0 auto; }
         .partner-hero { display: grid; grid-template-columns: 180px 1fr; gap: 2.5rem; align-items: center; margin-bottom: 2rem !important; }
         .partner-hero img { width: 180px; height: 180px; object-fit: contain; border-radius: 8px; }
@@ -296,8 +307,12 @@
         .partner-contact dl div { border-top: 1px solid var(--gray-200); padding-top: 0.75rem; }
         .partner-contact dt { color: var(--gray-600); font-size: 0.8rem; font-weight: 600; text-transform: uppercase; }
         .partner-contact dd { color: var(--black); margin-top: 0.2rem; }
+        .github-project p { min-height: 4.8rem; }
+        .project-meta { display: flex; gap: 1rem; margin-top: 1.25rem; color: var(--gray-600); font-family: var(--mono-font); font-size: 0.75rem; }
+        .projects-empty { grid-column: 1 / -1; padding: 2rem; color: var(--gray-700); text-align: center; }
         @media (max-width: 700px) {
             .sponsor-layout, .partner-details { grid-template-columns: 1fr; }
+            .projects-page-content .projects-grid { grid-template-columns: 1fr; }
             .sponsor-intro, .sponsor-partner, .sponsor-embed { grid-column: auto; }
             .sponsor-focus { grid-template-columns: 1fr; }
             .sponsor-tier { display: block; }
@@ -769,45 +784,29 @@
                 <h2>Projects I’ve Built</h2>
                 <p class="page-subtitle">A few things I’ve made, tested, and learned from.</p>
             </div>
-            
-            <div id="loading" class="loading">
-                <div class="projects-grid">
-                    <div class="skeleton-card">
-                        <div class="skeleton skeleton-title"></div>
-                        <div class="skeleton skeleton-text"></div>
-                        <div class="skeleton skeleton-text"></div>
-                        <div class="skeleton skeleton-tags"></div>
-                    </div>
-                    <div class="skeleton-card">
-                        <div class="skeleton skeleton-title"></div>
-                        <div class="skeleton skeleton-text"></div>
-                        <div class="skeleton skeleton-text"></div>
-                        <div class="skeleton skeleton-tags"></div>
-                    </div>
-                    <div class="skeleton-card">
-                        <div class="skeleton skeleton-title"></div>
-                        <div class="skeleton skeleton-text"></div>
-                        <div class="skeleton skeleton-text"></div>
-                        <div class="skeleton skeleton-tags"></div>
+
+            <div class="projects-page-content">
+                <div id="loading" class="loading">
+                    <div class="projects-grid">
+                        <div class="skeleton-card"><div class="skeleton skeleton-title"></div><div class="skeleton skeleton-text"></div><div class="skeleton skeleton-text"></div><div class="skeleton skeleton-tags"></div></div>
+                        <div class="skeleton-card"><div class="skeleton skeleton-title"></div><div class="skeleton skeleton-text"></div><div class="skeleton skeleton-text"></div><div class="skeleton skeleton-tags"></div></div>
+                        <div class="skeleton-card"><div class="skeleton skeleton-title"></div><div class="skeleton skeleton-text"></div><div class="skeleton skeleton-text"></div><div class="skeleton skeleton-tags"></div></div>
                     </div>
                 </div>
-            </div>
-            
-            <div id="error" class="error" style="display: none;">
-                <p>Failed to load projects. Please check your internet connection and try again.</p>
-                <button data-action="retry-projects" style="margin-top: 1rem; padding: 0.5rem 1rem; background: var(--accent); color: white; border: none; border-radius: 4px; cursor: pointer;">Retry</button>
-            </div>
-            
-            <div class="projects-grid" id="projects-container"></div>
-            
-            <div style="margin-top: 4rem; text-align: center;">
-                <h2 style="margin-bottom: 2rem; font-size: 2rem;">GitHub Activity</h2>
-                <div style="background: var(--white); padding: 2rem; border-radius: 12px; box-shadow: var(--shadow); display: inline-block; max-width: 100%;">
-                    <img src="https://ghchart.rshah.org/007bff/Sami9889" alt="GitHub Contribution Graph" style="max-width: 100%; height: auto; border-radius: 8px;" loading="lazy" width="500" height="300" decoding="async" />
-                    <p style="margin-top: 1rem; color: var(--gray-600); font-size: 0.9rem;">My GitHub contribution activity over the past year</p>
-                    <a href="https://github.com/Sami9889" target="_blank" rel="noopener noreferrer" style="display: inline-block; margin-top: 1rem; padding: 0.75rem 1.5rem; background: var(--accent); color: white; text-decoration: none; border-radius: 4px; font-weight: 600; transition: var(--transition);">
-                        View Full Profile →
-                    </a>
+
+                <div id="error" class="error" style="display: none;">
+                    <p>The project list could not load right now. You can still browse everything on GitHub.</p>
+                    <button data-action="retry-projects">Try again</button>
+                </div>
+
+                <div class="projects-grid" id="projects-container"></div>
+
+                <div class="project-card github-activity">
+                    <span class="section-kicker">Open work, updated often</span>
+                    <h3>What I’m working on</h3>
+                    <p>My GitHub activity is the best place to see recent experiments, updates, and small projects.</p>
+                    <img src="https://ghchart.rshah.org/007bff/Sami9889" alt="GitHub contribution activity for Sami9889" loading="lazy" width="500" height="300" decoding="async">
+                    <a class="primary-link" href="https://github.com/Sami9889" target="_blank" rel="noopener noreferrer">Visit my GitHub <span aria-hidden="true">↗</span></a>
                 </div>
             </div>
         </section>
