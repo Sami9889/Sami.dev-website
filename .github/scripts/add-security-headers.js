@@ -4,21 +4,35 @@
 
 const fs = require('fs');
 const path = require('path');
-const glob = require('glob');
 
 // Security headers to inject as meta tags
 const securityHeaders = [
-  { httpEquiv: 'Content-Security-Policy', content: "default-src 'self'; script-src 'self' 'unsafe-inline' https://fonts.googleapis.com https://api.github.com; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src 'self' https://fonts.gstatic.com; img-src 'self' data: https: blob:; connect-src 'self' https://api.github.com https://ghchart.rshah.org https://formsubmit.co; frame-ancestors 'none'; upgrade-insecure-requests" },
+  { httpEquiv: 'Content-Security-Policy', content: "default-src 'self'; script-src 'self' 'unsafe-inline' https://fonts.googleapis.com https://api.github.com; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src 'self' https://fonts.gstatic.com; img-src 'self' data: https: blob:; frame-src 'self' https://github.com; connect-src 'self' https://api.github.com https://ghchart.rshah.org https://formsubmit.co; frame-ancestors 'none'; upgrade-insecure-requests" },
   { httpEquiv: 'X-Content-Type-Options', content: 'nosniff' },
   { httpEquiv: 'X-Frame-Options', content: 'SAMEORIGIN' },
   { httpEquiv: 'Referrer-Policy', content: 'strict-origin-when-cross-origin' },
   { httpEquiv: 'Permissions-Policy', content: 'geolocation=(), microphone=(), camera=()' }
 ];
 
-// Find all HTML files
-const htmlFiles = glob.sync('**/*.html', {
-  ignore: ['node_modules/**', '.git/**', 'dist/**']
-});
+// Find HTML files without downloading a build dependency in CI.
+function findHtmlFiles(directory) {
+  const files = [];
+  for (const entry of fs.readdirSync(directory, { withFileTypes: true })) {
+    if (entry.name === 'node_modules' || entry.name === '.git' || entry.name === 'dist') {
+      continue;
+    }
+
+    const entryPath = path.join(directory, entry.name);
+    if (entry.isDirectory()) {
+      files.push(...findHtmlFiles(entryPath));
+    } else if (entry.isFile() && entry.name.endsWith('.html')) {
+      files.push(entryPath);
+    }
+  }
+  return files;
+}
+
+const htmlFiles = findHtmlFiles('.');
 
 console.log(`Found ${htmlFiles.length} HTML files to process`);
 

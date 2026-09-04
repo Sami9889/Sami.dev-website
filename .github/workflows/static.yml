@@ -37,9 +37,6 @@ jobs:
         with:
           node-version: '20'
 
-      - name: Install dependencies
-        run: npm install glob --no-save
-
       - name: Inject security headers into HTML
         run: node .github/scripts/add-security-headers.js
 
