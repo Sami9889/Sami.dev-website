@@ -1,11 +1,6 @@
 if (!window.samiConsoleWelcomeShown) {
     window.samiConsoleWelcomeShown = true;
-    const consoleLogo = String.raw`
-   _____          __  ___
-  / ___/____     /  |/  /__  ____ _   __
-  \__ \/ __ \   / /|_/ / _ \/ __ \ | / /
- ___/ / /_/ /  / /  / /  __/ / / / |/ /
-/____/\____/  /_/  /_/\___/_/ /_/|___/   .dev`;
+
     const consoleMessage = [
         '  > building useful things for the web',
         '',
@@ -15,14 +10,21 @@ if (!window.samiConsoleWelcomeShown) {
         '  Explore: https://sami-s.dev',
         '  Code:    https://github.com/Sami9889'
     ].join('\n');
-    const consoleColors = ['#ff4d6d', '#ff9f1c', '#f9c74f', '#43aa8b', '#4cc9f0', '#7b61ff'];
+
+    const consoleColors = [
+        '#ff375f', '#ff9f0a', '#ffd60a', '#30d158', '#64d2ff', '#0a84ff', '#bf5af2'
+    ];
+
     let consoleFrame = 0;
 
     const showConsoleWelcome = () => {
         const accent = consoleColors[consoleFrame % consoleColors.length];
-        console.log('%c' + consoleLogo + '\n%c' + consoleMessage,
-            `background:#101114;color:${accent};font:bold 16px/1.2 monospace;padding:10px 14px;`,
-            'background:#101114;color:#f5f7fa;font:13px/1.7 monospace;padding:4px 14px 12px;');
+        console.clear();
+        console.log(
+            '%cSAMI.DEV\n%c' + consoleMessage,
+            `background:#101114;color:${accent};font:bold 20px/1.2 monospace;padding:12px 16px;border-radius:8px;`,
+            'background:#101114;color:#f5f5f5;font:13px/1.7 monospace;padding:10px 14px 12px;'
+        );
         consoleFrame += 1;
     };
 
@@ -32,7 +34,7 @@ if (!window.samiConsoleWelcomeShown) {
         if (consoleFrame >= 12) {
             window.clearInterval(consoleAnimation);
         }
-    }, 260);
+    }, 220);
 }
 
 
