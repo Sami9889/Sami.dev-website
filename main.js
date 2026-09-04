@@ -1,25 +1,38 @@
 if (!window.samiConsoleWelcomeShown) {
     window.samiConsoleWelcomeShown = true;
-    console.log(
-        '%c' + String.raw`  _____              _
- / ____|            (_)
-| (___   __ _ _ __  _
- \___ \ / _| | '_ \| |
-  ___) | (_| | | | | |
- |____/ \__,_|_| |_|_|
-                         sami.dev` + '%c\n' +
-        '  > building useful things for the web\n\n' +
-        '  You found the console. Nice to have you here.\n' +
-        '  Have an idea, a project, or just want to say hello?\n\n' +
-        '  Explore: %chttps://sami-s.dev%c\n' +
-        '  Code:    %chttps://github.com/Sami9889%c',
-        'color:#0a7a55;font-size:13px;font-weight:700;line-height:1.2;',
-        'color:#555;font-size:12px;line-height:1.6;',
-        'color:#0a7a55;font-weight:700;text-decoration:underline;',
-        'color:#555;font-size:12px;',
-        'color:#0a7a55;font-weight:700;text-decoration:underline;',
-        'color:#555;font-size:12px;'
-    );
+    const consoleLogo = String.raw`
+   _____          __  ___
+  / ___/____     /  |/  /__  ____ _   __
+  \__ \/ __ \   / /|_/ / _ \/ __ \ | / /
+ ___/ / /_/ /  / /  / /  __/ / / / |/ /
+/____/\____/  /_/  /_/\___/_/ /_/|___/   .dev`;
+    const consoleMessage = [
+        '  > building useful things for the web',
+        '',
+        '  You found the console. Nice to have you here.',
+        '  Have an idea, a project, or just want to say hello?',
+        '',
+        '  Explore: https://sami-s.dev',
+        '  Code:    https://github.com/Sami9889'
+    ].join('\n');
+    const consoleColors = ['#ff4d6d', '#ff9f1c', '#f9c74f', '#43aa8b', '#4cc9f0', '#7b61ff'];
+    let consoleFrame = 0;
+
+    const showConsoleWelcome = () => {
+        const accent = consoleColors[consoleFrame % consoleColors.length];
+        console.log('%c' + consoleLogo + '\n%c' + consoleMessage,
+            `background:#101114;color:${accent};font:bold 16px/1.2 monospace;padding:10px 14px;`,
+            'background:#101114;color:#f5f7fa;font:13px/1.7 monospace;padding:4px 14px 12px;');
+        consoleFrame += 1;
+    };
+
+    showConsoleWelcome();
+    const consoleAnimation = window.setInterval(() => {
+        showConsoleWelcome();
+        if (consoleFrame >= 12) {
+            window.clearInterval(consoleAnimation);
+        }
+    }, 260);
 }
 
 
