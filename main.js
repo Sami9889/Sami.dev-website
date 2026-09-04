@@ -14,15 +14,19 @@ if (!window.samiConsoleWelcomeShown) {
     const consoleColors = [
         '#ff375f', '#ff9f0a', '#ffd60a', '#30d158', '#64d2ff', '#0a84ff', '#bf5af2'
     ];
+    const consoleWordmark = 'SAMI.DEV';
 
     let consoleFrame = 0;
 
     const showConsoleWelcome = () => {
-        const accent = consoleColors[consoleFrame % consoleColors.length];
-        console.clear();
+        const wordmarkFormat = consoleWordmark.split('').map(() => '%c%s').join('');
+        const wordmarkArguments = consoleWordmark.split('').flatMap((letter, index) => [
+            `background:#101114;color:${consoleColors[(index + consoleFrame) % consoleColors.length]};font:bold 20px/1.2 monospace;padding:12px 0;`,
+            letter
+        ]);
         console.log(
-            '%cSAMI.DEV\n%c' + consoleMessage,
-            `background:#101114;color:${accent};font:bold 20px/1.2 monospace;padding:12px 16px;border-radius:8px;`,
+            wordmarkFormat + '\n%c' + consoleMessage,
+            ...wordmarkArguments,
             'background:#101114;color:#f5f5f5;font:13px/1.7 monospace;padding:10px 14px 12px;'
         );
         consoleFrame += 1;
@@ -31,7 +35,7 @@ if (!window.samiConsoleWelcomeShown) {
     showConsoleWelcome();
     const consoleAnimation = window.setInterval(() => {
         showConsoleWelcome();
-        if (consoleFrame >= 12) {
+        if (consoleFrame >= 18) {
             window.clearInterval(consoleAnimation);
         }
     }, 220);
