@@ -225,6 +225,13 @@ function updateSkillProgress(pageElement) {
     });
 }
 
+function updateStatCounters() {
+    document.querySelectorAll('.stat-number[data-count]').forEach((counter) => {
+        const target = Math.max(0, Number(counter.dataset.count) || 0);
+        counter.textContent = target;
+    });
+}
+
 // Event delegation for all navigation and interaction handlers (CSP hardening)
 document.addEventListener('DOMContentLoaded', function() {
     const savedTheme = localStorage.getItem('theme');
@@ -235,6 +242,7 @@ document.addEventListener('DOMContentLoaded', function() {
     const initialPage = pageForPath(window.location.pathname);
     window.showPage(initialPage, false);
     updateSkillProgress(document.getElementById('skills'));
+    updateStatCounters();
     window.loadGitHubProjects();
 
     window.addEventListener('popstate', function() {
