@@ -7,70 +7,22 @@
   <!-- Homepage -->
   <url>
     <loc>https://sami-s.dev/</loc>
-    <lastmod>2024-12-18</lastmod>
+    <lastmod>2026-09-07</lastmod>
     <changefreq>weekly</changefreq>
     <priority>1.0</priority>
   </url>
 
-  <!-- About Page -->
-  <url>
-    <loc>https://sami-s.dev/about</loc>
-    <lastmod>2024-12-18</lastmod>
-    <changefreq>monthly</changefreq>
-    <priority>0.8</priority>
-  </url>
-
-  <!-- Skills Page -->
-  <url>
-    <loc>https://sami.is-a.dev/skills</loc>
-    <lastmod>2024-12-18</lastmod>
-    <changefreq>monthly</changefreq>
-    <priority>0.7</priority>
-  </url>
-
-  <!-- Services Page -->
-  <url>
-    <loc>https://sami.is-a.dev/services</loc>
-    <lastmod>2024-12-18</lastmod>
-    <changefreq>monthly</changefreq>
-    <priority>0.8</priority>
-  </url>
-
-  <!-- Experience Page -->
-  <url>
-    <loc>https://sami.is-a.dev/experience</loc>
-    <lastmod>2024-12-18</lastmod>
-    <changefreq>monthly</changefreq>
-    <priority>0.7</priority>
-  </url>
-
-  <!-- Projects Page -->
-  <url>
-    <loc>https://sami.is-a.dev/projects</loc>
-    <lastmod>2024-12-18</lastmod>
-    <changefreq>weekly</changefreq>
-    <priority>0.9</priority>
-  </url>
-
-  <!-- FAQ Page -->
-  <url>
-    <loc>https://sami.is-a.dev/faq</loc>
-    <lastmod>2024-12-18</lastmod>
-    <changefreq>monthly</changefreq>
-    <priority>0.6</priority>
-  </url>
-
-  <!-- Contact Page -->
-  <url>
-    <loc>https://sami.is-a.dev/contact</loc>
-    <lastmod>2024-12-18</lastmod>
-    <changefreq>monthly</changefreq>
-    <priority>0.9</priority>
-  </url>
+  <!-- Primary SPA routes -->
+  <url><loc>https://sami-s.dev/about</loc><changefreq>monthly</changefreq><priority>0.8</priority></url>
+  <url><loc>https://sami-s.dev/skills</loc><changefreq>monthly</changefreq><priority>0.7</priority></url>
+  <url><loc>https://sami-s.dev/projects</loc><changefreq>weekly</changefreq><priority>0.9</priority></url>
+  <url><loc>https://sami-s.dev/contact</loc><changefreq>monthly</changefreq><priority>0.9</priority></url>
+  <url><loc>https://sami-s.dev/sponsors</loc><changefreq>monthly</changefreq><priority>0.8</priority></url>
+  <url><loc>https://sami-s.dev/avion</loc><changefreq>monthly</changefreq><priority>0.7</priority></url>
 
   <!-- Merch Store -->
   <url>
-    <loc>https://sami.is-a.dev/merch.html</loc>
+    <loc>https://sami-s.dev/merch.html</loc>
     <lastmod>2026-01-16</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.85</priority>

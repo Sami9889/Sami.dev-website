@@ -117,8 +117,57 @@ const pageRoutes = {
     '/projects': 'projects',
     '/contact': 'contact',
     '/sponsors': 'sponsors',
+    '/sponsers': 'sponsors',
     '/avion': 'avion'
 };
+
+const pageSeo = {
+    home: {
+        title: 'Samrath "Sami" Singh - Full-Stack Developer',
+        description: 'Samrath "Sami" Singh is a full-stack developer from Australia building SaaS tools, web apps, Minecraft plugins, Shopify systems, and 3D printing projects.',
+        canonical: 'https://sami-s.dev/'
+    },
+    sponsors: {
+        title: 'Support Open-Source Work | Samrath "Sami" Singh',
+        description: 'Support Samrath Singh\'s open-source tools, web projects, and hardware experiments through GitHub Sponsors.',
+        canonical: 'https://sami-s.dev/sponsors'
+    },
+    avion: {
+        title: 'Avion Manufacturing Partner | Samrath "Sami" Singh',
+        description: 'Learn how Avion supports Samrath Singh\'s open-source hardware projects with prototyping and small production runs.',
+        canonical: 'https://sami-s.dev/avion'
+    }
+};
+
+function pageForPath(pathname) {
+    const normalizedPath = pathname.replace(/\/+$/, '') || '/';
+    return pageRoutes[normalizedPath] || 'home';
+}
+
+function updateSeoMetadata(page) {
+    const metadata = pageSeo[page] || pageSeo.home;
+    document.title = metadata.title;
+
+    const description = document.querySelector('meta[name="description"]');
+    if (description) {
+        description.setAttribute('content', metadata.description);
+    }
+
+    const canonical = document.querySelector('link[rel="canonical"]');
+    if (canonical) {
+        canonical.setAttribute('href', metadata.canonical);
+    }
+
+    document.querySelectorAll('[data-seo-title]').forEach((element) => {
+        element.setAttribute('content', metadata.title);
+    });
+    document.querySelectorAll('[data-seo-description]').forEach((element) => {
+        element.setAttribute('content', metadata.description);
+    });
+    document.querySelectorAll('[data-seo-url]').forEach((element) => {
+        element.setAttribute('content', metadata.canonical);
+    });
+}
 
 window.showPage = function(page, updateUrl = true) {
     const pageElement = document.getElementById(page);
@@ -137,6 +186,7 @@ window.showPage = function(page, updateUrl = true) {
     document.querySelector('.nav-links')?.classList.remove('open');
 
     updateSkillProgress(pageElement);
+    updateSeoMetadata(page);
 
     if (updateUrl) {
         const route = Object.keys(pageRoutes).find((path) => pageRoutes[path] === page) || '/';
@@ -182,13 +232,13 @@ document.addEventListener('DOMContentLoaded', function() {
         document.documentElement.setAttribute('data-theme', savedTheme);
     }
 
-    const initialPage = pageRoutes[window.location.pathname] || 'home';
+    const initialPage = pageForPath(window.location.pathname);
     window.showPage(initialPage, false);
     updateSkillProgress(document.getElementById('skills'));
     window.loadGitHubProjects();
 
     window.addEventListener('popstate', function() {
-        window.showPage(pageRoutes[window.location.pathname] || 'home', false);
+        window.showPage(pageForPath(window.location.pathname), false);
     });
 
     const themeIcon = document.getElementById('theme-icon');

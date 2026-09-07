@@ -76,6 +76,10 @@ app.use(compression());
 
 app.use(bodyParser.json());
 
+app.get('/sponsers', (req, res) => {
+  res.redirect(301, '/sponsors');
+});
+
 // Prevent markdown documents from being served as public site pages.
 // This keeps internal repo docs from being crawled or indexed as website content.
 app.use((req, res, next) => {

@@ -32,6 +32,10 @@ async function handleRequest(request) {
     })
   }
 
+  if (pathname === '/sponsers' || pathname === '/sponsers/') {
+    return Response.redirect(new URL('/sponsors', request.url), 301)
+  }
+
   if (pathname.match(/\.(md|markdown)$/i)) {
     return new Response('Not found', {
       status: 404,
