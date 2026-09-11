@@ -15,6 +15,7 @@
       "alternateName": "Sami Singh",
       "url": "https://sami.is-a.dev",
       "jobTitle": "Full-Stack Developer & Software Engineer",
+      "mainEntityOfPage": "https://sami.is-a.dev/",
       "address": {
         "@type": "PostalAddress",
         "addressLocality": "Point Cook",
@@ -22,6 +23,7 @@
         "addressCountry": "AU",
         "postalCode": "3030"
       },
+      "containedInPlace": "Melbourne",
       "sameAs": [
         "https://github.com/Sami9889",
         "https://www.linkedin.com/in/samrath-singh-400705297",
