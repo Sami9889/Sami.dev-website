@@ -130,6 +130,13 @@ app.get('/api/config', (req, res) => {
   });
 });
 
+app.get('/api/holiday', (req, res) => {
+  res.json({
+    holidayStart: '2026-09-18T14:30:00+11:00',
+    holidayEnd: '2026-10-02T09:00:00+11:00'
+  });
+});
+
 // Stripe Payment Intent endpoint — creates a payment intent for Stripe payment processing
 app.post('/api/stripe/create-payment-intent', async (req, res) => {
   if(!process.env.STRIPE_SECRET_KEY){
