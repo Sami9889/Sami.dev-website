@@ -310,67 +310,55 @@ document.addEventListener('DOMContentLoaded', function() {
 
 // Holiday Banner
 (function() {
+    const FALLBACK_START = '2026-09-18T14:30:00+11:00';
+    const FALLBACK_END = '2026-10-02T09:00:00+11:00';
+    const STORAGE_KEY = 'holiday-banner-state';
+
     let holidayStart = null;
     let holidayEnd = null;
     let countdownInterval = null;
 
-    async function initHolidayBanner() {
-        const banner = document.getElementById('holiday-banner');
-        const countdownEl = document.getElementById('holiday-countdown');
-        const textEl = document.getElementById('holiday-text');
-        const iconEl = document.getElementById('holiday-icon');
-        if (!banner || !countdownEl || !textEl || !iconEl) return;
-
-        const storageKey = 'holiday-banner-state';
-        let cached = null;
-        try {
-            const raw = localStorage.getItem(storageKey);
-            if (raw) cached = JSON.parse(raw);
-        } catch (e) {
-            cached = null;
-        }
-
-        if (cached && cached.holidayStart && cached.holidayEnd) {
-            holidayStart = cached.holidayStart;
-            holidayEnd = cached.holidayEnd;
-        }
-
-        if (holidayStart && holidayEnd) {
-            updateHolidayBanner();
-            countdownInterval = setInterval(updateHolidayBanner, 1000);
-        }
-
-        try {
-            const response = await fetch('/api/holiday');
-            if (response.ok) {
-                const data = await response.json();
-                const start = new Date(data.holidayStart).getTime();
-                const end = new Date(data.holidayEnd).getTime();
-                if (!isNaN(start) && !isNaN(end)) {
-                    holidayStart = start;
-                    holidayEnd = end;
-                    try {
-                        localStorage.setItem(storageKey, JSON.stringify({ holidayStart, holidayEnd }));
-                    } catch (e) {}
-                }
-            }
-        } catch (e) {
-            // keep using cached values if available
-        }
-
-        if (!holidayStart || !holidayEnd) return;
-        if (isNaN(holidayStart) || isNaN(holidayEnd)) return;
-
-        updateHolidayBanner();
-        countdownInterval = setInterval(updateHolidayBanner, 1000);
+    function parseIsoTimestamp(value) {
+        const time = new Date(value).getTime();
+        return Number.isFinite(time) ? time : null;
     }
 
-    function updateHolidayBanner() {
+    function loadCachedState() {
+        try {
+            const raw = localStorage.getItem(STORAGE_KEY);
+            if (!raw) return null;
+            const parsed = JSON.parse(raw);
+            if (parsed && Number.isFinite(parsed.holidayStart) && Number.isFinite(parsed.holidayEnd)) {
+                return parsed;
+            }
+        } catch (e) {
+            // ignore corrupt cache
+        }
+        return null;
+    }
+
+    function saveCachedState() {
+        try {
+            if (Number.isFinite(holidayStart) && Number.isFinite(holidayEnd)) {
+                localStorage.setItem(STORAGE_KEY, JSON.stringify({ holidayStart, holidayEnd }));
+            }
+        } catch (e) {
+            // ignore storage errors
+        }
+    }
+
+    function renderBanner() {
+        console.log("[holiday-banner] renderBanner called", holidayStart, holidayEnd, Date.now());
         const banner = document.getElementById('holiday-banner');
         const countdownEl = document.getElementById('holiday-countdown');
         const textEl = document.getElementById('holiday-text');
         const iconEl = document.getElementById('holiday-icon');
         if (!banner || !countdownEl || !textEl || !iconEl) return;
+
+        if (!Number.isFinite(holidayStart) || !Number.isFinite(holidayEnd)) {
+            banner.style.display = 'none';
+            return;
+        }
 
         const now = Date.now();
 
@@ -396,6 +384,50 @@ document.addEventListener('DOMContentLoaded', function() {
             countdownEl.textContent = formatDuration(diff);
         } else {
             banner.style.display = 'none';
+        }
+    }
+
+    function startTicker() {
+        console.log("[holiday-banner] startTicker called");
+        if (countdownInterval) return;
+        renderBanner();
+        countdownInterval = setInterval(renderBanner, 1000);
+    }
+
+    function applyAbsoluteTimes(start, end) {
+        if (!Number.isFinite(start) || !Number.isFinite(end)) return;
+        holidayStart = start;
+        holidayEnd = end;
+        saveCachedState();
+        startTicker();
+    }
+
+    async function initHolidayBanner() {
+        console.log("[holiday-banner] initHolidayBanner called");
+        const cached = loadCachedState();
+        if (cached) {
+            applyAbsoluteTimes(cached.holidayStart, cached.holidayEnd);
+        }
+
+        try {
+            const response = await fetch('/api/holiday');
+            if (response.ok) {
+                const data = await response.json();
+                const start = parseIsoTimestamp(data.holidayStart);
+                const end = parseIsoTimestamp(data.holidayEnd);
+                if (start && end) {
+                    applyAbsoluteTimes(start, end);
+                    return;
+                }
+            }
+        } catch (e) {
+            // fall back to cache or hardcoded values
+        }
+
+        if (!cached) {
+            const start = parseIsoTimestamp(FALLBACK_START);
+            const end = parseIsoTimestamp(FALLBACK_END);
+            applyAbsoluteTimes(start, end);
         }
     }
 
