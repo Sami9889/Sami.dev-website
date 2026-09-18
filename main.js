@@ -365,7 +365,7 @@ document.addEventListener('DOMContentLoaded', function() {
 
     window.holidayBannerDismiss = dismissBanner;
 
-    function updateHolidayBanner() {
+    function renderBanner() {
         if (bannerDismissed) return;
 
         const banner = document.getElementById('holiday-banner');
@@ -408,8 +408,8 @@ document.addEventListener('DOMContentLoaded', function() {
 
     function startTicker() {
         if (countdownInterval) return;
-        updateHolidayBanner();
-        countdownInterval = setInterval(updateHolidayBanner, 1000);
+        renderBanner();
+        countdownInterval = setInterval(renderBanner, 1000);
     }
 
     function applyAbsoluteTimes(start, end) {
