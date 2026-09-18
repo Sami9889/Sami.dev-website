@@ -296,5 +296,127 @@ document.addEventListener('DOMContentLoaded', function() {
             return;
         }
 
+        // Close holiday banner
+        if (e.target.closest('#holiday-close')) {
+            const banner = document.getElementById('holiday-banner');
+            if (banner) {
+                banner.style.display = 'none';
+            }
+            return;
+        }
+
     });
 });
+
+// Holiday Banner
+(function() {
+    let holidayStart = null;
+    let holidayEnd = null;
+    let countdownInterval = null;
+
+    async function initHolidayBanner() {
+        const banner = document.getElementById('holiday-banner');
+        const countdownEl = document.getElementById('holiday-countdown');
+        const textEl = document.getElementById('holiday-text');
+        const iconEl = document.getElementById('holiday-icon');
+        if (!banner || !countdownEl || !textEl || !iconEl) return;
+
+        const storageKey = 'holiday-banner-state';
+        let cached = null;
+        try {
+            const raw = localStorage.getItem(storageKey);
+            if (raw) cached = JSON.parse(raw);
+        } catch (e) {
+            cached = null;
+        }
+
+        if (cached && cached.holidayStart && cached.holidayEnd) {
+            holidayStart = cached.holidayStart;
+            holidayEnd = cached.holidayEnd;
+        }
+
+        if (holidayStart && holidayEnd) {
+            updateHolidayBanner();
+            countdownInterval = setInterval(updateHolidayBanner, 1000);
+        }
+
+        try {
+            const response = await fetch('/api/holiday');
+            if (response.ok) {
+                const data = await response.json();
+                const start = new Date(data.holidayStart).getTime();
+                const end = new Date(data.holidayEnd).getTime();
+                if (!isNaN(start) && !isNaN(end)) {
+                    holidayStart = start;
+                    holidayEnd = end;
+                    try {
+                        localStorage.setItem(storageKey, JSON.stringify({ holidayStart, holidayEnd }));
+                    } catch (e) {}
+                }
+            }
+        } catch (e) {
+            // keep using cached values if available
+        }
+
+        if (!holidayStart || !holidayEnd) return;
+        if (isNaN(holidayStart) || isNaN(holidayEnd)) return;
+
+        updateHolidayBanner();
+        countdownInterval = setInterval(updateHolidayBanner, 1000);
+    }
+
+    function updateHolidayBanner() {
+        const banner = document.getElementById('holiday-banner');
+        const countdownEl = document.getElementById('holiday-countdown');
+        const textEl = document.getElementById('holiday-text');
+        const iconEl = document.getElementById('holiday-icon');
+        if (!banner || !countdownEl || !textEl || !iconEl) return;
+
+        const now = Date.now();
+
+        if (now >= holidayStart && now <= holidayEnd) {
+            banner.style.display = 'block';
+            iconEl.textContent = '🏖️';
+            textEl.textContent = 'Holiday Ends In:';
+            const diff = holidayEnd - now;
+            if (diff <= 0) {
+                banner.style.display = 'none';
+                return;
+            }
+            countdownEl.textContent = formatDuration(diff);
+        } else if (now < holidayStart) {
+            banner.style.display = 'block';
+            iconEl.textContent = '🏖️';
+            textEl.textContent = 'Holiday Starts In:';
+            const diff = holidayStart - now;
+            if (diff <= 0) {
+                banner.style.display = 'none';
+                return;
+            }
+            countdownEl.textContent = formatDuration(diff);
+        } else {
+            banner.style.display = 'none';
+        }
+    }
+
+    function formatDuration(ms) {
+        const totalSeconds = Math.floor(ms / 1000);
+        const days = Math.floor(totalSeconds / 86400);
+        const hours = Math.floor((totalSeconds % 86400) / 3600);
+        const minutes = Math.floor((totalSeconds % 3600) / 60);
+        const seconds = totalSeconds % 60;
+
+        const parts = [];
+        if (days > 0) parts.push(days + 'd');
+        if (hours > 0 || days > 0) parts.push(hours + 'h');
+        parts.push(minutes + 'm');
+        parts.push(seconds + 's');
+        return parts.join(' ');
+    }
+
+    if (document.readyState === 'loading') {
+        document.addEventListener('DOMContentLoaded', initHolidayBanner);
+    } else {
+        initHolidayBanner();
+    }
+})();
