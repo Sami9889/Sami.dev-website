@@ -302,6 +302,9 @@ document.addEventListener('DOMContentLoaded', function() {
             if (banner) {
                 banner.style.display = 'none';
             }
+            if (window.holidayBannerDismiss) {
+                window.holidayBannerDismiss();
+            }
             return;
         }
 
@@ -317,6 +320,7 @@ document.addEventListener('DOMContentLoaded', function() {
     let holidayStart = null;
     let holidayEnd = null;
     let countdownInterval = null;
+    let bannerDismissed = false;
 
     function parseIsoTimestamp(value) {
         const time = new Date(value).getTime();
@@ -347,8 +351,23 @@ document.addEventListener('DOMContentLoaded', function() {
         }
     }
 
+    function dismissBanner() {
+        bannerDismissed = true;
+        const banner = document.getElementById('holiday-banner');
+        if (banner) {
+            banner.style.display = 'none';
+        }
+        if (countdownInterval) {
+            clearInterval(countdownInterval);
+            countdownInterval = null;
+        }
+    }
+
+    window.holidayBannerDismiss = dismissBanner;
+
     function renderBanner() {
-        console.log("[holiday-banner] renderBanner called", holidayStart, holidayEnd, Date.now());
+        if (bannerDismissed) return;
+
         const banner = document.getElementById('holiday-banner');
         const countdownEl = document.getElementById('holiday-countdown');
         const textEl = document.getElementById('holiday-text');
@@ -388,7 +407,6 @@ document.addEventListener('DOMContentLoaded', function() {
     }
 
     function startTicker() {
-        console.log("[holiday-banner] startTicker called");
         if (countdownInterval) return;
         renderBanner();
         countdownInterval = setInterval(renderBanner, 1000);
@@ -403,7 +421,6 @@ document.addEventListener('DOMContentLoaded', function() {
     }
 
     async function initHolidayBanner() {
-        console.log("[holiday-banner] initHolidayBanner called");
         const cached = loadCachedState();
         if (cached) {
             applyAbsoluteTimes(cached.holidayStart, cached.holidayEnd);
