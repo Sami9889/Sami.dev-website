@@ -321,16 +321,44 @@ document.addEventListener('DOMContentLoaded', function() {
         const iconEl = document.getElementById('holiday-icon');
         if (!banner || !countdownEl || !textEl || !iconEl) return;
 
+        const storageKey = 'holiday-banner-state';
+        let cached = null;
         try {
-            const response = await fetch('/api/holiday');
-            if (!response.ok) return;
-            const data = await response.json();
-            holidayStart = new Date(data.holidayStart).getTime();
-            holidayEnd = new Date(data.holidayEnd).getTime();
+            const raw = localStorage.getItem(storageKey);
+            if (raw) cached = JSON.parse(raw);
         } catch (e) {
-            return;
+            cached = null;
         }
 
+        if (cached && cached.holidayStart && cached.holidayEnd) {
+            holidayStart = cached.holidayStart;
+            holidayEnd = cached.holidayEnd;
+        }
+
+        if (holidayStart && holidayEnd) {
+            updateHolidayBanner();
+            countdownInterval = setInterval(updateHolidayBanner, 1000);
+        }
+
+        try {
+            const response = await fetch('/api/holiday');
+            if (response.ok) {
+                const data = await response.json();
+                const start = new Date(data.holidayStart).getTime();
+                const end = new Date(data.holidayEnd).getTime();
+                if (!isNaN(start) && !isNaN(end)) {
+                    holidayStart = start;
+                    holidayEnd = end;
+                    try {
+                        localStorage.setItem(storageKey, JSON.stringify({ holidayStart, holidayEnd }));
+                    } catch (e) {}
+                }
+            }
+        } catch (e) {
+            // keep using cached values if available
+        }
+
+        if (!holidayStart || !holidayEnd) return;
         if (isNaN(holidayStart) || isNaN(holidayEnd)) return;
 
         updateHolidayBanner();
