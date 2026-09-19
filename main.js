@@ -118,7 +118,8 @@ const pageRoutes = {
     '/contact': 'contact',
     '/sponsors': 'sponsors',
     '/sponsers': 'sponsors',
-    '/avion': 'avion'
+    '/avion': 'avion',
+    '/changelog': 'changelog'
 };
 
 const pageSeo = {
@@ -136,6 +137,11 @@ const pageSeo = {
         title: 'Avion Manufacturing Partner | Samrath "Sami" Singh',
         description: 'Learn how Avion supports Samrath Singh\'s open-source hardware projects with prototyping and small production runs.',
         canonical: 'https://sami-s.dev/avion'
+    },
+    changelog: {
+        title: 'Changelog | Samrath "Sami" Singh',
+        description: 'Recent updates, project milestones, and business updates from Samrath Singh.',
+        canonical: 'https://sami-s.dev/changelog'
     }
 };
 

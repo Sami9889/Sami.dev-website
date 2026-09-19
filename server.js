@@ -80,6 +80,34 @@ app.get('/sponsers', (req, res) => {
   res.redirect(301, '/sponsors');
 });
 
+app.get('/avion', (req, res) => {
+  res.sendFile(path.join(__dirname, 'avion.html'));
+});
+
+app.get('/services/web', (req, res) => {
+  res.sendFile(path.join(__dirname, 'services', 'web.html'));
+});
+
+app.get('/services/minecraft', (req, res) => {
+  res.sendFile(path.join(__dirname, 'services', 'minecraft.html'));
+});
+
+app.get('/services/shopify', (req, res) => {
+  res.sendFile(path.join(__dirname, 'services', 'shopify.html'));
+});
+
+app.get('/services/support', (req, res) => {
+  res.sendFile(path.join(__dirname, 'services', 'support.html'));
+});
+
+app.get('/services/3d-printing', (req, res) => {
+  res.sendFile(path.join(__dirname, 'services', '3d-printing.html'));
+});
+
+app.get('/services/api', (req, res) => {
+  res.sendFile(path.join(__dirname, 'services', 'api.html'));
+});
+
 // Prevent markdown documents from being served as public site pages.
 // This keeps internal repo docs from being crawled or indexed as website content.
 app.use((req, res, next) => {
