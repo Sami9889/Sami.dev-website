@@ -84,8 +84,8 @@ app.get('/avion', (req, res) => {
   res.sendFile(path.join(__dirname, 'avion.html'));
 });
 
-app.get('/sponsee', (req, res) => {
-  res.sendFile(path.join(__dirname, 'sponsee.html'));
+app.get('/mcp', (req, res) => {
+  res.sendFile(path.join(__dirname, 'mcp.html'));
 });
 
 app.get('/sponsors', (req, res) => {
