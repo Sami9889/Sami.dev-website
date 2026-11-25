@@ -12,7 +12,7 @@ if (!window.samiConsoleWelcomeShown) {
     ].join('\n');
 
     const consoleGradientColors = ['#ffffff'];
-    const consoleWordmark = 'SAMI.DEV';
+    const consoleWordmark = 'SAMI-S.DEV';
 
     let consoleFrame = 0;
 
@@ -129,7 +129,7 @@ const pageRoutes = {
 const pageSeo = {
     home: {
         title: 'Samrath "Sami" Singh - Full-Stack Developer',
-        description: 'Samrath "Sami" Singh is a full-stack developer from Australia building SaaS tools, web apps, Minecraft plugins, Shopify systems, and 3D printing projects.',
+        description: 'Samrath "Sami" Singh is a full-stack developer from Australia building web apps, Minecraft plugins, Shopify systems, and 3D printing projects.',
         canonical: 'https://sami-s.dev/'
     },
     sponsors: {
