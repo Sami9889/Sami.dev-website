@@ -116,6 +116,9 @@ const pageRoutes = {
     '/skills': 'skills',
     '/projects': 'projects',
     '/contact': 'contact',
+    '/services': 'services',
+    '/experience': 'experience',
+    '/faq': 'faq',
     '/sponsors': 'sponsors',
     '/sponsers': 'sponsors',
     '/mcp': 'mcp',
@@ -143,6 +146,21 @@ const pageSeo = {
         title: 'MCP Manufacturing Partner | Samrath "Sami" Singh',
         description: 'Learn how MCP supports Samrath Singh\'s 64-bit CPU hardware project.',
         canonical: 'https://sami-s.dev/mcp'
+    },
+    services: {
+        title: 'Services | Samrath "Sami" Singh',
+        description: 'Web development, Minecraft plugins, Shopify stores, technical support, 3D design, and API integration by Samrath Singh.',
+        canonical: 'https://sami-s.dev/services'
+    },
+    experience: {
+        title: 'Experience | Samrath "Sami" Singh',
+        description: 'Experience and journey of Samrath Singh, founder of 3DPrintzAU and freelance developer.',
+        canonical: 'https://sami-s.dev/experience'
+    },
+    faq: {
+        title: 'FAQ | Samrath "Sami" Singh',
+        description: 'Frequently asked questions about working with Samrath Singh.',
+        canonical: 'https://sami-s.dev/faq'
     },
     changelog: {
         title: 'Changelog | Samrath "Sami" Singh',
@@ -481,3 +499,4 @@ document.addEventListener('DOMContentLoaded', function() {
         initHolidayBanner();
     }
 })();
+
